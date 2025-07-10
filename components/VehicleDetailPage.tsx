@@ -1,11 +1,14 @@
 
-import React from 'react';
+
+import React, { useMemo } from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';
+import VehicleCard from './VehicleCard';
 import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon } from '../constants';
 
 interface VehicleDetailPageProps {
     vehicle: Vehicle;
+    allVehicles: Vehicle[];
 }
 
 const SpecificationItem: React.FC<{ icon: React.ReactNode; label: string; value: string | number; }> = ({ icon, label, value }) => (
@@ -34,7 +37,7 @@ const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
     </div>
 );
 
-const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
+const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehicles }) => {
     const contactMessage = `Hola, estoy interesado en el ${vehicle.make} ${vehicle.model}.`;
     const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(contactMessage)}`;
 
@@ -47,6 +50,34 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
         { icon: <SlidersIcon className="h-6 w-6"/>, label: "Transmisión", value: vehicle.transmission },
         { icon: <GasPumpIcon className="h-6 w-6"/>, label: "Combustible", value: vehicle.fuelType },
     ];
+    
+    const relatedVehicles = useMemo(() => {
+        if (!allVehicles || allVehicles.length <= 1) return [];
+
+        // Priority #1: Find others in a similar price range (+/- 25%)
+        const priceRangeVehicles = allVehicles.filter(v => {
+            if (v.id === vehicle.id) return false;
+            if (vehicle.price === 0) return false; // Avoid division by zero
+            const priceDiff = Math.abs(v.price - vehicle.price) / vehicle.price;
+            return priceDiff <= 0.25;
+        });
+
+        // Priority #2: Find others of the same make
+        const sameMake = allVehicles.filter(v => v.id !== vehicle.id && v.make === vehicle.make);
+        
+        // Combine, giving priority to price range, remove duplicates, and take the top 4
+        const combined = [...priceRangeVehicles, ...sameMake];
+        const uniqueIds = new Set();
+        const uniqueVehicles = combined.filter(v => {
+            if (uniqueIds.has(v.id)) {
+                return false;
+            }
+            uniqueIds.add(v.id);
+            return true;
+        });
+
+        return uniqueVehicles.slice(0, 4);
+    }, [vehicle, allVehicles]);
 
     return (
         <div className="max-w-screen-xl mx-auto">
@@ -129,6 +160,22 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
                      <Breadcrumb vehicle={vehicle} />
                 </div>
             </div>
+
+            {/* Related Vehicles Section */}
+            {relatedVehicles.length > 0 && (
+                <section className="mt-16 lg:mt-20 pt-16 border-t border-slate-200 dark:border-slate-800 opacity-0 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+                    <h2 className="text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white text-center mb-10">
+                        Vehículos Similares
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {relatedVehicles.map((relatedVehicle, index) => (
+                            <div key={relatedVehicle.id} className="stagger-child" style={{ animationDelay: `${index * 80}ms` }}>
+                                <VehicleCard vehicle={relatedVehicle} />
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
         </div>
     );
 };

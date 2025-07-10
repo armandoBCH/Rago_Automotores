@@ -222,7 +222,7 @@ const App: React.FC = () => {
         if (isAdmin) return <AdminPanel vehicles={vehicles} onAdd={handleAddVehicleClick} onEdit={handleEditVehicleClick} onDelete={handleDeleteVehicleClick} onLogout={handleLogout} />;
         if (loading) return <div className="text-center py-16"><h2 className="text-2xl font-semibold text-slate-700 dark:text-slate-300">Cargando vehículos...</h2></div>;
         if (dbError) return <div className="text-center py-16 text-red-500"><h2 className="text-2xl font-semibold">{dbError}</h2></div>;
-        if (vehicleId) return selectedVehicle ? <VehicleDetailPage vehicle={selectedVehicle} /> : <NotFoundPage />;
+        if (vehicleId) return selectedVehicle ? <VehicleDetailPage vehicle={selectedVehicle} allVehicles={vehicles} /> : <NotFoundPage />;
         if (isHomePage) return (<><FilterBar filters={filters} onFilterChange={handleFilterChange} brands={uniqueBrands} /><VehicleList vehicles={filteredVehicles} /><SellYourCarSection /></>);
         return <NotFoundPage />;
     };
