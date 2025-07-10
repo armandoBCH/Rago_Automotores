@@ -1,43 +1,42 @@
 // Vercel detectará este archivo como una función sin servidor.
-// El tipo de objeto 'request' puede variar según el framework, pero para Vercel es compatible con la API de Request/Response.
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(request: Request) {
+export default function handler(
+  request: VercelRequest,
+  response: VercelResponse,
+) {
+  // Maneja las solicitudes pre-vuelo (preflight) para CORS
+  if (request.method === 'OPTIONS') {
+    response.setHeader('Access-Control-Allow-Origin', '*');
+    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return response.status(200).end();
+  }
+  
+  // Asegura que solo se acepten métodos POST
   if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ message: 'Method Not Allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return response.status(405).json({ message: 'Method Not Allowed' });
   }
 
   try {
-    const { password } = await request.json();
+    const { password } = request.body;
 
     // Esta variable de entorno SÓLO existe en el servidor.
     // NO lleva el prefijo VITE_, por lo que nunca se expone al navegador.
     const adminPassword = process.env.ADMIN_PASSWORD;
 
     if (!adminPassword) {
-        return new Response(JSON.stringify({ message: 'La configuración del servidor está incompleta.' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
+      console.error("La variable de entorno ADMIN_PASSWORD no está configurada en el servidor.");
+      return response.status(500).json({ message: 'La configuración del servidor está incompleta.' });
     }
 
     if (password === adminPassword) {
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return response.status(200).json({ success: true });
     } else {
-      return new Response(JSON.stringify({ message: 'Contraseña incorrecta.' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return response.status(401).json({ message: 'Contraseña incorrecta.' });
     }
   } catch (error) {
-    return new Response(JSON.stringify({ message: 'Error en el servidor.' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    console.error("Error en el manejador de login:", error);
+    return response.status(500).json({ message: 'Error en el servidor.' });
   }
 }
