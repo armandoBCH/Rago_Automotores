@@ -1,6 +1,8 @@
-import React from 'react';
+
+import React, { useEffect, useRef } from 'react';
 import { CheckIcon, ArrowRightIcon, SellCarIcon, FileCheckIcon, CogIcon, ShieldIcon } from '../constants';
 import { optimizeUrl } from '../utils/image';
+import { trackEvent } from '../lib/analytics';
 
 const QualityCard: React.FC<{ icon: React.ReactNode; title: string; children: React.ReactNode; delay: number; }> = ({ icon, title, children, delay }) => (
     <div 
@@ -17,12 +19,43 @@ const QualityCard: React.FC<{ icon: React.ReactNode; title: string; children: Re
 
 
 const SellYourCarSection: React.FC = () => {
+    const sectionRef = useRef<HTMLElement>(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    trackEvent('view_sell_your_car');
+                    // Disconnect observer after event is fired to prevent multiple trackings
+                    if (sectionRef.current) {
+                        observer.unobserve(sectionRef.current);
+                    }
+                }
+            },
+            {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5, // Fire when 50% of the element is visible
+            }
+        );
+
+        if (sectionRef.current) {
+            observer.observe(sectionRef.current);
+        }
+
+        return () => {
+            if (sectionRef.current) {
+                observer.unobserve(sectionRef.current);
+            }
+        };
+    }, []);
+
     const contactMessage = "Hola, estoy interesado en vender mi vehículo con ustedes. Me gustaría recibir una cotización.";
     const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(contactMessage)}`;
     const imageUrl = "https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752115790/Gemini_Generated_Image_2lfdwh2lfdwh2lfd_zjz8tq.webp";
 
     return (
-        <section id="sell-car-section" className="text-white my-16 rounded-2xl shadow-2xl overflow-hidden bg-gradient-to-br from-rago-burgundy via-rago-burgundy-darker to-rago-black bg-[size:200%_200%] animate-bg-pan">
+        <section ref={sectionRef} id="sell-car-section" className="text-white my-16 rounded-2xl shadow-2xl overflow-hidden bg-gradient-to-br from-rago-burgundy via-rago-burgundy-darker to-rago-black bg-[size:200%_200%] animate-bg-pan">
             <div className="container mx-auto px-6 lg:px-8 py-16 md:py-24">
 
                 <div className="text-center mb-12 animate-fade-in-up">
@@ -91,6 +124,7 @@ const SellYourCarSection: React.FC = () => {
                 <div className="mt-16 text-center animate-fade-in-up" style={{ animationDelay: '500ms' }}>
                     <a 
                         href={whatsappLink}
+                        onClick={() => trackEvent('click_whatsapp_sell')}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="group inline-flex items-center justify-center gap-3 px-10 py-5 text-xl font-bold text-rago-burgundy bg-white rounded-lg hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 animate-pulse-light"

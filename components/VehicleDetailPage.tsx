@@ -1,10 +1,12 @@
 
 
-import React, { useMemo } from 'react';
+
+import React, { useMemo, useEffect } from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';
 import VehicleCard from './VehicleCard';
 import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon } from '../constants';
+import { trackEvent } from '../lib/analytics';
 
 interface VehicleDetailPageProps {
     vehicle: Vehicle;
@@ -38,6 +40,14 @@ const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
 );
 
 const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehicles }) => {
+    useEffect(() => {
+        trackEvent('view_vehicle', vehicle.id);
+    }, [vehicle.id]);
+
+    const handleWhatsAppClick = () => {
+        trackEvent('click_whatsapp', vehicle.id);
+    };
+
     const contactMessage = `Hola, estoy interesado en el ${vehicle.make} ${vehicle.model}.`;
     const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(contactMessage)}`;
 
@@ -116,6 +126,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                                 href={whatsappLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={handleWhatsAppClick}
                                 className="group w-full flex items-center justify-center gap-3 text-center bg-gradient-to-r from-rago-burgundy to-rago-burgundy-darker hover:shadow-rago-glow text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 text-xl transform hover:-translate-y-0.5 animate-pulse-burgundy"
                             >
                                 <ChatBubbleIcon className="h-7 w-7 transition-transform duration-300 group-hover:scale-110" />

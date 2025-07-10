@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatBubbleIcon, InstagramIcon } from '../constants';
+import { trackEvent } from '../lib/analytics';
 
 const NavLink: React.FC<{ href: string; children: React.ReactNode; }> = ({ href, children }) => (
     <a
@@ -45,6 +46,10 @@ const Header: React.FC = () => {
     const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(contactMessage)}`;
     const instagramUrl = "https://www.instagram.com/ragoautomotores?igsh=MWJuamF6ZXF5YjF4cw%3D%3D";
 
+    const handleWhatsAppClick = () => {
+        trackEvent('click_whatsapp_general');
+    };
+
     return (
         <header className={headerClasses}>
             <div className="container mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
@@ -67,6 +72,7 @@ const Header: React.FC = () => {
                     </a>
                     <a
                         href={whatsappLink}
+                        onClick={handleWhatsAppClick}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 px-4 py-2 text-base font-semibold text-white bg-rago-burgundy rounded-lg hover:bg-rago-burgundy-darker focus:outline-none focus:ring-4 focus:ring-rago-burgundy/50 transition-all duration-300 transform hover:-translate-y-px shadow-md hover:shadow-lg animate-pulse-burgundy"

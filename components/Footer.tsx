@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { LocationPinIcon, InstagramIcon, ChatBubbleIcon, ClockIcon } from '../constants';
+import { trackEvent } from '../lib/analytics';
 
 const Footer: React.FC = () => {
     const address = "Av. Ituzaingó 2658, Olavarría, Buenos Aires";
@@ -57,7 +58,7 @@ const Footer: React.FC = () => {
                         <h3 className="text-base font-bold text-white uppercase tracking-wider mb-5">Contacto</h3>
                         <ul className="space-y-4">
                              <li>
-                                <a href={telUrl} className="inline-flex items-center text-slate-400 hover:text-white transition-colors group">
+                                <a href={telUrl} onClick={() => trackEvent('click_phone_footer')} className="inline-flex items-center text-slate-400 hover:text-white transition-colors group">
                                     <ChatBubbleIcon className="h-6 w-6 mr-3 flex-shrink-0 text-rago-burgundy" />
                                     <span className="group-hover:underline">{phoneDisplay}</span>
                                 </a>
@@ -105,7 +106,7 @@ const Footer: React.FC = () => {
                         <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-400 hover:text-white transition-transform hover:scale-110 duration-300">
                             <InstagramIcon className="h-7 w-7" />
                         </a>
-                         <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-slate-400 hover:text-white transition-transform hover:scale-110 duration-300">
+                         <a href={whatsappUrl} onClick={() => trackEvent('click_whatsapp_footer')} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-slate-400 hover:text-white transition-transform hover:scale-110 duration-300">
                             <ChatBubbleIcon className="h-7 w-7" />
                         </a>
                     </div>

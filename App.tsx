@@ -4,6 +4,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Vehicle, VehicleFormData } from './types';
 import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon } from './constants';
 import { supabase } from './lib/supabaseClient';
+import { trackEvent } from './lib/analytics';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FilterBar from './components/FilterBar';
@@ -249,7 +250,7 @@ const App: React.FC = () => {
                 <div className="mt-auto pt-8 border-t border-slate-700/50">
                     <div className="flex justify-center gap-x-8">
                         <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-400 hover:text-white transition-transform duration-300 hover:scale-110"><InstagramIcon className="h-8 w-8" /></a>
-                        <a href={whatsappLink} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-slate-400 hover:text-white transition-transform duration-300 hover:scale-110"><ChatBubbleIcon className="h-8 w-8" /></a>
+                        <a href={whatsappLink} onClick={() => trackEvent('click_whatsapp_general')} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-slate-400 hover:text-white transition-transform duration-300 hover:scale-110"><ChatBubbleIcon className="h-8 w-8" /></a>
                     </div>
                 </div>
             </nav>
