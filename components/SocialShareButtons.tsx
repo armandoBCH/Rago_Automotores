@@ -1,6 +1,6 @@
 import React from 'react';
 import { Vehicle } from '../types';
-import { WhatsAppIcon, FacebookIcon, TwitterIcon, ShareIcon } from '../constants';
+import { WhatsAppIcon, FacebookIcon, ShareIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
 
 interface SocialShareButtonsProps {
@@ -17,16 +17,13 @@ const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({ vehicle }) => {
             name: 'WhatsApp',
             icon: <WhatsAppIcon className="h-6 w-6" />,
             url: `https://api.whatsapp.com/send?text=${encodeURIComponent(`${text} ${shareUrl}`)}`,
+            colorClass: 'text-white bg-[#25D366] hover:bg-[#1DAE58]',
         },
         {
             name: 'Facebook',
             icon: <FacebookIcon className="h-6 w-6" />,
             url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-        },
-        {
-            name: 'Twitter',
-            icon: <TwitterIcon className="h-6 w-6" />,
-            url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`,
+            colorClass: 'text-white bg-[#1877F2] hover:bg-[#166FE5]',
         },
     ];
 
@@ -57,7 +54,7 @@ const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({ vehicle }) => {
         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
             <h4 className="text-base font-semibold text-gray-600 dark:text-gray-400 mb-3 text-center lg:text-left">Compartir en:</h4>
             <div className="flex items-center justify-center lg:justify-start gap-3 flex-wrap">
-                {shareTargets.map(({ name, icon, url }) => (
+                {shareTargets.map(({ name, icon, url, colorClass }) => (
                      <a
                         key={name}
                         href={url}
@@ -65,7 +62,7 @@ const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({ vehicle }) => {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`Compartir en ${name}`}
-                        className="group w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rago-burgundy hover:text-white transition-all duration-300 transform hover:scale-110"
+                        className={`group w-12 h-12 flex items-center justify-center rounded-full ${colorClass} transition-all duration-300 transform hover:scale-110`}
                     >
                         {icon}
                     </a>
