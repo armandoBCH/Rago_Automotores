@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { SpeedInsights } from '@vercel/speed-insights/react';
+import { SpeedInsights } from 'https://esm.sh/@vercel/speed-insights@1.2.0/react';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
