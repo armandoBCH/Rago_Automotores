@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatBubbleIcon, InstagramIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
@@ -46,10 +47,6 @@ const Header: React.FC = () => {
     const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(contactMessage)}`;
     const instagramUrl = "https://www.instagram.com/ragoautomotores?igsh=MWJuamF6ZXF5YjF4cw%3D%3D";
 
-    const handleWhatsAppClick = () => {
-        trackEvent('click_whatsapp_general');
-    };
-
     return (
         <header className={headerClasses}>
             <div className="container mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
@@ -72,7 +69,7 @@ const Header: React.FC = () => {
                     </a>
                     <a
                         href={whatsappLink}
-                        onClick={handleWhatsAppClick}
+                        onClick={() => trackEvent('click_whatsapp_general')}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 px-4 py-2 text-base font-semibold text-white bg-rago-burgundy rounded-lg hover:bg-rago-burgundy-darker focus:outline-none focus:ring-4 focus:ring-rago-burgundy/50 transition-all duration-300 transform hover:-translate-y-px shadow-md hover:shadow-lg animate-pulse-burgundy"
@@ -81,7 +78,7 @@ const Header: React.FC = () => {
                         <span>Contactar</span>
                     </a>
                      <div className="w-px h-6 bg-slate-300 dark:bg-slate-700"></div>
-                     <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-500 dark:text-slate-400 hover:text-rago-burgundy dark:hover:text-white transition-transform duration-300 hover:scale-110">
+                     <a href={instagramUrl} onClick={() => trackEvent('click_instagram')} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-500 dark:text-slate-400 hover:text-rago-burgundy dark:hover:text-white transition-transform duration-300 hover:scale-110">
                         <InstagramIcon className="h-7 w-7" />
                     </a>
                 </div>

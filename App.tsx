@@ -1,7 +1,8 @@
 
+
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Vehicle, VehicleFormData } from './types';
-import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon } from './constants';
+import { Vehicle, VehicleFormData, AnalyticsEvent } from './types';
+import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon, StatsIcon } from './constants';
 import { supabase } from './lib/supabaseClient';
 import { trackEvent } from './lib/analytics';
 import { optimizeUrl } from './utils/image';
@@ -17,14 +18,17 @@ import Footer from './components/Footer';
 import LoginPage from './components/LoginPage';
 import SellYourCarSection from './components/SellYourCarSection';
 import ScrollToTopButton from './components/ScrollToTopButton';
+import VehicleStatsModal from './components/VehicleStatsModal';
 
 type ModalState = 
     | { type: 'none' }
     | { type: 'form'; vehicle?: Vehicle }
-    | { type: 'confirmDelete'; vehicleId: number };
+    | { type: 'confirmDelete'; vehicleId: number }
+    | { type: 'vehicleStats'; vehicle: Vehicle };
 
 const App: React.FC = () => {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+    const [analyticsEvents, setAnalyticsEvents] = useState<AnalyticsEvent[]>([]);
     const [loading, setLoading] = useState(true);
     const [dbError, setDbError] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem('rago-admin') === 'true');
@@ -42,47 +46,48 @@ const App: React.FC = () => {
         return window.location.pathname;
     });
 
-    const fetchVehicles = useCallback(async () => {
+    const fetchAllData = useCallback(async () => {
         setLoading(true);
         setDbError(null);
         try {
-            const { data, error } = await supabase
-                .from('vehicles')
-                .select('*')
-                .order('created_at', { ascending: false });
+            const [vehiclesResult, analyticsResult] = await Promise.all([
+                supabase.from('vehicles').select('*').order('created_at', { ascending: false }),
+                supabase.from('analytics_events').select('*')
+            ]);
 
-            if (error) throw error;
-            setVehicles(data || []);
+            if (vehiclesResult.error) throw vehiclesResult.error;
+            if (analyticsResult.error) throw analyticsResult.error;
+
+            setVehicles(vehiclesResult.data || []);
+            setAnalyticsEvents(analyticsResult.data || []);
         } catch (err: any) {
-            console.error("Error fetching vehicles:", err);
-            setDbError("No se pudieron cargar los vehículos. Por favor, intente de nuevo más tarde.");
+            console.error("Error fetching data:", err);
+            setDbError("No se pudieron cargar los datos. Por favor, intente de nuevo más tarde.");
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        fetchVehicles();
-    }, [fetchVehicles]);
+        fetchAllData();
+    }, [fetchAllData]);
     
     const navigate = useCallback((newPath: string, replace = false) => {
+        const currentPath = path + window.location.search + window.location.hash;
+        if (newPath === currentPath) return;
+
         if (replace) {
             window.history.replaceState({}, '', newPath);
         } else {
             window.history.pushState({}, '', newPath);
         }
-        setPath(newPath);
-    }, []);
+        // Only set the pathname part to the state for routing logic
+        setPath(newPath.split('?')[0].split('#')[0]);
+    }, [path]);
 
     useEffect(() => {
         const handlePopState = () => {
-            const currentAdminState = sessionStorage.getItem('rago-admin') === 'true';
-            if (currentAdminState && window.location.pathname !== '/admin') {
-                // If admin is logged in, force navigation to /admin on back/forward
-                navigate('/admin', true);
-            } else {
-                 setPath(window.location.pathname);
-            }
+             setPath(window.location.pathname);
         };
         
         const handleInternalLinkClick = (event: MouseEvent) => {
@@ -96,20 +101,20 @@ const App: React.FC = () => {
             event.preventDefault();
             
             const currentUrl = new URL(window.location.href);
-
-            const isSamePage = currentUrl.pathname === destinationUrl.pathname &&
-                               currentUrl.search === destinationUrl.search;
+            const isSamePage = currentUrl.pathname === destinationUrl.pathname && currentUrl.search === destinationUrl.search;
+            const newPath = destinationUrl.pathname + destinationUrl.hash + destinationUrl.search;
 
             if (isSamePage && destinationUrl.hash) {
                  const targetElement = document.querySelector(destinationUrl.hash);
                  if (targetElement) {
                      targetElement.scrollIntoView({ behavior: 'smooth' });
                      if (destinationUrl.hash !== currentUrl.hash) {
-                        navigate(destinationUrl.pathname + destinationUrl.hash);
+                         // Update URL without re-triggering navigation logic for the page itself
+                         window.history.pushState({}, '', newPath);
                      }
                  }
-            } else if (!isSamePage) {
-                navigate(destinationUrl.pathname + destinationUrl.hash + destinationUrl.search);
+            } else if (!isSamePage || destinationUrl.hash) {
+                navigate(newPath);
             }
             
             setIsMobileMenuOpen(false);
@@ -153,13 +158,14 @@ const App: React.FC = () => {
         setIsAdmin(false);
         navigate('/');
     };
-
-    const vehicleDetailMatch = path.match(/^\/vehiculo\/(.+)$/);
+    
+    const pathname = path.split('?')[0].split('#')[0] || '/';
+    const vehicleDetailMatch = pathname.match(/^\/vehiculo\/(.+)$/);
     const slug = vehicleDetailMatch ? vehicleDetailMatch[1].replace(/\/$/, '') : null;
     const vehicleIdStr = slug ? slug.split('-').pop() ?? null : null;
     const vehicleId = vehicleIdStr ? parseInt(vehicleIdStr, 10) : null;
-    const isHomePage = path === '/' || path === '/index.html';
-    const isAdminPage = path === '/admin';
+    const isHomePage = pathname === '/' || pathname === '/index.html';
+    const isAdminPage = pathname === '/admin';
 
     const selectedVehicle = useMemo(() => {
         if (!vehicleId || isNaN(vehicleId)) return null;
@@ -167,20 +173,12 @@ const App: React.FC = () => {
     }, [vehicleId, vehicles]);
     
     useEffect(() => {
-        // This effect manages dynamic meta tags for social sharing.
-        if (!selectedVehicle) return; // Only act on vehicle detail pages.
+        if (!selectedVehicle) return;
 
         const head = document.head;
         const originalTitle = document.title;
+        const updateMetaContent = (selector: string, content: string) => { const el = head.querySelector(selector); if (el) el.setAttribute('content', content); };
         
-        const updateMetaContent = (selector: string, content: string) => {
-            const element = head.querySelector(selector);
-            if (element) {
-                element.setAttribute('content', content);
-            }
-        };
-        
-        // New values for the vehicle page
         document.title = `${selectedVehicle.make} ${selectedVehicle.model} | Rago Automotores`;
         const vehicleImage = optimizeUrl(selectedVehicle.images[0], { w: 1200, h: 630, fit: 'cover', q: 80, output: 'jpeg' });
         const vehicleDesc = `Año ${selectedVehicle.year} - $${selectedVehicle.price.toLocaleString('es-AR')}. Mirá más detalles en Rago Automotores.`;
@@ -190,12 +188,10 @@ const App: React.FC = () => {
         updateMetaContent('meta[property="og:image"]', vehicleImage);
         updateMetaContent('meta[property="og:url"]', window.location.href);
         updateMetaContent('meta[property="og:type"]', 'product');
-
         updateMetaContent('meta[name="twitter:title"]', `${selectedVehicle.make} ${selectedVehicle.model}`);
         updateMetaContent('meta[name="twitter:description"]', vehicleDesc);
         updateMetaContent('meta[name="twitter:image"]', vehicleImage);
 
-        // Cleanup function to restore default values when navigating away
         return () => {
             document.title = originalTitle;
             updateMetaContent('meta[property="og:title"]', 'Rago Automotores - Catálogo de Vehículos');
@@ -203,38 +199,21 @@ const App: React.FC = () => {
             updateMetaContent('meta[property="og:image"]', 'https://i.imgur.com/zOGb0ay.jpeg');
             updateMetaContent('meta[property="og:url"]', window.location.origin);
             updateMetaContent('meta[property="og:type"]', 'website');
-
             updateMetaContent('meta[name="twitter:title"]', 'Rago Automotores - Catálogo de Vehículos');
             updateMetaContent('meta[name="twitter:description"]', 'Tu concesionaria de confianza para vehículos seleccionados. Calidad y transparencia en cada venta.');
             updateMetaContent('meta[name="twitter:image"]', 'https://i.imgur.com/zOGb0ay.jpeg');
         };
     }, [selectedVehicle]);
 
-
-    const uniqueBrands = useMemo(() => {
-        const brands = new Set(vehicles.map(v => v.make));
-        return Array.from(brands).sort();
-    }, [vehicles]);
+    const uniqueBrands = useMemo(() => Array.from(new Set(vehicles.map(v => v.make))).sort(), [vehicles]);
 
     const filteredVehicles = useMemo(() => {
         let tempVehicles = [...vehicles];
         const lowercasedTerm = searchTerm.toLowerCase().trim();
-        if (lowercasedTerm) {
-            tempVehicles = tempVehicles.filter(vehicle =>
-                vehicle.make.toLowerCase().includes(lowercasedTerm) ||
-                vehicle.model.toLowerCase().includes(lowercasedTerm) ||
-                String(vehicle.year).includes(lowercasedTerm)
-            );
-        }
+        if (lowercasedTerm) tempVehicles = tempVehicles.filter(v => `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(lowercasedTerm));
         if (filters.make) tempVehicles = tempVehicles.filter(v => v.make === filters.make);
-        if (filters.year) {
-            const yearNum = parseInt(filters.year, 10);
-            if (!isNaN(yearNum)) tempVehicles = tempVehicles.filter(v => v.year >= yearNum);
-        }
-        if (filters.price) {
-            const priceNum = parseInt(filters.price, 10);
-            if (!isNaN(priceNum)) tempVehicles = tempVehicles.filter(v => v.price <= priceNum);
-        }
+        if (filters.year) tempVehicles = tempVehicles.filter(v => v.year >= parseInt(filters.year, 10));
+        if (filters.price) tempVehicles = tempVehicles.filter(v => v.price <= parseInt(filters.price, 10));
         return tempVehicles;
     }, [vehicles, searchTerm, filters]);
 
@@ -244,6 +223,7 @@ const App: React.FC = () => {
     const handleAddVehicleClick = () => setModalState({ type: 'form' });
     const handleEditVehicleClick = (vehicle: Vehicle) => setModalState({ type: 'form', vehicle });
     const handleDeleteVehicleClick = (vehicleId: number) => setModalState({ type: 'confirmDelete', vehicleId });
+    const handleShowStatsClick = (vehicle: Vehicle) => setModalState({ type: 'vehicleStats', vehicle });
 
     const handleSaveVehicle = async (vehicleData: VehicleFormData) => {
         const isEdit = !!vehicleData.id;
@@ -253,12 +233,11 @@ const App: React.FC = () => {
                 const { error } = await supabase.from('vehicles').update(dataToUpdate).eq('id', id);
                 if (error) throw error;
             } else {
-                // Even if id is undefined, this is a safe way to remove it from the insert payload.
                 const { id, ...dataToInsert } = vehicleData;
                 const { error } = await supabase.from('vehicles').insert([dataToInsert]);
                 if (error) throw error;
             }
-            await fetchVehicles();
+            await fetchAllData();
             handleCloseModal();
         } catch (err: any) {
             console.error("Error saving vehicle:", err);
@@ -271,7 +250,7 @@ const App: React.FC = () => {
             try {
                 const { error } = await supabase.from('vehicles').delete().eq('id', modalState.vehicleId);
                 if (error) throw error;
-                await fetchVehicles(); 
+                await fetchAllData(); 
                 handleCloseModal();
             } catch (err: any) {
                 console.error("Error deleting vehicle:", err);
@@ -280,9 +259,7 @@ const App: React.FC = () => {
         }
     };
     
-    const handleAnalyticsReset = async () => {
-        await fetchVehicles(); // The panel already refetches analytics, so we just need to refetch vehicles
-    };
+    const handleAnalyticsReset = () => fetchAllData();
 
     const NotFoundPage = () => (
         <div className="text-center py-16">
@@ -293,12 +270,10 @@ const App: React.FC = () => {
     );
     
     const renderMainContent = () => {
-        if (path === '/login' && !isAdmin) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+        if (pathname === '/login' && !isAdmin) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
         if (isAdmin || isAdminPage) {
-            if (!isAdmin) {
-                 return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-            }
-            return <AdminPanel vehicles={vehicles} onAdd={handleAddVehicleClick} onEdit={handleEditVehicleClick} onDelete={handleDeleteVehicleClick} onLogout={handleLogout} onAnalyticsReset={handleAnalyticsReset} />;
+            if (!isAdmin) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+            return <AdminPanel vehicles={vehicles} allEvents={analyticsEvents} onAdd={handleAddVehicleClick} onEdit={handleEditVehicleClick} onDelete={handleDeleteVehicleClick} onLogout={handleLogout} onAnalyticsReset={handleAnalyticsReset} onShowStats={handleShowStatsClick} />;
         }
         if (loading) return <div className="text-center py-16"><h2 className="text-2xl font-semibold text-slate-700 dark:text-slate-300">Cargando vehículos...</h2></div>;
         if (dbError) return <div className="text-center py-16 text-red-500"><h2 className="text-2xl font-semibold">{dbError}</h2></div>;
@@ -328,7 +303,7 @@ const App: React.FC = () => {
                 </ul>
                 <div className="mt-auto pt-8 border-t border-slate-700/50">
                     <div className="flex justify-center gap-x-8">
-                        <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-400 hover:text-white transition-transform duration-300 hover:scale-110"><InstagramIcon className="h-8 w-8" /></a>
+                        <a href={instagramUrl} onClick={() => trackEvent('click_instagram')} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-400 hover:text-white transition-transform duration-300 hover:scale-110"><InstagramIcon className="h-8 w-8" /></a>
                         <a href={whatsappLink} onClick={() => trackEvent('click_whatsapp_general')} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-slate-400 hover:text-white transition-transform duration-300 hover:scale-110"><ChatBubbleIcon className="h-8 w-8" /></a>
                     </div>
                 </div>
@@ -344,6 +319,7 @@ const App: React.FC = () => {
             </div>
             {modalState.type === 'form' && <VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} brands={uniqueBrands} />}
             {modalState.type === 'confirmDelete' && <ConfirmationModal isOpen={true} onClose={handleCloseModal} onConfirm={confirmDelete} title="Confirmar Eliminación" message="¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer." />}
+            {modalState.type === 'vehicleStats' && <VehicleStatsModal vehicle={modalState.vehicle} allEvents={analyticsEvents} onClose={handleCloseModal} />}
             {isHomePage && <ScrollToTopButton />}
         </div>
     );

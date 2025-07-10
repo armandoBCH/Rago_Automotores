@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { LocationPinIcon, InstagramIcon, ChatBubbleIcon, ClockIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
@@ -44,7 +45,7 @@ const Footer: React.FC = () => {
                             </li>
                              <li>
                                 <a 
-                                    href="#sell-car-section"
+                                    href="/#sell-car-section"
                                     className="text-slate-400 hover:text-white transition-colors duration-300"
                                 >
                                    Vender mi Auto
@@ -64,7 +65,7 @@ const Footer: React.FC = () => {
                                 </a>
                             </li>
                             <li>
-                                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-slate-400 hover:text-white transition-colors group">
+                                <a href={instagramUrl} onClick={() => trackEvent('click_instagram')} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-slate-400 hover:text-white transition-colors group">
                                     <InstagramIcon className="h-6 w-6 mr-3 flex-shrink-0 text-rago-burgundy" />
                                     <span className="group-hover:underline">@ragoautomotores</span>
                                 </a>
@@ -103,10 +104,10 @@ const Footer: React.FC = () => {
                         &copy; {new Date().getFullYear()} Rago Automotores. Todos los derechos reservados.
                     </p>
                     <div className="flex items-center gap-x-6">
-                        <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-400 hover:text-white transition-transform hover:scale-110 duration-300">
+                        <a href={instagramUrl} onClick={() => trackEvent('click_instagram')} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-400 hover:text-white transition-transform hover:scale-110 duration-300">
                             <InstagramIcon className="h-7 w-7" />
                         </a>
-                         <a href={whatsappUrl} onClick={() => trackEvent('click_whatsapp_footer')} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-slate-400 hover:text-white transition-transform hover:scale-110 duration-300">
+                         <a href={whatsappUrl} onClick={() => trackEvent('click_whatsapp_general')} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-slate-400 hover:text-white transition-transform hover:scale-110 duration-300">
                             <ChatBubbleIcon className="h-7 w-7" />
                         </a>
                     </div>
