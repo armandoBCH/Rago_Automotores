@@ -2,7 +2,7 @@
 import React from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';
-import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon, CheckIcon } from '../constants';
+import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon } from '../constants';
 
 interface VehicleDetailPageProps {
     vehicle: Vehicle;
@@ -34,30 +34,6 @@ const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
     </div>
 );
 
-const StyledDescription: React.FC<{ text: string }> = ({ text }) => {
-    if (!text) return null;
-
-    const lines = text.split('\n').filter(line => line.trim() !== '');
-
-    return (
-        <div className="space-y-4 text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-            {lines.map((line, index) => {
-                const isListItem = /^\s*[-*•]/.test(line);
-                if (isListItem) {
-                    return (
-                        <div key={index} className="flex items-start gap-3">
-                            <CheckIcon className="h-7 w-7 text-rago-burgundy flex-shrink-0 mt-0.5" />
-                            <span className="flex-1">{line.replace(/^\s*[-*•]\s*/, '')}</span>
-                        </div>
-                    );
-                }
-                return <p key={index} className="whitespace-pre-wrap">{line}</p>;
-            })}
-        </div>
-    );
-};
-
-
 const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
     const contactMessage = `Hola, estoy interesado en el ${vehicle.make} ${vehicle.model}.`;
     const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(contactMessage)}`;
@@ -74,7 +50,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
 
     return (
         <div className="max-w-screen-xl mx-auto">
-            <div className="flex flex-col lg:grid lg:grid-cols-5 lg:gap-x-12">
+            <div className="flex flex-col lg:grid lg:grid-cols-5 lg:gap-x-12 lg:gap-y-8">
                 
                 {/* --- Mobile Order: 1 --- */}
                 {/* --- Desktop Position: Left Column --- */}
@@ -88,7 +64,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
 
                 {/* --- Mobile Order: 2 --- */}
                 {/* --- Desktop Position: Right Column, Sticky --- */}
-                <div className="order-2 lg:col-span-2 lg:order-3 lg:row-span-2 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+                <div className="order-2 lg:col-span-2 lg:order-3 lg:row-span-2 opacity-0 animate-fade-in-up mt-8 lg:mt-0" style={{ animationDelay: '150ms' }}>
                     <div className="lg:sticky lg:top-28 flex flex-col gap-y-8">
                         {/* Main Info Card */}
                         <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6 shadow-subtle dark:shadow-subtle-dark">
@@ -134,14 +110,14 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
                 
                 {/* --- Mobile Order: 3 --- */}
                 {/* --- Desktop Position: Left column, below image --- */}
-                <div className="order-3 lg:col-span-3 lg:order-4 opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+                <div className="order-3 lg:col-span-3 lg:order-4 mt-8 lg:mt-0 opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
                     <section>
                         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark overflow-hidden border border-gray-200 dark:border-gray-800">
                             <div className="border-b border-gray-200 dark:border-gray-800 px-6 py-4">
                                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Descripción</h3>
                             </div>
                             <div className="p-6">
-                                <StyledDescription text={vehicle.description} />
+                                <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{vehicle.description}</p>
                             </div>
                         </div>
                     </section>
@@ -149,7 +125,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
                 
                 {/* --- Mobile Order: 4 --- */}
                 {/* --- Desktop Position: Top of grid --- */}
-                <div className="order-4 lg:col-span-5 lg:order-1 lg:mb-0 mb-8 mt-8 lg:mt-0">
+                <div className="order-4 lg:col-span-5 lg:order-1 mb-8 mt-8 lg:mt-0 lg:mb-0">
                      <Breadcrumb vehicle={vehicle} />
                 </div>
             </div>
