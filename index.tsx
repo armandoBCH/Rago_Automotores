@@ -1,6 +1,6 @@
 
     import React from 'react';
-    import ReactDOM from 'react-dom/client';
+    import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
     import App from './App';
     import { SpeedInsights } from 'https://esm.sh/@vercel/speed-insights@1.2.0/react';
 
