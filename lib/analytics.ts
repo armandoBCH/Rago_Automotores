@@ -1,4 +1,5 @@
 
+
 import { supabase } from './supabaseClient';
 import { AnalyticsEventInsert } from '../types';
 
@@ -12,10 +13,14 @@ import { AnalyticsEventInsert } from '../types';
  * @param vehicleId - The ID of the vehicle related to the event, if any.
  */
 export const trackEvent = (eventType: string, vehicleId?: number): void => {
+    // Explicitly construct the object to avoid potential issues with object spreading
+    // and type inference, and to correctly handle vehicleId if it is 0.
     const eventData: AnalyticsEventInsert = {
         event_type: eventType,
-        ...(vehicleId && { vehicle_id: vehicleId }),
     };
+    if (vehicleId !== undefined) {
+        eventData.vehicle_id = vehicleId;
+    }
 
     supabase
         .from('analytics_events')

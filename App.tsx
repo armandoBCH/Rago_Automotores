@@ -1,7 +1,9 @@
 
 
+
+
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Vehicle, VehicleFormData, AnalyticsEvent } from './types';
+import { Vehicle, VehicleFormData, AnalyticsEvent, VehicleInsert } from './types';
 import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon, StatsIcon } from './constants';
 import { supabase } from './lib/supabaseClient';
 import { trackEvent } from './lib/analytics';
@@ -18,13 +20,11 @@ import Footer from './components/Footer';
 import LoginPage from './components/LoginPage';
 import SellYourCarSection from './components/SellYourCarSection';
 import ScrollToTopButton from './components/ScrollToTopButton';
-import VehicleStatsModal from './components/VehicleStatsModal';
 
 type ModalState = 
     | { type: 'none' }
     | { type: 'form'; vehicle?: Vehicle }
-    | { type: 'confirmDelete'; vehicleId: number }
-    | { type: 'vehicleStats'; vehicle: Vehicle };
+    | { type: 'confirmDelete'; vehicleId: number };
 
 const App: React.FC = () => {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -223,7 +223,6 @@ const App: React.FC = () => {
     const handleAddVehicleClick = () => setModalState({ type: 'form' });
     const handleEditVehicleClick = (vehicle: Vehicle) => setModalState({ type: 'form', vehicle });
     const handleDeleteVehicleClick = (vehicleId: number) => setModalState({ type: 'confirmDelete', vehicleId });
-    const handleShowStatsClick = (vehicle: Vehicle) => setModalState({ type: 'vehicleStats', vehicle });
 
     const handleSaveVehicle = async (vehicleData: VehicleFormData) => {
         const isEdit = !!vehicleData.id;
@@ -233,8 +232,21 @@ const App: React.FC = () => {
                 const { error } = await supabase.from('vehicles').update(dataToUpdate).eq('id', id);
                 if (error) throw error;
             } else {
-                const { id, ...dataToInsert } = vehicleData;
-                const { error } = await supabase.from('vehicles').insert([dataToInsert]);
+                // To avoid potential TypeScript type inference issues with complex generic types,
+                // we explicitly construct the object for insertion rather than relying on spreads.
+                const insertPayload: VehicleInsert = {
+                    make: vehicleData.make,
+                    model: vehicleData.model,
+                    year: vehicleData.year,
+                    price: vehicleData.price,
+                    mileage: vehicleData.mileage,
+                    engine: vehicleData.engine,
+                    transmission: vehicleData.transmission,
+                    fuelType: vehicleData.fuelType,
+                    description: vehicleData.description,
+                    images: vehicleData.images,
+                };
+                const { error } = await supabase.from('vehicles').insert([insertPayload]);
                 if (error) throw error;
             }
             await fetchAllData();
@@ -273,7 +285,7 @@ const App: React.FC = () => {
         if (pathname === '/login' && !isAdmin) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
         if (isAdmin || isAdminPage) {
             if (!isAdmin) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-            return <AdminPanel vehicles={vehicles} allEvents={analyticsEvents} onAdd={handleAddVehicleClick} onEdit={handleEditVehicleClick} onDelete={handleDeleteVehicleClick} onLogout={handleLogout} onAnalyticsReset={handleAnalyticsReset} onShowStats={handleShowStatsClick} />;
+            return <AdminPanel vehicles={vehicles} allEvents={analyticsEvents} onAdd={handleAddVehicleClick} onEdit={handleEditVehicleClick} onDelete={handleDeleteVehicleClick} onLogout={handleLogout} onAnalyticsReset={handleAnalyticsReset} />;
         }
         if (loading) return <div className="text-center py-16"><h2 className="text-2xl font-semibold text-slate-700 dark:text-slate-300">Cargando vehículos...</h2></div>;
         if (dbError) return <div className="text-center py-16 text-red-500"><h2 className="text-2xl font-semibold">{dbError}</h2></div>;
@@ -319,7 +331,6 @@ const App: React.FC = () => {
             </div>
             {modalState.type === 'form' && <VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} brands={uniqueBrands} />}
             {modalState.type === 'confirmDelete' && <ConfirmationModal isOpen={true} onClose={handleCloseModal} onConfirm={confirmDelete} title="Confirmar Eliminación" message="¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer." />}
-            {modalState.type === 'vehicleStats' && <VehicleStatsModal vehicle={modalState.vehicle} allEvents={analyticsEvents} onClose={handleCloseModal} />}
             {isHomePage && <ScrollToTopButton />}
         </div>
     );

@@ -1,10 +1,12 @@
 
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Vehicle, AnalyticsEvent } from '../types';
 import { PlusIcon, EditIcon, TrashIcon, SearchIcon, LogoutIcon, EyeIcon, ChatBubbleIcon as WhatsAppIcon, FileCheckIcon, SellCarIcon, ShareIcon, InstagramIcon, StatsIcon } from '../constants';
 import { optimizeUrl } from '../utils/image';
 import { supabase } from '../lib/supabaseClient';
 import ConfirmationModal from './ConfirmationModal';
+import VehiclePerformanceTable from './VehiclePerformanceTable';
 
 interface AdminPanelProps {
     vehicles: Vehicle[];
@@ -14,7 +16,6 @@ interface AdminPanelProps {
     onDelete: (vehicleId: number) => void;
     onLogout: () => void;
     onAnalyticsReset: () => void;
-    onShowStats: (vehicle: Vehicle) => void;
 }
 
 const StatCard: React.FC<{ title: string, value: string | number, icon: React.ReactNode }> = ({ title, value, icon }) => (
@@ -116,7 +117,7 @@ const AnalyticsDashboard: React.FC<{ vehicles: Vehicle[], events: AnalyticsEvent
     );
     
     const RankingList: React.FC<{ title: string, data: { vehicle: Vehicle | undefined, count: number }[], icon: React.ReactNode }> = ({ title, data, icon }) => (
-         <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-md"><h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">{title}</h3>
+         <div className="bg-slate-100 dark:bg-slate-800/50 p-6 rounded-lg"><h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">{title}</h3>
             {data.length > 0 ? (<ul className="space-y-4">{data.map(({ vehicle, count }) => vehicle && (
                 <li key={vehicle.id} className="flex items-center gap-4">
                     <img src={optimizeUrl(vehicle.images[0], {w: 64, h: 48, fit: 'cover'})} alt={vehicle.model} className="w-16 h-12 object-cover rounded-md flex-shrink-0 bg-slate-200 dark:bg-slate-700" />
@@ -133,21 +134,27 @@ const AnalyticsDashboard: React.FC<{ vehicles: Vehicle[], events: AnalyticsEvent
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 <StatCard title="Vistas de Vehículos" value={analyticsSummary.totalVehicleViews} icon={<EyeIcon className="h-7 w-7"/>} />
                 <StatCard title="Contactos por Vehículo" value={analyticsSummary.totalVehicleContacts} icon={<WhatsAppIcon className="h-7 w-7"/>} />
-                <StatCard title="Contactos Generales" value={analyticsSummary.totalGeneralContacts} icon={<WhatsAppIcon className="h-7 w-7"/>} />
                 <StatCard title="Veces Compartido" value={analyticsSummary.totalShares} icon={<ShareIcon className="h-7 w-7"/>} />
-            </div>
-            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mt-12">Interacciones Clave</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard title="Vistas 'Vender mi Auto'" value={analyticsSummary.sellCarViews} icon={<SellCarIcon className="h-7 w-7"/>} />
-                <StatCard title="Clics en Cotización" value={analyticsSummary.sellCarClicks} icon={<FileCheckIcon className="h-7 w-7"/>} />
                 <StatCard title="Clics en Instagram" value={analyticsSummary.instagramClicks} icon={<InstagramIcon className="h-7 w-7"/>} />
             </div>
+            
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mt-12">Rendimiento por Vehículo</h3>
+            <VehiclePerformanceTable vehicles={vehicles} events={events} />
+
             <h3 className="text-2xl font-bold text-slate-800 dark:text-white mt-12">Rankings</h3>
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <RankingList title="Vehículos Más Vistos" data={analyticsSummary.mostViewed} icon={<EyeIcon className="h-5 w-5" />} />
                 <RankingList title="Vehículos Más Contactados" data={analyticsSummary.mostContacted} icon={<WhatsAppIcon className="h-5 w-5" />} />
                 <RankingList title="Vehículos Más Compartidos" data={analyticsSummary.mostShared} icon={<ShareIcon className="h-5 w-5" />} />
             </div>
+
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mt-12">Interacciones Clave</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard title="Vistas 'Vender mi Auto'" value={analyticsSummary.sellCarViews} icon={<SellCarIcon className="h-7 w-7"/>} />
+                <StatCard title="Clics en Cotización" value={analyticsSummary.sellCarClicks} icon={<FileCheckIcon className="h-7 w-7"/>} />
+                <StatCard title="Contactos Generales" value={analyticsSummary.totalGeneralContacts} icon={<WhatsAppIcon className="h-7 w-7"/>} />
+            </div>
+
             <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700">
                 <h3 className="text-xl font-bold text-red-600 dark:text-red-500">Zona de Peligro</h3>
                 <p className="text-slate-500 dark:text-slate-400 mt-1">Esta acción es irreversible y borrará todos los datos de analíticas acumulados.</p>
@@ -174,7 +181,7 @@ const AnalyticsDashboard: React.FC<{ vehicles: Vehicle[], events: AnalyticsEvent
 };
 
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ vehicles, allEvents, onAdd, onEdit, onDelete, onLogout, onAnalyticsReset, onShowStats }) => {
+const AdminPanel: React.FC<AdminPanelProps> = ({ vehicles, allEvents, onAdd, onEdit, onDelete, onLogout, onAnalyticsReset }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'inventory' | 'analytics'>('inventory');
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -234,7 +241,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ vehicles, allEvents, onAdd, onE
                                             <td className="px-6 py-4 text-base">${vehicle.price.toLocaleString('es-AR')}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center space-x-3">
-                                                    <button onClick={() => onShowStats(vehicle)} className="text-gray-500 hover:text-rago-burgundy dark:text-gray-400 dark:hover:text-white transition-colors" aria-label="Ver estadísticas"><StatsIcon className="h-6 w-6" /></button>
                                                     <button onClick={() => onEdit(vehicle)} className="text-gray-500 hover:text-rago-burgundy dark:text-gray-400 dark:hover:text-white transition-colors" aria-label="Editar vehículo"><EditIcon className="h-6 w-6" /></button>
                                                     <button onClick={() => onDelete(vehicle.id)} className="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400 transition-colors" aria-label="Eliminar vehículo"><TrashIcon className="h-6 w-6" /></button>
                                                 </div>
