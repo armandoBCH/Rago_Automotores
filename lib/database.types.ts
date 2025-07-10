@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       analytics_events: {
@@ -28,7 +28,7 @@ export interface Database {
           event_type?: string
           vehicle_id?: number | null
         }
-      }
+      },
       vehicles: {
         Row: {
           id: number

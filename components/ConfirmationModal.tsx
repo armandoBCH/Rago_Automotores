@@ -7,9 +7,10 @@ interface ConfirmationModalProps {
     onConfirm: () => void;
     title: string;
     message: string;
+    isConfirming?: boolean;
 }
 
-const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, onConfirm, title, message }) => {
+const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, onConfirm, title, message, isConfirming }) => {
     const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
     useEffect(() => {
@@ -19,6 +20,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
     }, [isOpen]);
 
     const handleClose = () => {
+        if (isConfirming) return;
         setIsAnimatingOut(true);
         setTimeout(() => {
             onClose();
@@ -26,10 +28,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
     };
 
     const handleConfirm = () => {
-        setIsAnimatingOut(true);
-        setTimeout(() => {
-            onConfirm();
-        }, 200);
+        if (isConfirming) return;
+        onConfirm();
     };
 
     if (!isOpen) {
@@ -55,15 +55,23 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
                 <div className="bg-gray-50 dark:bg-gray-700/50 px-6 py-3 flex justify-end space-x-3">
                     <button
                         onClick={handleClose}
-                        className="px-4 py-2 text-base font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500 dark:focus:ring-offset-gray-800"
+                        disabled={isConfirming}
+                        className="px-4 py-2 text-base font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500 dark:focus:ring-offset-gray-800 disabled:opacity-50"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleConfirm}
-                        className="px-4 py-2 text-base font-medium text-white bg-rago-burgundy rounded-md hover:bg-rago-burgundy-darker focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rago-burgundy/50"
+                        disabled={isConfirming}
+                        className="px-4 py-2 text-base font-medium text-white bg-rago-burgundy rounded-md hover:bg-rago-burgundy-darker focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rago-burgundy/50 disabled:bg-rago-burgundy/70 disabled:cursor-wait flex items-center gap-2"
                     >
-                        Confirmar
+                        {isConfirming && (
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        )}
+                        {isConfirming ? 'Confirmando...' : 'Confirmar'}
                     </button>
                 </div>
             </div>

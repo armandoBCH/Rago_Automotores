@@ -1,10 +1,10 @@
 
-
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Vehicle, VehicleFormData } from './types';
 import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon } from './constants';
 import { supabase } from './lib/supabaseClient';
 import { trackEvent } from './lib/analytics';
+import { optimizeUrl } from './utils/image';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FilterBar from './components/FilterBar';
@@ -27,13 +27,20 @@ const App: React.FC = () => {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [loading, setLoading] = useState(true);
     const [dbError, setDbError] = useState<string | null>(null);
-    const [isAdmin, setIsAdmin] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem('rago-admin') === 'true');
     const [modalState, setModalState] = useState<ModalState>({ type: 'none' });
     const [searchTerm, setSearchTerm] = useState('');
     const [filters, setFilters] = useState({ make: '', year: '', price: '' });
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
-    const [path, setPath] = useState(window.location.pathname);
+    // Initialize path based on current location, but accommodate admin state
+    const [path, setPath] = useState(() => {
+        const currentAdminState = sessionStorage.getItem('rago-admin') === 'true';
+        if (currentAdminState) {
+            return '/admin'; // Force admin path if logged in
+        }
+        return window.location.pathname;
+    });
 
     const fetchVehicles = useCallback(async () => {
         setLoading(true);
@@ -57,9 +64,26 @@ const App: React.FC = () => {
     useEffect(() => {
         fetchVehicles();
     }, [fetchVehicles]);
+    
+    const navigate = useCallback((newPath: string, replace = false) => {
+        if (replace) {
+            window.history.replaceState({}, '', newPath);
+        } else {
+            window.history.pushState({}, '', newPath);
+        }
+        setPath(newPath);
+    }, []);
 
     useEffect(() => {
-        const handlePopState = () => setPath(window.location.pathname);
+        const handlePopState = () => {
+            const currentAdminState = sessionStorage.getItem('rago-admin') === 'true';
+            if (currentAdminState && window.location.pathname !== '/admin') {
+                // If admin is logged in, force navigation to /admin on back/forward
+                navigate('/admin', true);
+            } else {
+                 setPath(window.location.pathname);
+            }
+        };
         
         const handleInternalLinkClick = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -81,12 +105,11 @@ const App: React.FC = () => {
                  if (targetElement) {
                      targetElement.scrollIntoView({ behavior: 'smooth' });
                      if (destinationUrl.hash !== currentUrl.hash) {
-                        window.history.pushState({}, '', destinationUrl.href);
+                        navigate(destinationUrl.pathname + destinationUrl.hash);
                      }
                  }
             } else if (!isSamePage) {
-                window.history.pushState({}, '', destinationUrl.href);
-                setPath(destinationUrl.pathname);
+                navigate(destinationUrl.pathname + destinationUrl.hash + destinationUrl.search);
             }
             
             setIsMobileMenuOpen(false);
@@ -98,7 +121,7 @@ const App: React.FC = () => {
             window.removeEventListener('popstate', handlePopState);
             document.removeEventListener('click', handleInternalLinkClick);
         };
-    }, []);
+    }, [navigate]);
 
     useEffect(() => {
         const { hash } = window.location;
@@ -120,17 +143,15 @@ const App: React.FC = () => {
     }, [isMobileMenuOpen]);
 
     const handleLoginSuccess = () => {
+        sessionStorage.setItem('rago-admin', 'true');
         setIsAdmin(true);
-        window.history.pushState({}, '', '/');
-        setPath('/');
+        navigate('/admin');
     };
 
     const handleLogout = () => {
+        sessionStorage.removeItem('rago-admin');
         setIsAdmin(false);
-        if (path !== '/') {
-            window.history.pushState({}, '', '/');
-            setPath('/');
-        }
+        navigate('/');
     };
 
     const vehicleDetailMatch = path.match(/^\/vehiculo\/(.+)$/);
@@ -138,11 +159,57 @@ const App: React.FC = () => {
     const vehicleIdStr = slug ? slug.split('-').pop() ?? null : null;
     const vehicleId = vehicleIdStr ? parseInt(vehicleIdStr, 10) : null;
     const isHomePage = path === '/' || path === '/index.html';
+    const isAdminPage = path === '/admin';
 
     const selectedVehicle = useMemo(() => {
         if (!vehicleId || isNaN(vehicleId)) return null;
         return vehicles.find(v => v.id === vehicleId);
     }, [vehicleId, vehicles]);
+    
+    useEffect(() => {
+        // This effect manages dynamic meta tags for social sharing.
+        if (!selectedVehicle) return; // Only act on vehicle detail pages.
+
+        const head = document.head;
+        const originalTitle = document.title;
+        
+        const updateMetaContent = (selector: string, content: string) => {
+            const element = head.querySelector(selector);
+            if (element) {
+                element.setAttribute('content', content);
+            }
+        };
+        
+        // New values for the vehicle page
+        document.title = `${selectedVehicle.make} ${selectedVehicle.model} | Rago Automotores`;
+        const vehicleImage = optimizeUrl(selectedVehicle.images[0], { w: 1200, h: 630, fit: 'cover', q: 80, output: 'jpeg' });
+        const vehicleDesc = `Año ${selectedVehicle.year} - $${selectedVehicle.price.toLocaleString('es-AR')}. Mirá más detalles en Rago Automotores.`;
+
+        updateMetaContent('meta[property="og:title"]', `${selectedVehicle.make} ${selectedVehicle.model}`);
+        updateMetaContent('meta[property="og:description"]', vehicleDesc);
+        updateMetaContent('meta[property="og:image"]', vehicleImage);
+        updateMetaContent('meta[property="og:url"]', window.location.href);
+        updateMetaContent('meta[property="og:type"]', 'product');
+
+        updateMetaContent('meta[name="twitter:title"]', `${selectedVehicle.make} ${selectedVehicle.model}`);
+        updateMetaContent('meta[name="twitter:description"]', vehicleDesc);
+        updateMetaContent('meta[name="twitter:image"]', vehicleImage);
+
+        // Cleanup function to restore default values when navigating away
+        return () => {
+            document.title = originalTitle;
+            updateMetaContent('meta[property="og:title"]', 'Rago Automotores - Catálogo de Vehículos');
+            updateMetaContent('meta[property="og:description"]', 'Tu concesionaria de confianza para vehículos seleccionados. Calidad y transparencia en cada venta.');
+            updateMetaContent('meta[property="og:image"]', 'https://i.imgur.com/zOGb0ay.jpeg');
+            updateMetaContent('meta[property="og:url"]', window.location.origin);
+            updateMetaContent('meta[property="og:type"]', 'website');
+
+            updateMetaContent('meta[name="twitter:title"]', 'Rago Automotores - Catálogo de Vehículos');
+            updateMetaContent('meta[name="twitter:description"]', 'Tu concesionaria de confianza para vehículos seleccionados. Calidad y transparencia en cada venta.');
+            updateMetaContent('meta[name="twitter:image"]', 'https://i.imgur.com/zOGb0ay.jpeg');
+        };
+    }, [selectedVehicle]);
+
 
     const uniqueBrands = useMemo(() => {
         const brands = new Set(vehicles.map(v => v.make));
@@ -181,11 +248,14 @@ const App: React.FC = () => {
     const handleSaveVehicle = async (vehicleData: VehicleFormData) => {
         const isEdit = !!vehicleData.id;
         try {
-            if (isEdit) {
-                const { error } = await supabase.from('vehicles').update(vehicleData).eq('id', vehicleData.id);
+            if (isEdit && vehicleData.id) {
+                const { id, ...dataToUpdate } = vehicleData;
+                const { error } = await supabase.from('vehicles').update(dataToUpdate).eq('id', id);
                 if (error) throw error;
             } else {
-                const { error } = await supabase.from('vehicles').insert([vehicleData]);
+                // Even if id is undefined, this is a safe way to remove it from the insert payload.
+                const { id, ...dataToInsert } = vehicleData;
+                const { error } = await supabase.from('vehicles').insert([dataToInsert]);
                 if (error) throw error;
             }
             await fetchVehicles();
@@ -201,13 +271,17 @@ const App: React.FC = () => {
             try {
                 const { error } = await supabase.from('vehicles').delete().eq('id', modalState.vehicleId);
                 if (error) throw error;
-                await fetchVehicles(); // Re-fetch to get the latest state from DB
+                await fetchVehicles(); 
                 handleCloseModal();
             } catch (err: any) {
                 console.error("Error deleting vehicle:", err);
                 alert(`Error al eliminar el vehículo: ${err.message}`);
             }
         }
+    };
+    
+    const handleAnalyticsReset = async () => {
+        await fetchVehicles(); // The panel already refetches analytics, so we just need to refetch vehicles
     };
 
     const NotFoundPage = () => (
@@ -220,7 +294,12 @@ const App: React.FC = () => {
     
     const renderMainContent = () => {
         if (path === '/login' && !isAdmin) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-        if (isAdmin) return <AdminPanel vehicles={vehicles} onAdd={handleAddVehicleClick} onEdit={handleEditVehicleClick} onDelete={handleDeleteVehicleClick} onLogout={handleLogout} />;
+        if (isAdmin || isAdminPage) {
+            if (!isAdmin) {
+                 return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+            }
+            return <AdminPanel vehicles={vehicles} onAdd={handleAddVehicleClick} onEdit={handleEditVehicleClick} onDelete={handleDeleteVehicleClick} onLogout={handleLogout} onAnalyticsReset={handleAnalyticsReset} />;
+        }
         if (loading) return <div className="text-center py-16"><h2 className="text-2xl font-semibold text-slate-700 dark:text-slate-300">Cargando vehículos...</h2></div>;
         if (dbError) return <div className="text-center py-16 text-red-500"><h2 className="text-2xl font-semibold">{dbError}</h2></div>;
         if (vehicleId) return selectedVehicle ? <VehicleDetailPage vehicle={selectedVehicle} allVehicles={vehicles} /> : <NotFoundPage />;

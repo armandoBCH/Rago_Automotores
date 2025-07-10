@@ -1,6 +1,3 @@
-
-
-
 import { Vehicle } from './types';
 
 export const SearchIcon = ({ className }: { className?: string }) => (
@@ -205,5 +202,32 @@ export const EyeIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
         <circle cx="12" cy="12" r="3"/>
+    </svg>
+);
+
+// Social Share Icons
+export const WhatsAppIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M16.75 13.96c.25.13.43.2.5.25a.48.48 0 0 1 .12.31a.48.48 0 0 1-.24.44c-.18.12-.75.36-1.5.36c-.75 0-1.37-.25-1.5-.37a.48.48 0 0 1-.12-.31a.48.48 0 0 1 .12-.32c.1-.12.25-.18.37-.24l.13-.07c.5-.25.62-.37.75-.5a.62.62 0 0 0 .12-.37c-.12-.25-.37-.62-.5-.87s-.13-.5-.25-.75a.48.48 0 0 1 .06-.44c.13-.12.25-.18.37-.18s.25.06.32.12c.1.1.13.18.25.37c.12.2.2.44.3.63c.12.2.25.37.38.5c.12.12.25.25.37.37m3.13-6.62a8.34 8.34 0 0 0-11.81 0a8.34 8.34 0 0 0 0 11.81L3 21l1.9-5.7a8.38 8.38 0 0 0-.9-3.8a8.5 8.5 0 0 0 4.7-7.6a8.38 8.38 0 0 0 3.8-.9h.5a8.48 8.48 0 0 0 8-8v.5Z" />
+    </svg>
+);
+
+export const FacebookIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3V2z" />
+    </svg>
+);
+
+export const TwitterIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+);
+
+export const ShareIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+      <polyline points="16 6 12 2 8 6" />
+      <line x1="12" y1="2" x2="12" y2="15" />
     </svg>
 );

@@ -1,10 +1,9 @@
-
-
-
 import React, { useMemo, useEffect } from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';
 import VehicleCard from './VehicleCard';
+import SocialShareButtons from './SocialShareButtons';
+import DescriptionCard from './DescriptionCard';
 import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
 
@@ -64,18 +63,15 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
     const relatedVehicles = useMemo(() => {
         if (!allVehicles || allVehicles.length <= 1) return [];
 
-        // Priority #1: Find others in a similar price range (+/- 25%)
         const priceRangeVehicles = allVehicles.filter(v => {
             if (v.id === vehicle.id) return false;
-            if (vehicle.price === 0) return false; // Avoid division by zero
+            if (vehicle.price === 0) return false;
             const priceDiff = Math.abs(v.price - vehicle.price) / vehicle.price;
             return priceDiff <= 0.25;
         });
 
-        // Priority #2: Find others of the same make
         const sameMake = allVehicles.filter(v => v.id !== vehicle.id && v.make === vehicle.make);
         
-        // Combine, giving priority to price range, remove duplicates, and take the top 4
         const combined = [...priceRangeVehicles, ...sameMake];
         const uniqueIds = new Set();
         const uniqueVehicles = combined.filter(v => {
@@ -91,22 +87,30 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
     return (
         <div className="max-w-screen-xl mx-auto">
-            <div className="flex flex-col lg:grid lg:grid-cols-5 lg:gap-x-12 lg:gap-y-8">
-                
-                {/* --- Mobile Order: 1 --- */}
-                {/* --- Desktop Position: Left Column --- */}
-                <div className="order-1 lg:col-span-3 lg:order-2 opacity-0 animate-fade-in-up -mt-8 lg:mt-0">
-                    <div className="-mx-4 md:-mx-6 lg:mx-0">
-                        <div className="lg:rounded-2xl lg:overflow-hidden lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
-                            <ImageCarousel images={vehicle.images} />
+            <div className="mb-8">
+                <Breadcrumb vehicle={vehicle} />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-5 lg:gap-x-12">
+                {/* --- Left Column --- */}
+                <div className="lg:col-span-3 space-y-8">
+                    {/* Image Carousel */}
+                     <div className="opacity-0 animate-fade-in-up">
+                        <div className="-mx-4 md:-mx-6 lg:mx-0">
+                            <div className="lg:rounded-2xl lg:overflow-hidden lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
+                                <ImageCarousel images={vehicle.images} />
+                            </div>
                         </div>
+                    </div>
+                    {/* Description Card */}
+                    <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+                        <DescriptionCard description={vehicle.description} />
                     </div>
                 </div>
 
-                {/* --- Mobile Order: 2 --- */}
-                {/* --- Desktop Position: Right Column, Sticky --- */}
-                <div className="order-2 lg:col-span-2 lg:order-3 lg:row-span-2 opacity-0 animate-fade-in-up mt-8 lg:mt-0" style={{ animationDelay: '150ms' }}>
-                    <div className="lg:sticky lg:top-28 flex flex-col gap-y-8">
+                {/* --- Right Column (Sticky) --- */}
+                <div className="lg:col-span-2 mt-8 lg:mt-0">
+                    <div className="lg:sticky lg:top-28 flex flex-col gap-y-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
                         {/* Main Info Card */}
                         <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6 shadow-subtle dark:shadow-subtle-dark">
                             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b dark:border-gray-700 pb-4 mb-6">
@@ -132,6 +136,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                                 <ChatBubbleIcon className="h-7 w-7 transition-transform duration-300 group-hover:scale-110" />
                                 <span>Contactar por WhatsApp</span>
                             </a>
+                            <SocialShareButtons vehicle={vehicle} />
                         </div>
                         
                         {/* Specifications Card */}
@@ -148,27 +153,6 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                             </div>
                         </section>
                     </div>
-                </div>
-                
-                {/* --- Mobile Order: 3 --- */}
-                {/* --- Desktop Position: Left column, below image --- */}
-                <div className="order-3 lg:col-span-3 lg:order-4 mt-8 lg:mt-0 opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
-                    <section>
-                        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark overflow-hidden border border-gray-200 dark:border-gray-800">
-                            <div className="border-b border-gray-200 dark:border-gray-800 px-6 py-4">
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Descripción</h3>
-                            </div>
-                            <div className="p-6">
-                                <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{vehicle.description}</p>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-                
-                {/* --- Mobile Order: 4 --- */}
-                {/* --- Desktop Position: Top of grid --- */}
-                <div className="order-4 lg:col-span-5 lg:order-1 mb-8 mt-8 lg:mt-0 lg:mb-0">
-                     <Breadcrumb vehicle={vehicle} />
                 </div>
             </div>
 

@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 import { AnalyticsEventInsert } from '../types';
 
@@ -18,7 +19,7 @@ export const trackEvent = (eventType: string, vehicleId?: number): void => {
 
     supabase
         .from('analytics_events')
-        .insert(eventData)
+        .insert([eventData])
         .then(({ error }) => {
             if (error) {
                 console.error('Analytics Error:', error);
