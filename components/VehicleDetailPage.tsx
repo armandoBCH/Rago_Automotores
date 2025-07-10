@@ -2,7 +2,7 @@
 import React from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';
-import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon } from '../constants';
+import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon, CheckIcon } from '../constants';
 
 interface VehicleDetailPageProps {
     vehicle: Vehicle;
@@ -23,16 +23,40 @@ const SpecificationItem: React.FC<{ icon: React.ReactNode; label: string; value:
 );
 
 const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
-    <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl py-3 px-5 mb-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+    <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl py-3 px-5 border border-slate-200 dark:border-slate-800 shadow-sm">
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-base font-medium text-slate-500 dark:text-slate-400 flex-wrap">
             <a href="/" className="hover:text-rago-burgundy transition-colors">Inicio</a>
             <ArrowRightIcon className="h-4 w-4 text-slate-400" />
             <a href="/#catalog" className="hover:text-rago-burgundy transition-colors">Catálogo</a>
             <ArrowRightIcon className="h-4 w-4 text-slate-400" />
-            <span className="text-slate-800 dark:text-slate-200 font-bold">{vehicle.make} {vehicle.model}</span>
+            <span className="text-slate-800 dark:text-slate-200 font-bold truncate max-w-xs">{vehicle.make} {vehicle.model}</span>
         </nav>
     </div>
 );
+
+const StyledDescription: React.FC<{ text: string }> = ({ text }) => {
+    if (!text) return null;
+
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+
+    return (
+        <div className="space-y-4 text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+            {lines.map((line, index) => {
+                const isListItem = /^\s*[-*•]/.test(line);
+                if (isListItem) {
+                    return (
+                        <div key={index} className="flex items-start gap-3">
+                            <CheckIcon className="h-7 w-7 text-rago-burgundy flex-shrink-0 mt-0.5" />
+                            <span className="flex-1">{line.replace(/^\s*[-*•]\s*/, '')}</span>
+                        </div>
+                    );
+                }
+                return <p key={index} className="whitespace-pre-wrap">{line}</p>;
+            })}
+        </div>
+    );
+};
+
 
 const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
     const contactMessage = `Hola, estoy interesado en el ${vehicle.make} ${vehicle.model}.`;
@@ -50,11 +74,11 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
 
     return (
         <div className="max-w-screen-xl mx-auto">
-            <Breadcrumb vehicle={vehicle} />
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-y-8 lg:gap-x-12">
+            <div className="flex flex-col lg:grid lg:grid-cols-5 lg:gap-x-12">
                 
-                {/* Image Carousel (Item 1 in mobile, Left column on desktop) */}
-                <div className="lg:col-span-3 opacity-0 animate-fade-in-up">
+                {/* --- Mobile Order: 1 --- */}
+                {/* --- Desktop Position: Left Column --- */}
+                <div className="order-1 lg:col-span-3 lg:order-2 opacity-0 animate-fade-in-up -mt-8 lg:mt-0">
                     <div className="-mx-4 md:-mx-6 lg:mx-0">
                         <div className="lg:rounded-2xl lg:overflow-hidden lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
                             <ImageCarousel images={vehicle.images} />
@@ -62,8 +86,9 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
                     </div>
                 </div>
 
-                {/* Right Column: Sticky Info (Items 2 & 3 in mobile, Right column on desktop) */}
-                <div className="lg:col-span-2 lg:row-span-2 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+                {/* --- Mobile Order: 2 --- */}
+                {/* --- Desktop Position: Right Column, Sticky --- */}
+                <div className="order-2 lg:col-span-2 lg:order-3 lg:row-span-2 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
                     <div className="lg:sticky lg:top-28 flex flex-col gap-y-8">
                         {/* Main Info Card */}
                         <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6 shadow-subtle dark:shadow-subtle-dark">
@@ -90,7 +115,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
                                 <span>Contactar por WhatsApp</span>
                             </a>
                         </div>
-
+                        
                         {/* Specifications Card */}
                         <section>
                             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark overflow-hidden border border-gray-200 dark:border-gray-800">
@@ -107,20 +132,26 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
                     </div>
                 </div>
                 
-                {/* Description (Item 4 in mobile, Left column below image on desktop) */}
-                <div className="lg:col-span-3 opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+                {/* --- Mobile Order: 3 --- */}
+                {/* --- Desktop Position: Left column, below image --- */}
+                <div className="order-3 lg:col-span-3 lg:order-4 opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
                     <section>
                         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark overflow-hidden border border-gray-200 dark:border-gray-800">
                             <div className="border-b border-gray-200 dark:border-gray-800 px-6 py-4">
                                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Descripción</h3>
                             </div>
                             <div className="p-6">
-                                <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{vehicle.description}</p>
+                                <StyledDescription text={vehicle.description} />
                             </div>
                         </div>
                     </section>
                 </div>
-
+                
+                {/* --- Mobile Order: 4 --- */}
+                {/* --- Desktop Position: Top of grid --- */}
+                <div className="order-4 lg:col-span-5 lg:order-1 lg:mb-0 mb-8 mt-8 lg:mt-0">
+                     <Breadcrumb vehicle={vehicle} />
+                </div>
             </div>
         </div>
     );
