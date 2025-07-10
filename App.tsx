@@ -1,0 +1,255 @@
+
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { Vehicle, VehicleFormData } from './types';
+import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon } from './constants';
+import { supabase } from './lib/supabaseClient';
+import Header from './components/Header';
+import Hero from './components/Hero';
+import FilterBar from './components/FilterBar';
+import VehicleList from './components/VehicleList';
+import VehicleDetailPage from './components/VehicleDetailPage';
+import AdminPanel from './components/AdminPanel';
+import VehicleFormModal from './components/VehicleFormModal';
+import ConfirmationModal from './components/ConfirmationModal';
+import Footer from './components/Footer';
+import LoginPage from './components/LoginPage';
+import SellYourCarSection from './components/SellYourCarSection';
+import ScrollToTopButton from './components/ScrollToTopButton';
+
+type ModalState = 
+    | { type: 'none' }
+    | { type: 'form'; vehicle?: Vehicle }
+    | { type: 'confirmDelete'; vehicleId: number };
+
+const App: React.FC = () => {
+    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [dbError, setDbError] = useState<string | null>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [modalState, setModalState] = useState<ModalState>({ type: 'none' });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filters, setFilters] = useState({ make: '', year: '', price: '' });
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    
+    const [path, setPath] = useState(window.location.pathname);
+
+    const fetchVehicles = useCallback(async () => {
+        setLoading(true);
+        setDbError(null);
+        try {
+            const { data, error } = await supabase
+                .from('vehicles')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setVehicles(data || []);
+        } catch (err: any) {
+            console.error("Error fetching vehicles:", err);
+            setDbError("No se pudieron cargar los vehículos. Por favor, intente de nuevo más tarde.");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchVehicles();
+    }, [fetchVehicles]);
+
+    useEffect(() => {
+        const handlePopState = () => setPath(window.location.pathname);
+        const handleInternalLinkClick = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            const anchor = target.closest('a');
+            if (!anchor || !anchor.href || anchor.target === '_blank' || event.metaKey || event.ctrlKey) return;
+            const destinationUrl = new URL(anchor.href, window.location.origin);
+            if (destinationUrl.origin !== window.location.origin) return;
+            event.preventDefault();
+            if (window.location.href !== destinationUrl.href) {
+                window.history.pushState({}, '', destinationUrl.href);
+                setPath(destinationUrl.pathname);
+            } else if (destinationUrl.hash) {
+                const targetElement = document.querySelector(destinationUrl.hash);
+                if (targetElement) targetElement.scrollIntoView({ behavior: 'smooth' });
+            }
+            setIsMobileMenuOpen(false);
+        };
+        window.addEventListener('popstate', handlePopState);
+        document.addEventListener('click', handleInternalLinkClick);
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+            document.removeEventListener('click', handleInternalLinkClick);
+        };
+    }, []);
+
+    useEffect(() => {
+        const { hash } = window.location;
+        if (hash) {
+            const id = hash.slice(1);
+            const timer = setTimeout(() => {
+                const element = document.getElementById(id);
+                if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+            return () => clearTimeout(timer);
+        } else {
+            window.scrollTo(0, 0);
+        }
+    }, [path]);
+
+    useEffect(() => {
+        document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [isMobileMenuOpen]);
+
+    const handleLoginSuccess = () => {
+        setIsAdmin(true);
+        window.history.pushState({}, '', '/');
+        setPath('/');
+    };
+
+    const handleLogout = () => {
+        setIsAdmin(false);
+        if (path !== '/') {
+            window.history.pushState({}, '', '/');
+            setPath('/');
+        }
+    };
+
+    const vehicleDetailMatch = path.match(/^\/vehiculo\/(.+)$/);
+    const slug = vehicleDetailMatch ? vehicleDetailMatch[1].replace(/\/$/, '') : null;
+    const vehicleIdStr = slug ? slug.split('-').pop() ?? null : null;
+    const vehicleId = vehicleIdStr ? parseInt(vehicleIdStr, 10) : null;
+    const isHomePage = path === '/' || path === '/index.html';
+
+    const selectedVehicle = useMemo(() => {
+        if (!vehicleId || isNaN(vehicleId)) return null;
+        return vehicles.find(v => v.id === vehicleId);
+    }, [vehicleId, vehicles]);
+
+    const uniqueBrands = useMemo(() => {
+        const brands = new Set(vehicles.map(v => v.make));
+        return Array.from(brands).sort();
+    }, [vehicles]);
+
+    const filteredVehicles = useMemo(() => {
+        let tempVehicles = [...vehicles];
+        const lowercasedTerm = searchTerm.toLowerCase().trim();
+        if (lowercasedTerm) {
+            tempVehicles = tempVehicles.filter(vehicle =>
+                vehicle.make.toLowerCase().includes(lowercasedTerm) ||
+                vehicle.model.toLowerCase().includes(lowercasedTerm) ||
+                String(vehicle.year).includes(lowercasedTerm)
+            );
+        }
+        if (filters.make) tempVehicles = tempVehicles.filter(v => v.make === filters.make);
+        if (filters.year) {
+            const yearNum = parseInt(filters.year, 10);
+            if (!isNaN(yearNum)) tempVehicles = tempVehicles.filter(v => v.year >= yearNum);
+        }
+        if (filters.price) {
+            const priceNum = parseInt(filters.price, 10);
+            if (!isNaN(priceNum)) tempVehicles = tempVehicles.filter(v => v.price <= priceNum);
+        }
+        return tempVehicles;
+    }, [vehicles, searchTerm, filters]);
+
+    const handleCloseModal = () => setModalState({ type: 'none' });
+    const handleFilterChange = useCallback((newFilters: { make: string, year: string, price: string }) => setFilters(newFilters), []);
+
+    const handleAddVehicleClick = () => setModalState({ type: 'form' });
+    const handleEditVehicleClick = (vehicle: Vehicle) => setModalState({ type: 'form', vehicle });
+    const handleDeleteVehicleClick = (vehicleId: number) => setModalState({ type: 'confirmDelete', vehicleId });
+
+    const handleSaveVehicle = async (vehicleData: VehicleFormData) => {
+        const isEdit = !!vehicleData.id;
+        try {
+            if (isEdit) {
+                const { error } = await supabase.from('vehicles').update(vehicleData).eq('id', vehicleData.id);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase.from('vehicles').insert([vehicleData]);
+                if (error) throw error;
+            }
+            await fetchVehicles();
+            handleCloseModal();
+        } catch (err: any) {
+            console.error("Error saving vehicle:", err);
+            alert(`Error al guardar el vehículo: ${err.message}`);
+        }
+    };
+
+    const confirmDelete = async () => {
+        if (modalState.type === 'confirmDelete') {
+            try {
+                const { error } = await supabase.from('vehicles').delete().eq('id', modalState.vehicleId);
+                if (error) throw error;
+                await fetchVehicles(); // Re-fetch to get the latest state from DB
+                handleCloseModal();
+            } catch (err: any) {
+                console.error("Error deleting vehicle:", err);
+                alert(`Error al eliminar el vehículo: ${err.message}`);
+            }
+        }
+    };
+
+    const NotFoundPage = () => (
+        <div className="text-center py-16">
+            <h1 className="text-4xl font-bold text-rago-burgundy mb-4">404 - Página No Encontrada</h1>
+            <p className="text-xl text-slate-700 dark:text-slate-300">La página que buscas no existe o fue removida.</p>
+            <a href="/" className="mt-8 inline-block px-6 py-3 text-lg font-semibold text-white bg-rago-burgundy rounded-lg hover:bg-rago-burgundy-darker transition-colors">Volver al Inicio</a>
+        </div>
+    );
+    
+    const renderMainContent = () => {
+        if (path === '/login' && !isAdmin) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+        if (isAdmin) return <AdminPanel vehicles={vehicles} onAdd={handleAddVehicleClick} onEdit={handleEditVehicleClick} onDelete={handleDeleteVehicleClick} onLogout={handleLogout} />;
+        if (loading) return <div className="text-center py-16"><h2 className="text-2xl font-semibold text-slate-700 dark:text-slate-300">Cargando vehículos...</h2></div>;
+        if (dbError) return <div className="text-center py-16 text-red-500"><h2 className="text-2xl font-semibold">{dbError}</h2></div>;
+        if (vehicleId) return selectedVehicle ? <VehicleDetailPage vehicle={selectedVehicle} /> : <NotFoundPage />;
+        if (isHomePage) return (<><FilterBar filters={filters} onFilterChange={handleFilterChange} brands={uniqueBrands} /><VehicleList vehicles={filteredVehicles} /><SellYourCarSection /></>);
+        return <NotFoundPage />;
+    };
+    
+    const contactMessage = "Hola, estoy interesado en sus vehículos.";
+    const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(contactMessage)}`;
+    const instagramUrl = "https://www.instagram.com/ragoautomotores?igsh=MWJuamF6ZXF5YjF4cw%3D%3D";
+
+    const mainAppContainerClasses = `min-h-screen flex flex-col bg-slate-100 dark:bg-slate-950 font-sans transform-gpu origin-center relative transition-all duration-500 ease-in-out ${isMobileMenuOpen ? 'scale-[0.85] -translate-x-[70%] sm:-translate-x-64 rounded-3xl shadow-2xl overflow-y-hidden brightness-[0.7] blur-sm' : 'scale-100 translate-x-0 rounded-none shadow-none brightness-100 blur-0'}`;
+    const hamburgerClasses = `md:hidden fixed top-6 right-6 z-[60] p-2 transition-colors duration-300 ${isMobileMenuOpen ? 'text-white' : 'text-slate-900 dark:text-slate-100'}`;
+
+    return (
+        <div className="bg-slate-800 dark:bg-rago-black min-h-screen overflow-x-hidden">
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={hamburgerClasses} aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"} aria-controls="mobile-menu" aria-expanded={isMobileMenuOpen}>
+                <div id="nav-icon3" className={isMobileMenuOpen ? 'open' : ''}><span></span><span></span><span></span><span></span></div>
+            </button>
+            <nav id="mobile-menu" aria-hidden={!isMobileMenuOpen} className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-gradient-to-br from-slate-900 via-rago-burgundy-darker to-rago-black shadow-2xl p-6 pt-20 flex flex-col text-white transform-gpu transition-transform duration-500 ease-in-out z-50 md:hidden ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className="px-6 mb-12 text-center"><a href="/"><img src="https://i.imgur.com/zOGb0ay.jpeg" alt="Rago Automotores Logo" className="h-20 inline-block" /></a></div>
+                <ul className="flex flex-col gap-2">
+                    <li><a href="/" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><HomeIcon className="h-7 w-7 text-rago-burgundy" /><span>Inicio</span></a></li>
+                    <li><a href="/#catalog" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><CatalogIcon className="h-7 w-7 text-rago-burgundy" /><span>Catálogo</span></a></li>
+                    <li><a href="/#sell-car-section" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><SellCarIcon className="h-7 w-7 text-rago-burgundy" /><span>Vender mi Auto</span></a></li>
+                </ul>
+                <div className="mt-auto pt-8 border-t border-slate-700/50">
+                    <div className="flex justify-center gap-x-8">
+                        <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-400 hover:text-white transition-transform duration-300 hover:scale-110"><InstagramIcon className="h-8 w-8" /></a>
+                        <a href={whatsappLink} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-slate-400 hover:text-white transition-transform duration-300 hover:scale-110"><ChatBubbleIcon className="h-8 w-8" /></a>
+                    </div>
+                </div>
+            </nav>
+            <div className={mainAppContainerClasses}>
+                {isMobileMenuOpen && <div role="button" aria-label="Cerrar menú" className="absolute inset-0 z-50" onClick={() => setIsMobileMenuOpen(false)}></div>}
+                <Header />
+                {!isAdmin && isHomePage && <Hero searchTerm={searchTerm} onSearchChange={setSearchTerm} />}
+                <main id="catalog" className="container mx-auto px-4 md:px-6 py-8 flex-grow">
+                     <div key={path} className="animate-fade-in">{renderMainContent()}</div>
+                </main>
+                <Footer />
+            </div>
+            {modalState.type === 'form' && <VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} brands={uniqueBrands} />}
+            {modalState.type === 'confirmDelete' && <ConfirmationModal isOpen={true} onClose={handleCloseModal} onConfirm={confirmDelete} title="Confirmar Eliminación" message="¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer." />}
+            {isHomePage && <ScrollToTopButton />}
+        </div>
+    );
+};
+
+export default App;
