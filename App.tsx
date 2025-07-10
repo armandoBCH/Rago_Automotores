@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Vehicle, VehicleFormData } from './types';
 import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon } from './constants';
@@ -32,6 +33,7 @@ const App: React.FC = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     const [path, setPath] = useState(window.location.pathname);
+    const [locationKey, setLocationKey] = useState(Date.now());
 
     const fetchVehicles = useCallback(async () => {
         setLoading(true);
@@ -57,23 +59,38 @@ const App: React.FC = () => {
     }, [fetchVehicles]);
 
     useEffect(() => {
-        const handlePopState = () => setPath(window.location.pathname);
+        const handlePopState = () => {
+            setPath(window.location.pathname);
+            setLocationKey(Date.now());
+        };
+
         const handleInternalLinkClick = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
             const anchor = target.closest('a');
+
             if (!anchor || !anchor.href || anchor.target === '_blank' || event.metaKey || event.ctrlKey) return;
+            
             const destinationUrl = new URL(anchor.href, window.location.origin);
+
             if (destinationUrl.origin !== window.location.origin) return;
+
             event.preventDefault();
+
+            const isDifferentPath = window.location.pathname !== destinationUrl.pathname;
+
             if (window.location.href !== destinationUrl.href) {
                 window.history.pushState({}, '', destinationUrl.href);
-                setPath(destinationUrl.pathname);
-            } else if (destinationUrl.hash) {
-                const targetElement = document.querySelector(destinationUrl.hash);
-                if (targetElement) targetElement.scrollIntoView({ behavior: 'smooth' });
             }
+
+            if (isDifferentPath) {
+                setPath(destinationUrl.pathname);
+            }
+            
+            setLocationKey(Date.now());
+
             setIsMobileMenuOpen(false);
         };
+
         window.addEventListener('popstate', handlePopState);
         document.addEventListener('click', handleInternalLinkClick);
         return () => {
@@ -88,13 +105,15 @@ const App: React.FC = () => {
             const id = hash.slice(1);
             const timer = setTimeout(() => {
                 const element = document.getElementById(id);
-                if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             }, 100);
             return () => clearTimeout(timer);
         } else {
-            window.scrollTo(0, 0);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    }, [path]);
+    }, [path, locationKey]);
 
     useEffect(() => {
         document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
