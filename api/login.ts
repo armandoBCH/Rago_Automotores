@@ -1,10 +1,6 @@
 // Vercel detectará este archivo como una función sin servidor.
 // El tipo de objeto 'request' puede variar según el framework, pero para Vercel es compatible con la API de Request/Response.
 
-export const config = {
-  runtime: 'edge',
-};
-
 export default async function handler(request: Request) {
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ message: 'Method Not Allowed' }), {
