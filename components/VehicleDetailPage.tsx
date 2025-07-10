@@ -53,31 +53,16 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
             <Breadcrumb vehicle={vehicle} />
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-y-8 lg:gap-x-12">
                 
-                {/* Left Column: Image & Description */}
-                <div className="lg:col-span-3 flex flex-col gap-y-8">
-                    <div className="opacity-0 animate-fade-in-up">
-                        <div className="-mx-4 md:-mx-6 lg:mx-0">
-                            <div className="lg:rounded-2xl lg:overflow-hidden lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
-                                <ImageCarousel images={vehicle.images} />
-                            </div>
+                {/* Image Carousel (Item 1 in mobile, Left column on desktop) */}
+                <div className="lg:col-span-3 opacity-0 animate-fade-in-up">
+                    <div className="-mx-4 md:-mx-6 lg:mx-0">
+                        <div className="lg:rounded-2xl lg:overflow-hidden lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
+                            <ImageCarousel images={vehicle.images} />
                         </div>
-                    </div>
-                    
-                    <div className="lg:col-span-3 opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
-                        <section>
-                            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark overflow-hidden border border-gray-200 dark:border-gray-800">
-                                <div className="border-b border-gray-200 dark:border-gray-800 px-6 py-4">
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Descripción</h3>
-                                </div>
-                                <div className="p-6">
-                                    <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{vehicle.description}</p>
-                                </div>
-                            </div>
-                        </section>
                     </div>
                 </div>
 
-                {/* Right Column: Sticky Info */}
+                {/* Right Column: Sticky Info (Items 2 & 3 in mobile, Right column on desktop) */}
                 <div className="lg:col-span-2 lg:row-span-2 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
                     <div className="lg:sticky lg:top-28 flex flex-col gap-y-8">
                         {/* Main Info Card */}
@@ -121,6 +106,21 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle }) => {
                         </section>
                     </div>
                 </div>
+                
+                {/* Description (Item 4 in mobile, Left column below image on desktop) */}
+                <div className="lg:col-span-3 opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+                    <section>
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark overflow-hidden border border-gray-200 dark:border-gray-800">
+                            <div className="border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Descripción</h3>
+                            </div>
+                            <div className="p-6">
+                                <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{vehicle.description}</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
             </div>
         </div>
     );
