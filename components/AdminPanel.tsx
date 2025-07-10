@@ -29,12 +29,20 @@ const StatCard: React.FC<{ title: string, value: string | number, icon: React.Re
 const AnalyticsDashboard: React.FC<{ vehicles: Vehicle[] }> = ({ vehicles }) => {
     const [events, setEvents] = useState<AnalyticsEvent[]>([]);
     const [loading, setLoading] = useState(true);
+    const [dbError, setDbError] = useState<string | null>(null);
 
     const fetchAnalytics = useCallback(async () => {
         setLoading(true);
+        setDbError(null);
         const { data, error } = await supabase.from('analytics_events').select('*').order('created_at', { ascending: false });
+        
         if (error) {
-            console.error("Error fetching analytics", error);
+            console.error("Error fetching analytics:", error);
+            if (error.message.includes('violates row-level security policy')) {
+                setDbError("Error de permisos: No se pueden leer las estadísticas. Asegúrate de haber aplicado la política de lectura (SELECT) en la tabla 'analytics_events' de Supabase.");
+            } else {
+                setDbError("No se pudieron cargar las estadísticas. Intenta de nuevo.");
+            }
         } else {
             setEvents(data);
         }
@@ -90,6 +98,19 @@ const AnalyticsDashboard: React.FC<{ vehicles: Vehicle[] }> = ({ vehicles }) => 
     }, [events, vehicles]);
 
     if (loading) return <div className="text-center p-10">Cargando estadísticas...</div>;
+
+    if (dbError) return (
+        <div className="bg-red-100 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-300 p-4 rounded-r-lg" role="alert">
+            <p className="font-bold">Error al Cargar Estadísticas</p>
+            <p>{dbError}</p>
+             <button
+                onClick={fetchAnalytics}
+                className="mt-3 px-3 py-1 text-sm font-semibold text-white bg-red-600 rounded-md hover:bg-red-700"
+            >
+                Reintentar
+            </button>
+        </div>
+    );
     
     const RankingList: React.FC<{ title: string, data: { vehicle: Vehicle | undefined, count: number }[], icon: React.ReactNode }> = ({ title, data, icon }) => (
          <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-md">
