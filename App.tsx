@@ -33,7 +33,6 @@ const App: React.FC = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     const [path, setPath] = useState(window.location.pathname);
-    const [locationKey, setLocationKey] = useState(Date.now());
 
     const fetchVehicles = useCallback(async () => {
         setLoading(true);
@@ -59,35 +58,36 @@ const App: React.FC = () => {
     }, [fetchVehicles]);
 
     useEffect(() => {
-        const handlePopState = () => {
-            setPath(window.location.pathname);
-            setLocationKey(Date.now());
-        };
-
+        const handlePopState = () => setPath(window.location.pathname);
+        
         const handleInternalLinkClick = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
             const anchor = target.closest('a');
-
             if (!anchor || !anchor.href || anchor.target === '_blank' || event.metaKey || event.ctrlKey) return;
-            
-            const destinationUrl = new URL(anchor.href, window.location.origin);
 
+            const destinationUrl = new URL(anchor.href, window.location.origin);
             if (destinationUrl.origin !== window.location.origin) return;
 
             event.preventDefault();
+            
+            const currentUrl = new URL(window.location.href);
 
-            const isDifferentPath = window.location.pathname !== destinationUrl.pathname;
+            const isSamePage = currentUrl.pathname === destinationUrl.pathname &&
+                               currentUrl.search === destinationUrl.search;
 
-            if (window.location.href !== destinationUrl.href) {
+            if (isSamePage && destinationUrl.hash) {
+                 const targetElement = document.querySelector(destinationUrl.hash);
+                 if (targetElement) {
+                     targetElement.scrollIntoView({ behavior: 'smooth' });
+                     if (destinationUrl.hash !== currentUrl.hash) {
+                        window.history.pushState({}, '', destinationUrl.href);
+                     }
+                 }
+            } else if (!isSamePage) {
                 window.history.pushState({}, '', destinationUrl.href);
-            }
-
-            if (isDifferentPath) {
                 setPath(destinationUrl.pathname);
             }
             
-            setLocationKey(Date.now());
-
             setIsMobileMenuOpen(false);
         };
 
@@ -105,15 +105,13 @@ const App: React.FC = () => {
             const id = hash.slice(1);
             const timer = setTimeout(() => {
                 const element = document.getElementById(id);
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
+                if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
             return () => clearTimeout(timer);
         } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo(0, 0);
         }
-    }, [path, locationKey]);
+    }, [path]);
 
     useEffect(() => {
         document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
