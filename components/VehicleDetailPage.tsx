@@ -1,10 +1,10 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';
 import VehicleCard from './VehicleCard';
 import SocialShareButtons from './SocialShareButtons';
 import DescriptionCard from './DescriptionCard';
-import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon } from '../constants';
+import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon, ArrowLeftIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
 
 interface VehicleDetailPageProps {
@@ -39,6 +39,8 @@ const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
 );
 
 const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehicles }) => {
+    const similarVehiclesRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         trackEvent('view_vehicle', vehicle.id);
     }, [vehicle.id]);
@@ -87,6 +89,16 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
         return uniqueVehicles.slice(0, 4);
     }, [vehicle, allVehicles]);
 
+    const scrollSimilarVehicles = (direction: 'left' | 'right') => {
+        if (similarVehiclesRef.current) {
+            const scrollAmount = similarVehiclesRef.current.clientWidth * 0.9;
+            similarVehiclesRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth',
+            });
+        }
+    };
+
     return (
         <div className="max-w-screen-xl mx-auto">
             <div className="mb-8">
@@ -109,8 +121,8 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                             </div>
                         </div>
                     </div>
-                    {/* Description Card */}
-                    <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+                    {/* Description Card (Desktop Only) */}
+                    <div className="hidden lg:block opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
                         <DescriptionCard description={vehicle.description} />
                     </div>
                 </div>
@@ -168,19 +180,39 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                     </div>
                 </div>
             </div>
+            
+            {/* --- Description Card (Mobile Only) --- */}
+            <div className="lg:hidden mt-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+                <DescriptionCard description={vehicle.description} />
+            </div>
 
             {/* Related Vehicles Section */}
             {relatedVehicles.length > 0 && (
-                <section className="mt-16 lg:mt-20 pt-16 border-t border-slate-200 dark:border-slate-800 opacity-0 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-                    <h2 className="text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white text-center mb-10">
-                        Vehículos Similares
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {relatedVehicles.map((relatedVehicle, index) => (
-                            <div key={relatedVehicle.id} className="stagger-child" style={{ animationDelay: `${index * 80}ms` }}>
-                                <VehicleCard vehicle={relatedVehicle} />
-                            </div>
-                        ))}
+                <section className="mt-16 lg:mt-20 pt-16 lg:pt-20 pb-16 bg-white dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800">
+                    <div className="max-w-screen-xl mx-auto px-4 md:px-6">
+                        <div className="flex justify-between items-center mb-10">
+                            <h2 className="text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white">
+                                También te puede interesar
+                            </h2>
+                            {relatedVehicles.length > 3 && (
+                                <div className="hidden md:flex gap-2">
+                                    <button onClick={() => scrollSimilarVehicles('left')} aria-label="Desplazar a la izquierda" className="w-12 h-12 rounded-full bg-slate-200/70 dark:bg-slate-800/70 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center transition-colors">
+                                        <ArrowLeftIcon className="h-6 w-6" />
+                                    </button>
+                                    <button onClick={() => scrollSimilarVehicles('right')} aria-label="Desplazar a la derecha" className="w-12 h-12 rounded-full bg-slate-200/70 dark:bg-slate-800/70 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center transition-colors">
+                                        <ArrowRightIcon className="h-6 w-6" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        <div ref={similarVehiclesRef} className="flex gap-6 overflow-x-auto pb-4 hide-scrollbar">
+                            {relatedVehicles.map((relatedVehicle, index) => (
+                                <div key={relatedVehicle.id} className="flex-shrink-0 w-[85%] sm:w-[45%] md:w-[40%] lg:w-[30%] xl:w-1/4 stagger-child" style={{ animationDelay: `${index * 80}ms` }}>
+                                    <VehicleCard vehicle={relatedVehicle} />
+                                </div>
+                            ))}
+                        </div>
+                         <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
                     </div>
                 </section>
             )}
