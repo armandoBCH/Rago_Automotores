@@ -179,10 +179,11 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                     <div className="lg:hidden space-y-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
                         <PriceCard vehicle={vehicle} whatsappLink={whatsappLink} onWhatsAppClick={handleWhatsAppClick} />
                         <SpecsCard specs={specs} />
+                        <DescriptionCard description={vehicle.description} />
                     </div>
                     
-                    {/* Description for All */}
-                    <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+                    {/* Description for Desktop */}
+                    <div className="hidden lg:block opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
                         <DescriptionCard description={vehicle.description} />
                     </div>
                 </div>
@@ -198,25 +199,20 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
             {/* Similar Vehicles Section */}
             {relatedVehicles.length > 0 && (
-                <section className="mt-20 lg:mt-24 py-4">
-                     <div className="relative overflow-hidden rounded-3xl p-8 md:p-12 lg:p-16 border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white via-slate-50 to-slate-100 dark:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] dark:from-rago-black dark:via-slate-900 dark:to-slate-900 shadow-2xl dark:shadow-rago-glow">
-                        <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-rago-burgundy/10 via-transparent to-transparent blur-3xl opacity-50"></div>
-                        <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-500/10 via-transparent to-transparent blur-3xl opacity-50"></div>
+                <section className="mt-12 lg:mt-16">
+                     <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 shadow-xl border border-slate-200 dark:border-slate-800">
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-white">
+                                Vehículos similares
+                            </h2>
+                        </div>
             
-                        <div className="relative z-10">
-                            <div className="text-center mb-12">
-                                <h2 className="text-5xl md:text-6xl font-black text-slate-800 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-br dark:from-white dark:to-slate-400">
-                                    Vehículos similares
-                                </h2>
-                            </div>
-                
-                            <div ref={similarVehiclesRef} className="flex gap-6 -m-4 p-4 overflow-x-auto pb-6 hide-scrollbar">
-                                {relatedVehicles.map((relatedVehicle, index) => (
-                                    <div key={relatedVehicle.id} className="flex-shrink-0 w-[85%] sm:w-[45%] md:w-[40%] lg:w-[30%] xl:w-1/4 stagger-child" style={{ animationDelay: `${index * 80}ms` }}>
-                                        <VehicleCard vehicle={relatedVehicle} />
-                                    </div>
-                                ))}
-                            </div>
+                        <div ref={similarVehiclesRef} className="flex gap-6 -m-4 p-4 overflow-x-auto pb-6 hide-scrollbar">
+                            {relatedVehicles.map((relatedVehicle, index) => (
+                                <div key={relatedVehicle.id} className="flex-shrink-0 w-[85%] sm:w-[45%] md:w-[40%] lg:w-[30%] xl:w-1/4 stagger-child" style={{ animationDelay: `${index * 80}ms` }}>
+                                    <VehicleCard vehicle={relatedVehicle} />
+                                </div>
+                            ))}
                         </div>
 
                         {relatedVehicles.length > 3 && (
