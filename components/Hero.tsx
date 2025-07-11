@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { DownIcon } from '../constants';
 
@@ -20,7 +19,7 @@ const Hero: React.FC<HeroProps> = ({ searchTerm, onSearchChange }) => {
     };
 
     return (
-        <div className="relative text-white overflow-hidden pb-20 md:pb-28">
+        <div className="relative text-white overflow-hidden">
             {/* Background Image and Overlay */}
             <div className="absolute inset-0 z-0">
                 <img 
@@ -32,7 +31,7 @@ const Hero: React.FC<HeroProps> = ({ searchTerm, onSearchChange }) => {
             </div>
 
             {/* Content - Changed to flex column for easier alignment */}
-            <div className="relative z-10 container mx-auto text-center flex flex-col items-center px-6 pt-20 pb-16 md:pt-28 md:pb-24">
+            <div className="relative z-10 container mx-auto text-center flex flex-col items-center px-6 pt-20 pb-32 md:pt-28 md:pb-40">
                 <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
                     <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight drop-shadow-lg">
                         Nuestro Catálogo de Vehículos
@@ -90,6 +89,13 @@ const Hero: React.FC<HeroProps> = ({ searchTerm, onSearchChange }) => {
                         Vender mi Auto
                     </a>
                 </div>
+            </div>
+
+            {/* Shape Divider */}
+            <div className="absolute bottom-0 left-0 w-full h-20 md:h-28 overflow-hidden leading-none z-[5]" style={{ transform: 'translateY(1px)' }}>
+                <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M600,120C300,120,0,0,0,0V120H1200V0C1200,0,900,120,600,120Z" className="fill-slate-900 dark:fill-rago-black"></path>
+                </svg>
             </div>
         </div>
     );

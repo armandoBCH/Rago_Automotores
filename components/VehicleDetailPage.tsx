@@ -1,11 +1,10 @@
-
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';
 import VehicleCard from './VehicleCard';
 import SocialShareButtons from './SocialShareButtons';
 import DescriptionCard from './DescriptionCard';
-import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon, ArrowLeftIcon } from '../constants';
+import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
 
 interface VehicleDetailPageProps {
@@ -40,8 +39,6 @@ const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
 );
 
 const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehicles }) => {
-    const similarVehiclesRef = useRef<HTMLDivElement>(null);
-
     useEffect(() => {
         trackEvent('view_vehicle', vehicle.id);
     }, [vehicle.id]);
@@ -87,18 +84,8 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
             return true;
         });
 
-        return uniqueVehicles.slice(0, 8); // Get more for carousel
+        return uniqueVehicles.slice(0, 4);
     }, [vehicle, allVehicles]);
-    
-    const scrollSimilar = (direction: 'left' | 'right') => {
-        if (similarVehiclesRef.current) {
-            const scrollAmount = similarVehiclesRef.current.clientWidth * 0.8;
-            similarVehiclesRef.current.scrollBy({
-                left: direction === 'left' ? -scrollAmount : scrollAmount,
-                behavior: 'smooth',
-            });
-        }
-    };
 
     return (
         <div className="max-w-screen-xl mx-auto">
@@ -107,11 +94,10 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 lg:gap-x-12">
-                
-                {/* --- Left Column: Image & Description --- */}
-                <div className="lg:col-span-3 flex flex-col gap-y-8 order-1">
+                {/* --- Left Column --- */}
+                <div className="lg:col-span-3 space-y-8">
                     {/* Image Carousel */}
-                    <div className="opacity-0 animate-fade-in-up">
+                     <div className="opacity-0 animate-fade-in-up">
                         <div className="-mx-4 md:-mx-6 lg:mx-0">
                             <div className="relative lg:rounded-2xl lg:overflow-hidden lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
                                 <ImageCarousel images={vehicle.images} />
@@ -123,14 +109,14 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                             </div>
                         </div>
                     </div>
-                    {/* Description (Mobile: will appear after right col because of flex order) */}
-                    <div className="order-3 lg:order-2 opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+                    {/* Description Card */}
+                    <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
                         <DescriptionCard description={vehicle.description} />
                     </div>
                 </div>
 
-                {/* --- Right Column: Price & Specs (Sticky) --- */}
-                <div className="lg:col-span-2 mt-8 lg:mt-0 order-2 lg:order-3">
+                {/* --- Right Column (Sticky) --- */}
+                <div className="lg:col-span-2 mt-8 lg:mt-0">
                     <div className="lg:sticky lg:top-28 flex flex-col gap-y-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
                         {/* Main Info Card */}
                         <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6 shadow-subtle dark:shadow-subtle-dark">
@@ -185,39 +171,17 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
             {/* Related Vehicles Section */}
             {relatedVehicles.length > 0 && (
-                <section className="mt-16 lg:mt-24 bg-white dark:bg-rago-black border-y border-slate-200 dark:border-slate-800/50">
-                    <div className="max-w-screen-xl mx-auto py-20 lg:py-24 px-4 md:px-6 opacity-0 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-                        <div className="relative">
-                            <div className="text-center mb-12">
-                                <h2 className="text-4xl lg:text-5xl font-black text-slate-900 dark:text-white">
-                                    También te podría interesar
-                                </h2>
-                                <p className="mt-4 text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-                                    Explora otros vehículos en nuestro inventario que se ajustan a tus intereses.
-                                </p>
+                <section className="mt-16 lg:mt-20 pt-16 border-t border-slate-200 dark:border-slate-800 opacity-0 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+                    <h2 className="text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white text-center mb-10">
+                        Vehículos Similares
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {relatedVehicles.map((relatedVehicle, index) => (
+                            <div key={relatedVehicle.id} className="stagger-child" style={{ animationDelay: `${index * 80}ms` }}>
+                                <VehicleCard vehicle={relatedVehicle} />
                             </div>
-                
-                            <div ref={similarVehiclesRef} className="flex gap-6 overflow-x-auto pb-4 hide-scrollbar -mx-4 px-4 md:-mx-6 md:px-6">
-                                {relatedVehicles.map((relatedVehicle, index) => (
-                                    <div key={relatedVehicle.id} className="flex-shrink-0 w-[85%] sm:w-[45%] md:w-1/3 lg:w-1/4 stagger-child" style={{ animationDelay: `${index * 80}ms` }}>
-                                        <VehicleCard vehicle={relatedVehicle} />
-                                    </div>
-                                ))}
-                            </div>
-                
-                            {relatedVehicles.length > 4 && (
-                                <>
-                                    <button onClick={() => scrollSimilar('left')} aria-label="Anterior" className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex items-center justify-center w-14 h-14 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm rounded-full shadow-lg hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white transition-all duration-300 transform hover:scale-105">
-                                        <ArrowLeftIcon className="h-7 w-7" />
-                                    </button>
-                                    <button onClick={() => scrollSimilar('right')} aria-label="Siguiente" className="absolute -right-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex items-center justify-center w-14 h-14 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm rounded-full shadow-lg hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white transition-all duration-300 transform hover:scale-105">
-                                        <ArrowRightIcon className="h-7 w-7" />
-                                    </button>
-                                </>
-                            )}
-                        </div>
+                        ))}
                     </div>
-                    <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { scrollbar-width: none; }`}</style>
                 </section>
             )}
         </div>
