@@ -21,13 +21,13 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
 
     return (
         <div 
-            className={`relative bg-white dark:bg-slate-900 rounded-2xl flex flex-col transition-all duration-300 ease-out shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-800 ${!vehicle.is_sold && 'hover:shadow-rago-lg dark:hover:shadow-rago-glow dark:hover:border-rago-burgundy/40 hover:-translate-y-1.5'} group`}
+            className={`relative bg-white dark:bg-slate-900 rounded-2xl overflow-hidden flex flex-col transition-all duration-300 ease-out shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-800 ${!vehicle.is_sold && 'hover:shadow-rago-lg dark:hover:shadow-rago-glow dark:hover:border-rago-burgundy/40 hover:-translate-y-1.5'} group`}
         >
              {vehicle.is_sold && (
-                <div className="absolute inset-0 flex items-center justify-center z-20 rounded-2xl pointer-events-none">
-                    <span className="transform -rotate-12 select-none text-5xl md:text-6xl font-black text-red-600 border-4 border-red-600 rounded-xl px-4 py-2 bg-white/80 shadow-2xl">
-                        VENDIDO
-                    </span>
+                <div className="absolute top-0 left-0 w-28 h-28 overflow-hidden z-20 pointer-events-none">
+                    <div className="absolute transform -rotate-45 bg-red-600 text-center text-white font-bold uppercase tracking-wider shadow-lg" style={{ width: '150px', left: '-42px', top: '28px', padding: '4px 0', fontSize: '0.8rem' }}>
+                        Vendido
+                    </div>
                 </div>
             )}
             {vehicle.is_featured && !vehicle.is_sold && (

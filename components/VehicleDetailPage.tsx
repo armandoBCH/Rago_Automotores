@@ -219,13 +219,13 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                     {/* Image Carousel */}
                     <div className="opacity-0 animate-fade-in-up">
                         <div className="-mx-4 md:-mx-6 lg:mx-0">
-                            <div className="relative lg:rounded-2xl lg:overflow-hidden lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
+                            <div className="relative overflow-hidden lg:rounded-2xl lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
                                 <ImageCarousel images={vehicle.images} />
                                 {vehicle.is_sold && (
-                                    <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none lg:rounded-2xl">
-                                        <span className="transform -rotate-12 select-none text-6xl md:text-7xl font-black text-red-600 border-4 border-red-600 rounded-xl px-6 py-3 bg-white/80 shadow-2xl">
-                                            VENDIDO
-                                        </span>
+                                    <div className="absolute top-0 left-0 w-36 h-36 overflow-hidden z-20 pointer-events-none">
+                                        <div className="absolute transform -rotate-45 bg-red-600 text-center text-white font-bold uppercase tracking-wider shadow-lg" style={{ width: '200px', left: '-50px', top: '38px', padding: '6px 0', fontSize: '1.1rem' }}>
+                                            Vendido
+                                        </div>
                                     </div>
                                 )}
                             </div>

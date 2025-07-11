@@ -302,13 +302,13 @@ const InputField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label
 const VehicleDetailPreview: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
     <div className="border rounded-lg dark:border-gray-600 bg-gray-50 dark:bg-gray-800 shadow-inner">
         <div className="max-h-[calc(90vh - 160px)] overflow-y-auto preview-scrollbar">
-            <div className="relative aspect-[4/3] bg-gray-200 dark:bg-black">
+            <div className="relative aspect-[4/3] bg-gray-200 dark:bg-black overflow-hidden">
                 <ImageCarousel images={vehicle.images} />
                 {vehicle.is_sold && (
-                     <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none bg-black/10 backdrop-blur-[2px]">
-                        <span className="transform -rotate-12 select-none text-6xl md:text-7xl font-black text-red-600 border-4 border-red-600 rounded-xl px-6 py-3 bg-white/80 shadow-2xl">
-                            VENDIDO
-                        </span>
+                    <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden z-20 pointer-events-none">
+                        <div className="absolute transform -rotate-45 bg-red-600 text-center text-white font-bold uppercase tracking-wider shadow-lg" style={{ width: '180px', left: '-45px', top: '32px', padding: '4px 0' }}>
+                            Vendido
+                        </div>
                     </div>
                 )}
             </div>
