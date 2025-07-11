@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Vehicle, VehicleFormData } from '../types';
 import { XIcon } from '../constants';
@@ -10,7 +11,7 @@ import { supabase } from '../lib/supabaseClient';
 
 const DRAFT_STORAGE_KEY = 'rago-new-vehicle-draft';
 
-type FormDataState = Omit<Vehicle, 'id' | 'year' | 'price' | 'mileage' | 'created_at' | 'images'> & {
+type FormDataState = Omit<Vehicle, 'id' | 'year' | 'price' | 'mileage' | 'created_at' | 'images' | 'display_order'> & {
     year: string;
     price: string;
     mileage: string;
@@ -59,7 +60,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
                 localStorage.removeItem(DRAFT_STORAGE_KEY);
                 const standardFuelTypes = ['Nafta', 'Diesel', 'GNC'];
                 const isStandard = standardFuelTypes.includes(initialData.fuelType);
-                const { created_at, id, images, ...rest } = initialData;
+                const { created_at, id, images, display_order, ...rest } = initialData;
                 setFormData({
                     ...rest,
                     year: String(initialData.year),
@@ -115,6 +116,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
             images: validImages.length > 0 ? validImages : ['https://i.imgur.com/g2a4A0a.png'],
             is_featured: formData.is_featured,
             is_sold: formData.is_sold,
+            display_order: initialData?.display_order || null,
         };
     }, [formData, imageFiles, initialData, isOtherFuelType]);
 

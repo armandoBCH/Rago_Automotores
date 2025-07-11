@@ -46,6 +46,7 @@ export type Database = {
           images: string[]
           is_featured: boolean
           is_sold: boolean
+          display_order: number | null
         }
         Insert: {
           id?: number
@@ -62,6 +63,7 @@ export type Database = {
           images: string[]
           is_featured?: boolean
           is_sold?: boolean
+          display_order?: number | null
         }
         Update: {
           id?: number
@@ -78,6 +80,7 @@ export type Database = {
           images?: string[]
           is_featured?: boolean
           is_sold?: boolean
+          display_order?: number | null
         }
         Relationships: []
       }

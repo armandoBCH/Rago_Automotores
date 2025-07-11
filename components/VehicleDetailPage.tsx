@@ -1,4 +1,5 @@
 
+
 import React, { useMemo, useEffect, useRef } from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';

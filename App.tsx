@@ -47,23 +47,21 @@ const App: React.FC = () => {
         setLoading(true);
         setDbError(null);
         try {
-            // Fetch vehicles always
-            const vehiclesResult = await supabase.from('vehicles').select('*');
+            // Fetch vehicles always, now sorted by the new custom order field
+            const vehiclesResult = await supabase
+                .from('vehicles')
+                .select('*')
+                .order('display_order', { ascending: true })
+                .order('is_sold', { ascending: true })
+                .order('created_at', { ascending: false });
+            
             if (vehiclesResult.error) throw vehiclesResult.error;
-
-            const sortedVehicles = (vehiclesResult.data || []).sort((a, b) => {
-                if (a.is_sold !== b.is_sold) {
-                    return a.is_sold ? 1 : -1;
-                }
-                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-            });
-            setVehicles(sortedVehicles);
+            setVehicles(vehiclesResult.data || []);
 
             // Conditionally fetch analytics only for admins
             if (isAdmin) {
                 const response = await fetch('/api/get-analytics');
                 if (!response.ok) {
-                    // Don't throw a fatal error, just log it.
                     console.error('Could not fetch analytics:', await response.text());
                     setAnalyticsEvents([]);
                 } else {
@@ -342,6 +340,34 @@ const App: React.FC = () => {
         }
     };
     
+    const handleReorderVehicles = async (reorderedVehicles: Vehicle[]) => {
+        // Optimistic update
+        setVehicles(reorderedVehicles);
+
+        const orderPayload = reorderedVehicles.map((vehicle, index) => ({
+            id: vehicle.id,
+            display_order: index,
+        }));
+
+        try {
+            const response = await fetch('/api/reorder-vehicles', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vehicles: orderPayload }),
+            });
+            if (!response.ok) {
+                // Revert on error
+                console.error("Failed to save new order, reverting.");
+                await fetchAllData(); 
+                alert("No se pudo guardar el nuevo orden.");
+            }
+        } catch (error) {
+            console.error("Error saving new order:", error);
+            await fetchAllData();
+            alert("Ocurrió un error al guardar el nuevo orden.");
+        }
+    };
+    
     const handleAnalyticsReset = () => fetchAllData();
     const NotFoundPage = () => (
         <div className="text-center py-16"><h1 className="text-4xl font-bold text-rago-burgundy mb-4">404</h1><p>Página No Encontrada</p><a href="/" className="mt-8 inline-block px-6 py-3 font-semibold text-white bg-rago-burgundy rounded-lg">Volver al Inicio</a></div>
@@ -369,6 +395,7 @@ const App: React.FC = () => {
                         onAnalyticsReset={handleAnalyticsReset} 
                         onToggleFeatured={handleToggleFeatured}
                         onToggleSold={handleToggleSold}
+                        onReorder={handleReorderVehicles}
                     />
                 </main>
                 {modalState.type === 'form' && <VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} brands={uniqueBrands} />}

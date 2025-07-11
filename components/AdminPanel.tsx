@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Vehicle, AnalyticsEvent } from '../types';
-import { PlusIcon, EditIcon, TrashIcon, SearchIcon, LogoutIcon, EyeIcon, ChatBubbleIcon as WhatsAppIcon, FileCheckIcon, SellCarIcon, ShareIcon, InstagramIcon, StarIcon, CircleDollarSignIcon } from '../constants';
+import { PlusIcon, EditIcon, TrashIcon, SearchIcon, LogoutIcon, EyeIcon, ChatBubbleIcon as WhatsAppIcon, FileCheckIcon, SellCarIcon, ShareIcon, InstagramIcon, StarIcon, CircleDollarSignIcon, GripVerticalIcon } from '../constants';
 import { optimizeUrl } from '../utils/image';
 import ConfirmationModal from './ConfirmationModal';
 import VehiclePerformanceTable from './VehiclePerformanceTable';
@@ -15,6 +15,7 @@ interface AdminPanelProps {
     onAnalyticsReset: () => void;
     onToggleFeatured: (vehicleId: number, currentStatus: boolean) => void;
     onToggleSold: (vehicleId: number, currentStatus: boolean) => void;
+    onReorder: (reorderedVehicles: Vehicle[]) => void;
 }
 
 const StatCard: React.FC<{ title: string, value: string | number, icon: React.ReactNode }> = ({ title, value, icon }) => (
@@ -137,15 +138,46 @@ const AnalyticsDashboard: React.FC<{ vehicles: Vehicle[], events: AnalyticsEvent
     );
 };
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ vehicles, allEvents, onAdd, onEdit, onDelete, onLogout, onAnalyticsReset, onToggleFeatured, onToggleSold }) => {
+const AdminPanel: React.FC<AdminPanelProps> = ({ vehicles, allEvents, onAdd, onEdit, onDelete, onLogout, onAnalyticsReset, onToggleFeatured, onToggleSold, onReorder }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'inventory' | 'analytics'>('inventory');
+    const [orderedVehicles, setOrderedVehicles] = useState(vehicles);
+    const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
+
+    useEffect(() => {
+        setOrderedVehicles(vehicles);
+    }, [vehicles]);
 
     const filteredVehicles = useMemo(() => {
         const term = searchTerm.toLowerCase().trim();
-        return term ? vehicles.filter(v => `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(term)) : vehicles;
-    }, [vehicles, searchTerm]);
+        // If searching, use the original `vehicles` prop to filter from the full list
+        const sourceList = term ? vehicles : orderedVehicles;
+        return term ? sourceList.filter(v => `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(term)) : sourceList;
+    }, [vehicles, orderedVehicles, searchTerm]);
     
+    const isSearching = searchTerm.trim() !== '';
+
+    const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, index: number) => {
+        setDraggedItemIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragEnter = (index: number) => {
+        if (draggedItemIndex === null || draggedItemIndex === index) return;
+        const newItems = [...orderedVehicles];
+        const [draggedItem] = newItems.splice(draggedItemIndex, 1);
+        newItems.splice(index, 0, draggedItem);
+        setDraggedItemIndex(index);
+        setOrderedVehicles(newItems);
+    };
+
+    const handleDragEnd = () => {
+        if (draggedItemIndex !== null) {
+            onReorder(orderedVehicles);
+        }
+        setDraggedItemIndex(null);
+    };
+
     const TabButton: React.FC<{ tabId: 'inventory' | 'analytics', children: React.ReactNode }> = ({ tabId, children }) => (
         <button
             onClick={() => setActiveTab(tabId)}
@@ -189,6 +221,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ vehicles, allEvents, onAdd, onE
                                 <table className="w-full text-base text-left">
                                     <thead className="text-sm text-slate-500 dark:text-slate-400 uppercase border-b-2 border-slate-200 dark:border-slate-700">
                                         <tr>
+                                            <th scope="col" className="w-12 px-2 py-4"></th>
                                             <th scope="col" className="px-6 py-4 font-semibold">Vehículo</th>
                                             <th scope="col" className="px-6 py-4 font-semibold">Estado</th>
                                             <th scope="col" className="px-6 py-4 font-semibold">Precio</th>
@@ -197,8 +230,23 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ vehicles, allEvents, onAdd, onE
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredVehicles.map(vehicle => (
-                                            <tr key={vehicle.id} className={`border-b dark:border-slate-800 transition-colors duration-200 ${vehicle.is_sold ? 'bg-slate-100/50 dark:bg-slate-800/30 opacity-60' : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'}`}>
+                                        {filteredVehicles.map((vehicle, index) => (
+                                            <tr 
+                                                key={vehicle.id} 
+                                                draggable={!isSearching}
+                                                onDragStart={!isSearching ? (e) => handleDragStart(e, index) : undefined}
+                                                onDragEnter={!isSearching ? () => handleDragEnter(index) : undefined}
+                                                onDragEnd={!isSearching ? handleDragEnd : undefined}
+                                                onDragOver={!isSearching ? (e) => e.preventDefault() : undefined}
+                                                className={`border-b dark:border-slate-800 transition-colors duration-200 ${vehicle.is_sold ? 'bg-slate-100/50 dark:bg-slate-800/30 opacity-60' : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'} ${draggedItemIndex === index ? 'opacity-50 scale-105 shadow-2xl' : ''}`}
+                                            >
+                                                <td className="px-2 py-4">
+                                                    {!isSearching && (
+                                                        <div className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors cursor-grab active:cursor-grabbing">
+                                                            <GripVerticalIcon className="h-6 w-6" />
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <th scope="row" className="px-6 py-4 font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap">
                                                     <div className='flex items-center gap-4'>
                                                         <img src={optimizeUrl(vehicle.images?.[0], { w: 80, h: 64, fit: 'cover' })} alt={`${vehicle.make} ${vehicle.model}`} className="w-20 h-16 object-cover rounded-md" />

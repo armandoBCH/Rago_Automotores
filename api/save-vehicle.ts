@@ -49,7 +49,22 @@ export default async function handler(
         if (error) throw error;
         result = data;
     } else {
-        // This is a create
+        // This is a create, so we need to set the display_order
+        const { data: maxOrderData, error: maxOrderError } = await supabaseAdmin
+            .from('vehicles')
+            .select('display_order')
+            .order('display_order', { ascending: false, nullsFirst: false })
+            .limit(1)
+            .single();
+
+        // PGRST116 means no rows found, which is okay for the first vehicle.
+        if (maxOrderError && maxOrderError.code !== 'PGRST116') {
+            throw maxOrderError;
+        }
+
+        const newOrder = (maxOrderData?.display_order ?? -1) + 1;
+        dataToSave.display_order = newOrder;
+
         const { data, error } = await supabaseAdmin
             .from('vehicles')
             .insert(dataToSave)
