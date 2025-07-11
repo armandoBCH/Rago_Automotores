@@ -1,5 +1,4 @@
 
-
 export const slugify = (text: string): string => {
   if (!text) return '';
   
@@ -18,8 +17,18 @@ export const slugify = (text: string): string => {
 }
 
 export const optimizeUrl = (url: string, options: Record<string, any> = {}): string => {
-    // Return a placeholder for invalid or non-http URLs
-    if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    // Return a placeholder for invalid URLs
+    if (!url || typeof url !== 'string') {
+        return 'https://i.imgur.com/g2a4A0a.png';
+    }
+
+    // If it's a local preview (blob or data URL), return it directly without optimization.
+    if (url.startsWith('blob:') || url.startsWith('data:')) {
+        return url;
+    }
+
+    // For external URLs, check if they start with http
+    if (!url.startsWith('http')) {
         return 'https://i.imgur.com/g2a4A0a.png';
     }
 

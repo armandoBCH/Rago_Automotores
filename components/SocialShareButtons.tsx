@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Vehicle } from '../types';
 import { WhatsAppIcon, FacebookIcon, ShareIcon } from '../constants';
@@ -8,6 +9,10 @@ interface SocialShareButtonsProps {
 }
 
 const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({ vehicle }) => {
+    if (vehicle.is_sold) {
+        return null;
+    }
+
     const shareUrl = window.location.href;
     const title = `${vehicle.make} ${vehicle.model} (${vehicle.year})`;
     const text = `¡Mira este ${title} en Rago Automotores! Precio: $${vehicle.price.toLocaleString('es-AR')}.`;

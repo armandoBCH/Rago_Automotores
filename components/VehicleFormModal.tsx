@@ -1,9 +1,4 @@
 
-
-
-
-
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Vehicle, VehicleFormData } from '../types';
 import { XIcon } from '../constants';
@@ -46,19 +41,6 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
     
     const imageFilesRef = useRef(imageFiles);
     imageFilesRef.current = imageFiles;
-
-    useEffect(() => {
-        // This effect's cleanup runs ONLY on unmount.
-        // It revokes any created blob URLs to prevent memory leaks.
-        return () => {
-            imageFilesRef.current.forEach(imageFile => {
-                if (imageFile.file && imageFile.preview.startsWith('blob:')) {
-                    URL.revokeObjectURL(imageFile.preview);
-                }
-            });
-        };
-    }, []); // Empty dependency array ensures this runs only on mount and unmount.
-
 
     const isOtherFuelType = formData.fuelType === 'Otro';
 
@@ -323,8 +305,10 @@ const VehicleDetailPreview: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
             <div className="relative aspect-[4/3] bg-gray-200 dark:bg-black">
                 <ImageCarousel images={vehicle.images} />
                 {vehicle.is_sold && (
-                     <div className="absolute inset-0 bg-white/10 dark:bg-black/40 backdrop-blur-sm flex items-center justify-center z-20 pointer-events-none">
-                        <img src="https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752208124/toppng.com-vendido-carimbo-la-96-nike-missile-site-432x152_1_ybxv6w.png" alt="Vendido" className="w-1/2 opacity-90 transform -rotate-[15deg]" />
+                     <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none bg-black/10 backdrop-blur-[2px]">
+                        <span className="transform -rotate-12 select-none text-6xl md:text-7xl font-black text-red-600 border-4 border-red-600 rounded-xl px-6 py-3 bg-white/80 shadow-2xl">
+                            VENDIDO
+                        </span>
                     </div>
                 )}
             </div>

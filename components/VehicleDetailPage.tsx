@@ -222,8 +222,10 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                             <div className="relative lg:rounded-2xl lg:overflow-hidden lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
                                 <ImageCarousel images={vehicle.images} />
                                 {vehicle.is_sold && (
-                                    <div className="absolute inset-0 bg-white/10 dark:bg-black/40 backdrop-blur-sm flex items-center justify-center z-20 pointer-events-none lg:rounded-2xl">
-                                        <img src="https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752208124/toppng.com-vendido-carimbo-la-96-nike-missile-site-432x152_1_ybxv6w.png" alt="Vendido" className="w-2/3 md:w-1/2 opacity-90 transform -rotate-[15deg] drop-shadow-lg" />
+                                    <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none lg:rounded-2xl">
+                                        <span className="transform -rotate-12 select-none text-6xl md:text-7xl font-black text-red-600 border-4 border-red-600 rounded-xl px-6 py-3 bg-white/80 shadow-2xl">
+                                            VENDIDO
+                                        </span>
                                     </div>
                                 )}
                             </div>

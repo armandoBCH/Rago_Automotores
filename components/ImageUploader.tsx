@@ -1,8 +1,4 @@
 
-
-
-
-
 import React, { useCallback, useMemo, useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { TrashIcon, GripVerticalIcon, PlusIcon } from '../constants';
@@ -58,13 +54,20 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ files, setFiles, disabled
     const dragItemNode = useRef<HTMLDivElement | null>(null);
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
-        const newImageFiles: ImageFile[] = acceptedFiles.map(file => ({
-            id: `${file.name}-${file.lastModified}-${Math.random()}`,
-            file,
-            preview: URL.createObjectURL(file),
-            status: 'pending'
-        }));
-        setFiles(prev => [...prev, ...newImageFiles]);
+        acceptedFiles.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const dataUrl = reader.result as string;
+                const newImageFile: ImageFile = {
+                    id: `${file.name}-${file.lastModified}-${Math.random()}`,
+                    file,
+                    preview: dataUrl,
+                    status: 'pending'
+                };
+                setFiles(prev => [...prev, newImageFile]);
+            };
+            reader.readAsDataURL(file);
+        });
     }, [setFiles]);
 
     const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } = useDropzone({
@@ -86,14 +89,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ files, setFiles, disabled
     }, [isFocused, isDragAccept, isDragReject, disabled]);
 
     const removeFile = (id: string) => {
-        setFiles(prev => {
-            const fileToRemove = prev.find(f => f.id === id);
-            // Revoke the blob URL if it exists to prevent memory leaks
-            if (fileToRemove && fileToRemove.file && fileToRemove.preview.startsWith('blob:')) {
-                URL.revokeObjectURL(fileToRemove.preview);
-            }
-            return prev.filter(f => f.id !== id);
-        });
+        setFiles(prev => prev.filter(f => f.id !== id));
     };
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
