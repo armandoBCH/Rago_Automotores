@@ -47,13 +47,13 @@ export default async function handler(
     }
 
     if (vehicle && vehicle.images && vehicle.images.length > 0) {
-        const filePaths = vehicle.images.map(url => {
+        const filePaths = vehicle.images.map((url: string) => {
             try {
                 const urlObject = new URL(url);
                 const pathParts = urlObject.pathname.split('/vehicle-images/'); // Corrected bucket name
                 return pathParts.length > 1 ? decodeURIComponent(pathParts[1]) : null;
             } catch (e) { return null; }
-        }).filter((path): path is string => path !== null);
+        }).filter((path: string | null): path is string => path !== null);
 
         if (filePaths.length > 0) {
             const { error: storageError } = await supabaseAdmin.storage
