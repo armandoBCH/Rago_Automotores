@@ -1,4 +1,3 @@
-
 import React, { useMemo, useEffect, useRef } from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';
@@ -28,7 +27,7 @@ const SpecificationItem: React.FC<{ icon: React.ReactNode; label: string; value:
 );
 
 const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
-    <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl py-3 px-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+    <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl py-3 px-5 border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-base font-medium text-slate-500 dark:text-slate-400 flex-wrap">
             <a href="/" className="hover:text-rago-burgundy transition-colors">Inicio</a>
             <ArrowRightIcon className="h-4 w-4 text-slate-400" />
@@ -38,6 +37,57 @@ const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
         </nav>
     </div>
 );
+
+const PriceCard: React.FC<{ vehicle: Vehicle, whatsappLink: string, onWhatsAppClick: () => void }> = ({ vehicle, whatsappLink, onWhatsAppClick }) => (
+    <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6 shadow-subtle dark:shadow-subtle-dark">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b dark:border-gray-700 pb-4 mb-6">
+            <h1 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+                {vehicle.make} {vehicle.model}
+            </h1>
+            <span className="text-xl font-bold inline-block align-baseline py-1 px-4 rounded-full text-rago-burgundy bg-rago-burgundy/10 dark:text-white dark:bg-rago-burgundy">
+                {vehicle.year}
+            </span>
+        </div>
+        <div className="mb-6">
+            <p className="text-[2.1rem] leading-tight sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-rago-burgundy">
+                ${vehicle.price.toLocaleString('es-AR')}
+            </p>
+        </div>
+        {vehicle.is_sold ? (
+            <div className="group w-full flex items-center justify-center gap-3 text-center bg-slate-400 dark:bg-slate-700 text-white font-bold py-4 px-4 rounded-lg text-xl cursor-not-allowed">
+                Vehículo Vendido
+            </div>
+        ) : (
+            <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onWhatsAppClick}
+                className="group w-full flex items-center justify-center gap-3 text-center bg-gradient-to-r from-rago-burgundy to-rago-burgundy-darker hover:shadow-rago-glow text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 text-xl transform hover:-translate-y-0.5 animate-pulse-burgundy"
+            >
+                <ChatBubbleIcon className="h-7 w-7 transition-transform duration-300 group-hover:scale-110" />
+                <span>Contactar por WhatsApp</span>
+            </a>
+        )}
+        <SocialShareButtons vehicle={vehicle} />
+    </div>
+);
+
+const SpecsCard: React.FC<{ specs: { icon: JSX.Element; label: string; value: string | number }[] }> = ({ specs }) => (
+     <section>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark overflow-hidden border border-gray-200 dark:border-gray-800">
+            <div className="border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Especificaciones</h3>
+            </div>
+            <div className="p-6 divide-y divide-gray-200 dark:divide-gray-800">
+                {specs.map(spec => (
+                    <SpecificationItem key={spec.label} icon={spec.icon} label={spec.label} value={spec.value} />
+                ))}
+            </div>
+        </div>
+    </section>
+);
+
 
 const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehicles }) => {
     const similarVehiclesRef = useRef<HTMLDivElement>(null);
@@ -87,7 +137,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
             return true;
         });
 
-        return uniqueVehicles.slice(0, 8); // Show up to 8 similar vehicles
+        return uniqueVehicles.slice(0, 8);
     }, [vehicle, allVehicles]);
 
     const scrollSimilarVehicles = (direction: 'left' | 'right') => {
@@ -102,19 +152,20 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
     return (
         <div className="max-w-screen-xl mx-auto">
-             <div className="mb-8 opacity-0 animate-fade-in-up">
+            <div className="opacity-0 animate-fade-in-up">
                 <Breadcrumb vehicle={vehicle} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 lg:gap-x-12">
-                 {/* --- Column for Image and Mobile description --- */}
-                <div className="lg:col-span-3 space-y-8 flex flex-col">
+                
+                {/* --- Left Column: Image & Description --- */}
+                <div className="lg:col-span-3 flex flex-col gap-y-8">
                     {/* Image Carousel */}
-                     <div className="opacity-0 animate-fade-in-up">
+                    <div className="opacity-0 animate-fade-in-up">
                         <div className="-mx-4 md:-mx-6 lg:mx-0">
                             <div className="relative lg:rounded-2xl lg:overflow-hidden lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
                                 <ImageCarousel images={vehicle.images} />
-                                 {vehicle.is_sold && (
+                                {vehicle.is_sold && (
                                     <div className="absolute inset-0 bg-white/10 dark:bg-black/40 backdrop-blur-sm flex items-center justify-center z-20 pointer-events-none lg:rounded-2xl">
                                         <img src="https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752208124/toppng.com-vendido-carimbo-la-96-nike-missile-site-432x152_1_ybxv6w.png" alt="Vendido" className="w-2/3 md:w-1/2 opacity-90 transform -rotate-[15deg] drop-shadow-lg" />
                                     </div>
@@ -122,85 +173,36 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                             </div>
                         </div>
                     </div>
-                    {/* Description Card (Visible on mobile, hidden on lg) */}
-                    <div className="block lg:hidden opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
-                        <DescriptionCard description={vehicle.description} />
-                    </div>
-                </div>
 
-                {/* --- Right Column (Sticky) --- */}
-                <div className="lg:col-span-2 mt-8 lg:mt-0">
-                    <div className="lg:sticky lg:top-28 flex flex-col gap-y-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-                        {/* Main Info Card */}
-                        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6 shadow-subtle dark:shadow-subtle-dark">
-                            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b dark:border-gray-700 pb-4 mb-6">
-                                <h1 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
-                                    {vehicle.make} {vehicle.model}
-                                </h1>
-                                <span className="text-xl font-bold inline-block align-baseline py-1 px-4 rounded-full text-rago-burgundy bg-rago-burgundy/10 dark:text-white dark:bg-rago-burgundy">
-                                    {vehicle.year}
-                                </span>
-                            </div>
-                            <div className="mb-6">
-                                <p className="text-[2.1rem] leading-tight sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-rago-burgundy">
-                                    ${vehicle.price.toLocaleString('es-AR')}
-                                </p>
-                            </div>
-                            {vehicle.is_sold ? (
-                                <div className="group w-full flex items-center justify-center gap-3 text-center bg-slate-400 dark:bg-slate-700 text-white font-bold py-4 px-4 rounded-lg text-xl cursor-not-allowed">
-                                    Vehículo Vendido
-                                </div>
-                            ) : (
-                                <a
-                                    href={whatsappLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={handleWhatsAppClick}
-                                    className="group w-full flex items-center justify-center gap-3 text-center bg-gradient-to-r from-rago-burgundy to-rago-burgundy-darker hover:shadow-rago-glow text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 text-xl transform hover:-translate-y-0.5 animate-pulse-burgundy"
-                                >
-                                    <ChatBubbleIcon className="h-7 w-7 transition-transform duration-300 group-hover:scale-110" />
-                                    <span>Contactar por WhatsApp</span>
-                                </a>
-                            )}
-                            <SocialShareButtons vehicle={vehicle} />
-                        </div>
+                    {/* Content for Mobile */}
+                    <div className="lg:hidden space-y-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+                        <PriceCard vehicle={vehicle} whatsappLink={whatsappLink} onWhatsAppClick={handleWhatsAppClick} />
+                        <SpecsCard specs={specs} />
                     </div>
-                </div>
-            </div>
-            
-            <div className="hidden lg:grid grid-cols-5 lg:gap-x-12 mt-8">
-                 <div className="lg:col-span-3 space-y-8">
+                    
+                    {/* Description for All */}
                     <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
                         <DescriptionCard description={vehicle.description} />
                     </div>
                 </div>
-                 <div className="lg:col-span-2">
-                    <div className="lg:sticky lg:top-28 flex flex-col gap-y-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '350ms' }}>
-                         <section>
-                            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark overflow-hidden border border-gray-200 dark:border-gray-800">
-                                <div className="border-b border-gray-200 dark:border-gray-800 px-6 py-4">
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Especificaciones</h3>
-                                </div>
-                                <div className="p-6 divide-y divide-gray-200 dark:divide-gray-800">
-                                    {specs.map(spec => (
-                                        <SpecificationItem key={spec.label} icon={spec.icon} label={spec.label} value={spec.value} />
-                                    ))}
-                                </div>
-                            </div>
-                        </section>
+
+                {/* --- Right Column (Sticky on Desktop) --- */}
+                <div className="hidden lg:block lg:col-span-2">
+                    <div className="lg:sticky lg:top-28 space-y-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+                        <PriceCard vehicle={vehicle} whatsappLink={whatsappLink} onWhatsAppClick={handleWhatsAppClick} />
+                        <SpecsCard specs={specs} />
                     </div>
                 </div>
             </div>
 
-
-            {/* Related Vehicles Section */}
+            {/* Similar Vehicles Section */}
             {relatedVehicles.length > 0 && (
-                <section className="mt-16 lg:mt-24 py-16 lg:py-24 bg-slate-100 dark:bg-slate-950">
+                <section className="mt-12 lg:mt-16 py-16 lg:py-24 bg-slate-100 dark:bg-slate-950 -mx-4 md:-mx-6">
                     <div className="max-w-screen-xl mx-auto px-4 md:px-6">
                         <div className="relative bg-slate-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-rago-black rounded-3xl p-8 md:p-12 lg:p-16 shadow-xl border border-slate-200 dark:border-slate-800">
-                             <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-y-4">
+                            <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-y-4">
                                 <h2 className="text-center md:text-left text-4xl md:text-5xl font-black text-slate-800 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-br dark:from-white dark:to-slate-400">
-                                    También te puede interesar
+                                    Vehículos similares
                                 </h2>
                                 {relatedVehicles.length > 3 && (
                                     <div className="flex gap-3">
@@ -221,7 +223,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                                 ))}
                             </div>
                         </div>
-                         <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
+                        <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
                     </div>
                 </section>
             )}
