@@ -7,6 +7,7 @@ import SocialShareButtons from './SocialShareButtons';
 import DescriptionCard from './DescriptionCard';
 import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon, ArrowLeftIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
+import { optimizeUrl, slugify } from '../utils/image';
 
 interface VehicleDetailPageProps {
     vehicle: Vehicle;
@@ -95,7 +96,61 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
     useEffect(() => {
         trackEvent('view_vehicle', vehicle.id);
-    }, [vehicle.id]);
+        
+        // Add Vehicle JSON-LD structured data
+        const schema = {
+            '@context': 'https://schema.org',
+            '@type': 'Vehicle',
+            'name': `${vehicle.make} ${vehicle.model} ${vehicle.year}`,
+            'url': window.location.href,
+            'image': vehicle.images.map(img => optimizeUrl(img, { w: 1200, h: 800, fit: 'cover' })),
+            'description': vehicle.description,
+            'brand': {
+                '@type': 'Brand',
+                'name': vehicle.make
+            },
+            'model': vehicle.model,
+            'vehicleModelDate': String(vehicle.year),
+            'mileageFromOdometer': {
+                '@type': 'QuantitativeValue',
+                'value': vehicle.mileage,
+                'unitCode': 'KMT'
+            },
+            'fuelType': vehicle.fuelType,
+            'vehicleEngine': {
+                '@type': 'EngineSpecification',
+                'name': vehicle.engine
+            },
+            'vehicleTransmission': vehicle.transmission,
+            'offers': {
+                '@type': 'Offer',
+                'price': vehicle.price,
+                'priceCurrency': 'ARS',
+                'availability': vehicle.is_sold ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+                'seller': {
+                    '@type': 'AutoDealer',
+                    'name': 'Rago Automotores',
+                    'url': window.location.origin
+                }
+            }
+        };
+
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.id = 'vehicle-json-ld';
+        script.innerHTML = JSON.stringify(schema);
+
+        const existingScript = document.getElementById('vehicle-json-ld');
+        if (existingScript) {
+            existingScript.remove();
+        }
+        document.head.appendChild(script);
+
+        return () => {
+            document.getElementById('vehicle-json-ld')?.remove();
+        };
+
+    }, [vehicle]);
 
     const handleWhatsAppClick = () => {
         trackEvent('click_whatsapp', vehicle.id);

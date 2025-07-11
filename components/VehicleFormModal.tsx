@@ -2,7 +2,9 @@
 
 
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+
+
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Vehicle, VehicleFormData } from '../types';
 import { XIcon } from '../constants';
 import VehicleCard from './VehicleCard';
@@ -41,6 +43,22 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
     const [isAnimatingOut, setIsAnimatingOut] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitProgress, setSubmitProgress] = useState({ total: 0, completed: 0 });
+    
+    const imageFilesRef = useRef(imageFiles);
+    imageFilesRef.current = imageFiles;
+
+    useEffect(() => {
+        // This effect's cleanup runs ONLY on unmount.
+        // It revokes any created blob URLs to prevent memory leaks.
+        return () => {
+            imageFilesRef.current.forEach(imageFile => {
+                if (imageFile.file && imageFile.preview.startsWith('blob:')) {
+                    URL.revokeObjectURL(imageFile.preview);
+                }
+            });
+        };
+    }, []); // Empty dependency array ensures this runs only on mount and unmount.
+
 
     const isOtherFuelType = formData.fuelType === 'Otro';
 

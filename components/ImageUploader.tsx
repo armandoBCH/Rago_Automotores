@@ -1,6 +1,8 @@
 
 
 
+
+
 import React, { useCallback, useMemo, useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { TrashIcon, GripVerticalIcon, PlusIcon } from '../constants';
@@ -84,7 +86,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ files, setFiles, disabled
     }, [isFocused, isDragAccept, isDragReject, disabled]);
 
     const removeFile = (id: string) => {
-        setFiles(prev => prev.filter(f => f.id !== id));
+        setFiles(prev => {
+            const fileToRemove = prev.find(f => f.id === id);
+            // Revoke the blob URL if it exists to prevent memory leaks
+            if (fileToRemove && fileToRemove.file && fileToRemove.preview.startsWith('blob:')) {
+                URL.revokeObjectURL(fileToRemove.preview);
+            }
+            return prev.filter(f => f.id !== id);
+        });
     };
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
@@ -128,21 +137,30 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ files, setFiles, disabled
                         onDragEnter={(e) => handleDragEnter(e, index)}
                         onDragEnd={handleDragEnd}
                         onDragOver={(e) => e.preventDefault()}
-                        className={`flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-700/50 transition-all duration-300 ease-in-out ${draggedIndex === index ? 'opacity-50 shadow-2xl scale-105' : 'opacity-100 shadow-sm'}`}
+                        className={`group relative flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-700/50 transition-all duration-300 ease-in-out ${draggedIndex === index ? 'opacity-50 shadow-2xl scale-105' : 'opacity-100 shadow-sm'}`}
                     >
                         <div className={`flex-shrink-0 ${disabled ? 'cursor-not-allowed' : 'cursor-grab'}`} aria-label="Arrastrar para reordenar">
                            <GripVerticalIcon className="h-6 w-6 text-slate-400 dark:text-slate-500" />
                         </div>
-                        <div className="relative w-20 h-16 rounded flex-shrink-0">
+                        <div className="relative w-20 h-16 rounded flex-shrink-0 bg-slate-200 dark:bg-slate-700">
                              {index === 0 && <span className="absolute -top-1.5 -left-1.5 bg-rago-burgundy text-white text-xs font-bold px-2 py-0.5 rounded-full z-10 select-none">Principal</span>}
-                            <img src={imageFile.preview} alt={`Previsualización de ${imageFile.file?.name || 'imagen'}`} className="w-full h-full object-cover rounded" onLoad={() => { if (imageFile.file && imageFile.preview.startsWith('blob:')) URL.revokeObjectURL(imageFile.preview) }} />
+                            <img 
+                                src={imageFile.preview} 
+                                alt={`Previsualización de ${imageFile.file?.name || 'imagen'}`} 
+                                className="w-full h-full object-cover rounded" 
+                            />
                         </div>
                         <div className="flex-grow min-w-0">
                             <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{imageFile.file?.name || new URL(imageFile.url || '').pathname.split('/').pop()}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">{imageFile.file ? `${(imageFile.file.size / 1024).toFixed(1)} KB` : 'Subida'}</p>
                         </div>
                         <div className="flex items-center flex-shrink-0">
-                            <button type="button" onClick={() => removeFile(imageFile.id)} disabled={disabled} className="p-1.5 disabled:opacity-50 text-red-500 hover:text-red-700"><TrashIcon /></button>
+                            <button type="button" onClick={() => removeFile(imageFile.id)} disabled={disabled} className="p-1.5 disabled:opacity-50 text-red-500 hover:text-red-700 transition-colors"><TrashIcon /></button>
+                        </div>
+
+                        {/* Hover Preview Tooltip */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-1 bg-white dark:bg-black border border-slate-300 dark:border-slate-600 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20">
+                            <img src={imageFile.preview} alt="Vista previa ampliada" className="w-56 h-auto max-h-56 object-contain rounded" />
                         </div>
                     </div>
                 ))}

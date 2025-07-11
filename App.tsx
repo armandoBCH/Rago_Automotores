@@ -177,32 +177,67 @@ const App: React.FC = () => {
         return vehicles.find(v => v.id === vehicleId);
     }, [vehicleId, vehicles]);
     
+     // SEO and Metadata Management
     useEffect(() => {
-        if (!selectedVehicle) return;
         const head = document.head;
-        const originalTitle = document.title;
         const updateMeta = (selector: string, content: string) => head.querySelector(selector)?.setAttribute('content', content);
+        const updateLink = (selector: string, href: string) => head.querySelector(selector)?.setAttribute('href', href);
         
-        document.title = `${selectedVehicle.make} ${selectedVehicle.model} | Rago Automotores`;
-        const image = optimizeUrl(selectedVehicle.images[0], { w: 1200, h: 630, fit: 'cover', q: 80, output: 'jpeg' });
-        const desc = `Año ${selectedVehicle.year} - $${selectedVehicle.price.toLocaleString('es-AR')}. Mirá más detalles.`;
-
-        updateMeta('meta[property="og:title"]', `${selectedVehicle.make} ${selectedVehicle.model}`);
-        updateMeta('meta[property="og:description"]', desc);
-        updateMeta('meta[property="og:image"]', image);
-        updateMeta('meta[property="og:url"]', window.location.href);
-        updateMeta('meta[name="twitter:title"]', `${selectedVehicle.make} ${selectedVehicle.model}`);
-        updateMeta('meta[name="twitter:description"]', desc);
-        updateMeta('meta[name="twitter:image"]', image);
-
-        return () => { // Cleanup
-            document.title = originalTitle;
+        // Canonical URL update for all pages
+        const canonicalUrl = window.location.origin + path;
+        updateLink('link[rel="canonical"]', canonicalUrl);
+        updateMeta('meta[property="og:url"]', canonicalUrl);
+        
+        // Remove existing structured data
+        head.querySelectorAll('script[type="application/ld+json"]').forEach(tag => tag.remove());
+        
+        if (isHomePage) {
+            document.title = 'Rago Automotores - Venta de Usados Seleccionados en Olavarría';
+            updateMeta('meta[name="description"]', 'Encontrá tu próximo vehículo en Rago Automotores. Ofrecemos un catálogo de autos usados seleccionados en Olavarría. Calidad, confianza y la mejor financiación.');
             updateMeta('meta[property="og:title"]', 'Rago Automotores - Catálogo de Vehículos');
-            updateMeta('meta[property="og:description"]', 'Tu concesionaria de confianza.');
+            updateMeta('meta[property="og:description"]', 'Tu concesionaria de confianza para vehículos seleccionados. Calidad y transparencia en cada venta.');
             updateMeta('meta[property="og:image"]', 'https://i.imgur.com/zOGb0ay.jpeg');
-            updateMeta('meta[property="og:url"]', window.location.origin);
-        };
-    }, [selectedVehicle]);
+
+            // Add Organization JSON-LD for homepage
+            const orgSchema = {
+                '@context': 'https://schema.org',
+                '@type': 'AutoDealer',
+                'name': 'Rago Automotores',
+                'url': window.location.origin,
+                'logo': 'https://i.imgur.com/zOGb0ay.jpeg',
+                'address': {
+                    '@type': 'PostalAddress',
+                    'streetAddress': 'Av. Ituzaingó 2658',
+                    'addressLocality': 'Olavarría',
+                    'addressRegion': 'Buenos Aires',
+                    'postalCode': 'B7400',
+                    'addressCountry': 'AR'
+                },
+                'telephone': '+5492284635692',
+                'openingHours': 'Mo-Fr 09:00-17:00, Sa 09:00-13:30',
+                 'image': 'https://i.imgur.com/zOGb0ay.jpeg'
+            };
+            const script = document.createElement('script');
+            script.type = 'application/ld+json';
+            script.innerHTML = JSON.stringify(orgSchema);
+            head.appendChild(script);
+
+        } else if (selectedVehicle) {
+            const title = `${selectedVehicle.make} ${selectedVehicle.model} ${selectedVehicle.year} | Rago Automotores`;
+            const description = `Encontrá este ${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.year}) en Rago Automotores. Kilometraje: ${selectedVehicle.mileage.toLocaleString('es-AR')} km. Precio: $${selectedVehicle.price.toLocaleString('es-AR')}.`;
+            const imageUrl = optimizeUrl(selectedVehicle.images[0], { w: 1200, h: 630, fit: 'cover', q: 80, output: 'jpeg' });
+            
+            document.title = title;
+            updateMeta('meta[name="description"]', description);
+            updateMeta('meta[property="og:title"]', title);
+            updateMeta('meta[property="og:description"]', description);
+            updateMeta('meta[property="og:image"]', imageUrl);
+            updateMeta('meta[name="twitter:title"]', title);
+            updateMeta('meta[name="twitter:description"]', description);
+            updateMeta('meta[name="twitter:image"]', imageUrl);
+        }
+        
+    }, [path, selectedVehicle, isHomePage]);
 
     const uniqueBrands = useMemo(() => Array.from(new Set(vehicles.map(v => v.make))).sort(), [vehicles]);
 
