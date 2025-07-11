@@ -1,3 +1,4 @@
+
 import React, { useMemo, useEffect, useRef } from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';
@@ -197,24 +198,18 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
             {/* Similar Vehicles Section */}
             {relatedVehicles.length > 0 && (
-                <section className="mt-12 lg:mt-16 py-16 lg:py-24 bg-slate-100 dark:bg-slate-950 -mx-4 md:-mx-6">
-                    <div className="max-w-screen-xl mx-auto px-4 md:px-6">
-                        <div className="relative bg-slate-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-rago-black rounded-3xl p-8 md:p-12 lg:p-16 shadow-xl border border-slate-200 dark:border-slate-800">
-                            <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-y-4">
-                                <h2 className="text-center md:text-left text-4xl md:text-5xl font-black text-slate-800 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-br dark:from-white dark:to-slate-400">
+                <section className="mt-20 lg:mt-24 py-4">
+                     <div className="relative overflow-hidden rounded-3xl p-8 md:p-12 lg:p-16 border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white via-slate-50 to-slate-100 dark:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] dark:from-rago-black dark:via-slate-900 dark:to-slate-900 shadow-2xl dark:shadow-rago-glow">
+                        <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-rago-burgundy/10 via-transparent to-transparent blur-3xl opacity-50"></div>
+                        <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-500/10 via-transparent to-transparent blur-3xl opacity-50"></div>
+            
+                        <div className="relative z-10">
+                            <div className="text-center mb-12">
+                                <h2 className="text-5xl md:text-6xl font-black text-slate-800 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-br dark:from-white dark:to-slate-400">
                                     Vehículos similares
                                 </h2>
-                                {relatedVehicles.length > 3 && (
-                                    <div className="flex gap-3">
-                                        <button onClick={() => scrollSimilarVehicles('left')} aria-label="Desplazar a la izquierda" className="w-14 h-14 rounded-full bg-white/50 dark:bg-white/5 border border-transparent dark:border-white/10 hover:bg-white dark:hover:bg-white/10 backdrop-blur-sm flex items-center justify-center transition-all duration-300 text-slate-800 dark:text-white transform hover:scale-105">
-                                            <ArrowLeftIcon className="h-7 w-7" />
-                                        </button>
-                                        <button onClick={() => scrollSimilarVehicles('right')} aria-label="Desplazar a la derecha" className="w-14 h-14 rounded-full bg-white/50 dark:bg-white/5 border border-transparent dark:border-white/10 hover:bg-white dark:hover:bg-white/10 backdrop-blur-sm flex items-center justify-center transition-all duration-300 text-slate-800 dark:text-white transform hover:scale-105">
-                                            <ArrowRightIcon className="h-7 w-7" />
-                                        </button>
-                                    </div>
-                                )}
                             </div>
+                
                             <div ref={similarVehiclesRef} className="flex gap-6 -m-4 p-4 overflow-x-auto pb-6 hide-scrollbar">
                                 {relatedVehicles.map((relatedVehicle, index) => (
                                     <div key={relatedVehicle.id} className="flex-shrink-0 w-[85%] sm:w-[45%] md:w-[40%] lg:w-[30%] xl:w-1/4 stagger-child" style={{ animationDelay: `${index * 80}ms` }}>
@@ -223,8 +218,27 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                                 ))}
                             </div>
                         </div>
-                        <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
+
+                        {relatedVehicles.length > 3 && (
+                            <>
+                                <button 
+                                    onClick={() => scrollSimilarVehicles('left')} 
+                                    aria-label="Desplazar a la izquierda" 
+                                    className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 hidden md:flex items-center justify-center w-14 h-14 bg-white/30 dark:bg-black/30 backdrop-blur-lg rounded-full border border-white/20 dark:border-white/10 text-slate-800 dark:text-white hover:bg-white/50 dark:hover:bg-black/50 hover:border-white/30 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                >
+                                    <ArrowLeftIcon className="h-7 w-7" />
+                                </button>
+                                <button 
+                                    onClick={() => scrollSimilarVehicles('right')} 
+                                    aria-label="Desplazar a la derecha" 
+                                    className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 hidden md:flex items-center justify-center w-14 h-14 bg-white/30 dark:bg-black/30 backdrop-blur-lg rounded-full border border-white/20 dark:border-white/10 text-slate-800 dark:text-white hover:bg-white/50 dark:hover:bg-black/50 hover:border-white/30 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                >
+                                    <ArrowRightIcon className="h-7 w-7" />
+                                </button>
+                            </>
+                        )}
                     </div>
+                    <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
                 </section>
             )}
         </div>
