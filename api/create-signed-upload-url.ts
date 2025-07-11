@@ -8,17 +8,16 @@ export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
 ) {
+  // Set CORS headers
+  response.setHeader('Access-Control-Allow-Origin', '*'); // In production, restrict this to your domain
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   // Handle CORS preflight requests
   if (request.method === 'OPTIONS') {
-    response.setHeader('Access-Control-Allow-Origin', '*'); // In production, restrict this to your domain
-    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     return response.status(200).end();
   }
   
-  // Set CORS header for the actual request
-  response.setHeader('Access-Control-Allow-Origin', '*'); // In production, restrict this to your domain
-
   if (request.method !== 'POST') {
     return response.status(405).json({ message: 'Method Not Allowed' });
   }
@@ -46,15 +45,23 @@ export default async function handler(
     const path = `public/${Date.now()}-${sanitizedFileName}`;
 
     const { data, error } = await supabaseAdmin.storage
-        .from('vehicle-images') // Corrected bucket name
+        .from('vehicle-images')
         .createSignedUploadUrl(path);
 
     if (error) {
         console.error('Supabase signed URL error:', error);
         throw new Error('Could not create signed URL.');
     }
+    
+    const url = new URL(data.signedUrl);
+    const token = url.searchParams.get('token');
 
-    return response.status(200).json({ signedUrl: data.signedUrl, path: data.path });
+    if (!token) {
+        console.error('Could not extract token from signed URL', data.signedUrl);
+        throw new Error('Could not process signed URL token.');
+    }
+
+    return response.status(200).json({ token: token, path: data.path });
 
   } catch (error: any) {
     console.error('Error in create-signed-upload-url handler:', error);

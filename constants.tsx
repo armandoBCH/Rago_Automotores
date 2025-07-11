@@ -1,4 +1,5 @@
 
+
 import { Vehicle } from './types';
 
 export const SearchIcon = ({ className }: { className?: string }) => (
@@ -53,6 +54,10 @@ export const DownIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className || "h-5 w-5"} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
     </svg>
+);
+
+export const GripVerticalIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
 );
 
 export const LogoutIcon = ({ className }: { className?: string }) => (
@@ -159,6 +164,14 @@ export const CheckIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
+export const CircleDollarSignIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
+        <path d="M12 18V6"/>
+    </svg>
+);
+
 export const ClockIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -223,6 +236,11 @@ export const TargetIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
+export const StarIcon = ({ className, filled }: { className?: string, filled?: boolean }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill={filled ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.31h5.404a.563.563 0 01.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.528 5.345a.562.562 0 01-.82.622l-4.402-2.963a.563.563 0 00-.63 0l-4.402 2.963a.562.562 0 01-.82-.622l1.528-5.345a.563.563 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988h5.404a.563.563 0 00.475-.31l2.125-5.111z" />
+    </svg>
+);
 
 // Social Share Icons
 export const WhatsAppIcon = ({ className }: { className?: string }) => (

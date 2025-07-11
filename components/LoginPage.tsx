@@ -14,6 +14,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         setError('');
         setIsLoading(true);
 
+        const applyErrorAnimation = () => {
+            const form = document.getElementById('login-form-panel');
+            form?.classList.add('animate-shake');
+            setTimeout(() => form?.classList.remove('animate-shake'), 600);
+        };
+
         try {
             const response = await fetch('/api/login', {
                 method: 'POST',
@@ -29,68 +35,88 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 onLoginSuccess();
             } else {
                 setError(data.message || 'Ocurrió un error. Inténtalo de nuevo.');
+                applyErrorAnimation();
             }
         } catch (err) {
             setError('No se pudo conectar con el servidor. Verifica tu conexión.');
+            applyErrorAnimation();
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-full max-w-md bg-white dark:bg-gray-900 shadow-xl rounded-2xl p-8">
-                <div className="text-center">
-                    <img src="https://i.imgur.com/zOGb0ay.jpeg" alt="Rago Automotores Logo" className="h-20 mx-auto mb-4" />
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Acceso de Administrador</h1>
-                    <p className="mt-2 text-gray-600 dark:text-gray-400">Ingresa tu contraseña para gestionar el inventario.</p>
+        <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 overflow-hidden animate-aurora selection:bg-rago-burgundy/80 selection:text-white">
+            <div 
+                id="login-form-panel"
+                className="relative z-10 flex flex-col items-center w-full max-w-sm animate-fade-in-up"
+            >
+                {/* Logo */}
+                <a href="/" className="mb-10 block transition-transform duration-300 hover:scale-105" aria-label="Volver a la página de inicio">
+                    <img 
+                        src="https://i.imgur.com/zOGb0ay.jpeg" 
+                        alt="Rago Automotores Logo" 
+                        className="h-28 drop-shadow-[0_8px_20px_rgba(0,0,0,0.5)]" 
+                    />
+                </a>
+
+                {/* Form Container */}
+                <div className="w-full bg-slate-900/70 backdrop-blur-md rounded-2xl p-8 shadow-rago-glow border border-slate-700/80">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-white">Panel de Control</h1>
+                        <p className="mt-2 text-slate-300">Bienvenido. Ingrese su contraseña.</p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label htmlFor="password" className="sr-only">Contraseña</label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                autoComplete="current-password"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                disabled={isLoading}
+                                className="w-full px-5 py-4 text-lg bg-slate-800/70 border-2 border-slate-700 rounded-lg placeholder-slate-500 text-white focus:bg-slate-800 focus:ring-2 focus:ring-rago-burgundy focus:border-transparent focus:outline-none transition-all duration-300 disabled:opacity-50"
+                                placeholder="Contraseña"
+                            />
+                        </div>
+
+                        {error && (
+                            <p className="text-sm text-red-400 text-center animate-fade-in">{error}</p>
+                        )}
+
+                        <div>
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full shimmer-effect group flex justify-center items-center py-4 px-4 text-lg font-bold rounded-lg text-white bg-rago-burgundy hover:bg-rago-burgundy-darker focus:outline-none focus:ring-4 focus:ring-rago-burgundy/50 transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-60 disabled:hover:shadow-none disabled:hover:-translate-y-0 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? (
+                                    <>
+                                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>Ingresando...</span>
+                                    </>
+                                ) : (
+                                    <span>Ingresar</span>
+                                )}
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
-                <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-                    <div>
-                        <label htmlFor="password" className="sr-only">Contraseña</label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autoComplete="current-password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            disabled={isLoading}
-                            className="w-full px-4 py-3 text-lg bg-gray-100 dark:bg-gray-800 border-2 border-transparent rounded-lg focus:ring-2 focus:ring-rago-burgundy focus:border-transparent focus:outline-none transition disabled:opacity-50"
-                            placeholder="Contraseña"
-                        />
-                    </div>
-
-                    {error && (
-                        <p className="text-sm text-red-600 dark:text-red-500 text-center">{error}</p>
-                    )}
-
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-lg font-medium rounded-lg text-white bg-rago-burgundy hover:bg-rago-burgundy-darker focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rago-burgundy/50 transition disabled:bg-rago-burgundy/50 disabled:cursor-not-allowed"
-                        >
-                            {isLoading ? (
-                                <>
-                                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Ingresando...
-                                </>
-                            ) : (
-                                'Ingresar'
-                            )}
-                        </button>
-                    </div>
-                </form>
-
-                 <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <a href="/" className="w-full flex justify-center py-3 px-4 border border-gray-300 dark:border-gray-600 text-lg font-medium rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rago-burgundy transition">
-                        &larr; Volver al catálogo
+                 <div className="mt-8">
+                    <a 
+                        href="/" 
+                        className="text-slate-400 hover:text-white font-medium transition-colors duration-300 group inline-flex items-center gap-2"
+                    >
+                        <span className="transform transition-transform duration-300 group-hover:-translate-x-1">&larr;</span>
+                        <span>Volver al sitio</span>
                     </a>
                 </div>
             </div>

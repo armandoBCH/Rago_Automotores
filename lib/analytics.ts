@@ -1,10 +1,9 @@
 
 
-import { supabase } from './supabaseClient';
 import { AnalyticsEventInsert } from '../types';
 
 /**
- * Tracks an analytics event and sends it to Supabase.
+ * Tracks an analytics event by sending it to a secure serverless function.
  * This is a "fire-and-forget" function, meaning it won't block
  * the UI thread. Errors are logged to the console without being
  * thrown, to avoid crashing the user experience for an analytics event.
@@ -13,8 +12,6 @@ import { AnalyticsEventInsert } from '../types';
  * @param vehicleId - The ID of the vehicle related to the event, if any.
  */
 export const trackEvent = (eventType: string, vehicleId?: number): void => {
-    // Explicitly construct the object to avoid potential issues with object spreading
-    // and type inference, and to correctly handle vehicleId if it is 0.
     const eventData: AnalyticsEventInsert = {
         event_type: eventType,
     };
@@ -22,12 +19,16 @@ export const trackEvent = (eventType: string, vehicleId?: number): void => {
         eventData.vehicle_id = vehicleId;
     }
 
-    supabase
-        .from('analytics_events')
-        .insert([eventData])
-        .then(({ error }) => {
-            if (error) {
-                console.error('Analytics Error:', error);
-            }
-        });
+    // Send the event to our secure API endpoint instead of directly to Supabase
+    fetch('/api/track-event', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(eventData),
+        keepalive: true, // Useful for events fired during page unload
+    }).catch(error => {
+        // We still don't want to break the user experience for an analytics error
+        console.error('Analytics Fetch Error:', error);
+    });
 };

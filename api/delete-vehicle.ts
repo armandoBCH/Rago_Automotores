@@ -8,10 +8,12 @@ export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
 ) {
+  // Set CORS headers
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (request.method === 'OPTIONS') {
-    response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     return response.status(200).end();
   }
 
@@ -50,14 +52,14 @@ export default async function handler(
         const filePaths = vehicle.images.map((url: string) => {
             try {
                 const urlObject = new URL(url);
-                const pathParts = urlObject.pathname.split('/vehicle-images/'); // Corrected bucket name
+                const pathParts = urlObject.pathname.split('/vehicle-images/');
                 return pathParts.length > 1 ? decodeURIComponent(pathParts[1]) : null;
             } catch (e) { return null; }
         }).filter((path: string | null): path is string => path !== null);
 
         if (filePaths.length > 0) {
             const { error: storageError } = await supabaseAdmin.storage
-                .from('vehicle-images') // Corrected bucket name
+                .from('vehicle-images')
                 .remove(filePaths);
             
             if (storageError) {

@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          id: number
+          created_at: string
+          event_type: string
+          vehicle_id: number | null
+        }
+        Insert: {
+          id?: number
+          created_at?: string
+          event_type: string
+          vehicle_id?: number | null
+        }
+        Update: {
+          id?: number
+          created_at?: string
+          event_type?: string
+          vehicle_id?: number | null
+        }
+        Relationships: []
+      }
       vehicles: {
         Row: {
           id: number
@@ -23,6 +44,8 @@ export type Database = {
           fuelType: string
           description: string
           images: string[]
+          is_featured: boolean
+          is_sold: boolean
         }
         Insert: {
           id?: number
@@ -37,6 +60,8 @@ export type Database = {
           fuelType: string
           description: string
           images: string[]
+          is_featured?: boolean
+          is_sold?: boolean
         }
         Update: {
           id?: number
@@ -51,7 +76,10 @@ export type Database = {
           fuelType?: string
           description?: string
           images?: string[]
+          is_featured?: boolean
+          is_sold?: boolean
         }
+        Relationships: []
       }
     }
     Views: {

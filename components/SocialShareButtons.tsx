@@ -22,7 +22,7 @@ const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({ vehicle }) => {
         {
             name: 'Facebook',
             icon: <FacebookIcon className="h-6 w-6" />,
-            url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+            url: 'https://www.facebook.com/marketplace/profile/61574946448121/?ref=permalink&mibextid=6ojiHh',
             colorClass: 'text-white bg-[#1877F2] hover:bg-[#166FE5]',
         },
     ];

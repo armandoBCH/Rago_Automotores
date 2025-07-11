@@ -1,10 +1,7 @@
 
-
-
-
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Vehicle, VehicleFormData, AnalyticsEvent, VehicleInsert } from './types';
-import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon, StatsIcon } from './constants';
+import { Vehicle, VehicleFormData, AnalyticsEvent, VehicleUpdate } from './types';
+import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon, DownIcon, StarIcon } from './constants';
 import { supabase } from './lib/supabaseClient';
 import { trackEvent } from './lib/analytics';
 import { optimizeUrl } from './utils/image';
@@ -20,6 +17,7 @@ import Footer from './components/Footer';
 import LoginPage from './components/LoginPage';
 import SellYourCarSection from './components/SellYourCarSection';
 import ScrollToTopButton from './components/ScrollToTopButton';
+import FeaturedVehiclesSection from './components/FeaturedVehiclesSection';
 
 type ModalState = 
     | { type: 'none' }
@@ -36,13 +34,12 @@ const App: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filters, setFilters] = useState({ make: '', year: '', price: '' });
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [visibleCount, setVisibleCount] = useState(8);
     
-    // Initialize path based on current location, but accommodate admin state
     const [path, setPath] = useState(() => {
         const currentAdminState = sessionStorage.getItem('rago-admin') === 'true';
-        if (currentAdminState) {
-            return '/admin'; // Force admin path if logged in
-        }
+        if (currentAdminState && window.location.pathname === '/') return '/admin';
         return window.location.pathname;
     });
 
@@ -50,23 +47,40 @@ const App: React.FC = () => {
         setLoading(true);
         setDbError(null);
         try {
-            const [vehiclesResult, analyticsResult] = await Promise.all([
-                supabase.from('vehicles').select('*').order('created_at', { ascending: false }),
-                supabase.from('analytics_events').select('*')
-            ]);
-
+            // Fetch vehicles always
+            const vehiclesResult = await supabase.from('vehicles').select('*');
             if (vehiclesResult.error) throw vehiclesResult.error;
-            if (analyticsResult.error) throw analyticsResult.error;
 
-            setVehicles(vehiclesResult.data || []);
-            setAnalyticsEvents(analyticsResult.data || []);
+            const sortedVehicles = (vehiclesResult.data || []).sort((a, b) => {
+                if (a.is_sold !== b.is_sold) {
+                    return a.is_sold ? 1 : -1;
+                }
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
+            setVehicles(sortedVehicles);
+
+            // Conditionally fetch analytics only for admins
+            if (isAdmin) {
+                const response = await fetch('/api/get-analytics');
+                if (!response.ok) {
+                    // Don't throw a fatal error, just log it.
+                    console.error('Could not fetch analytics:', await response.text());
+                    setAnalyticsEvents([]);
+                } else {
+                    const analyticsData: AnalyticsEvent[] = await response.json();
+                    setAnalyticsEvents(analyticsData);
+                }
+            } else {
+                setAnalyticsEvents([]); // Not admin, ensure analytics are clear
+            }
+
         } catch (err: any) {
             console.error("Error fetching data:", err);
             setDbError("No se pudieron cargar los datos. Por favor, intente de nuevo más tarde.");
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [isAdmin]);
 
     useEffect(() => {
         fetchAllData();
@@ -81,14 +95,11 @@ const App: React.FC = () => {
         } else {
             window.history.pushState({}, '', newPath);
         }
-        // Only set the pathname part to the state for routing logic
         setPath(newPath.split('?')[0].split('#')[0]);
     }, [path]);
 
     useEffect(() => {
-        const handlePopState = () => {
-             setPath(window.location.pathname);
-        };
+        const handlePopState = () => setPath(window.location.pathname);
         
         const handleInternalLinkClick = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -108,10 +119,7 @@ const App: React.FC = () => {
                  const targetElement = document.querySelector(destinationUrl.hash);
                  if (targetElement) {
                      targetElement.scrollIntoView({ behavior: 'smooth' });
-                     if (destinationUrl.hash !== currentUrl.hash) {
-                         // Update URL without re-triggering navigation logic for the page itself
-                         window.history.pushState({}, '', newPath);
-                     }
+                     if (destinationUrl.hash !== currentUrl.hash) window.history.pushState({}, '', newPath);
                  }
             } else if (!isSamePage || destinationUrl.hash) {
                 navigate(newPath);
@@ -129,12 +137,10 @@ const App: React.FC = () => {
     }, [navigate]);
 
     useEffect(() => {
-        const { hash } = window.location;
-        if (hash) {
-            const id = hash.slice(1);
+        if (window.location.hash) {
+            const id = window.location.hash.slice(1);
             const timer = setTimeout(() => {
-                const element = document.getElementById(id);
-                if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
             return () => clearTimeout(timer);
         } else {
@@ -165,8 +171,7 @@ const App: React.FC = () => {
     const vehicleIdStr = slug ? slug.split('-').pop() ?? null : null;
     const vehicleId = vehicleIdStr ? parseInt(vehicleIdStr, 10) : null;
     const isHomePage = pathname === '/' || pathname === '/index.html';
-    const isAdminPage = pathname === '/admin';
-
+    
     const selectedVehicle = useMemo(() => {
         if (!vehicleId || isNaN(vehicleId)) return null;
         return vehicles.find(v => v.id === vehicleId);
@@ -174,123 +179,190 @@ const App: React.FC = () => {
     
     useEffect(() => {
         if (!selectedVehicle) return;
-
         const head = document.head;
         const originalTitle = document.title;
-        const updateMetaContent = (selector: string, content: string) => { const el = head.querySelector(selector); if (el) el.setAttribute('content', content); };
+        const updateMeta = (selector: string, content: string) => head.querySelector(selector)?.setAttribute('content', content);
         
         document.title = `${selectedVehicle.make} ${selectedVehicle.model} | Rago Automotores`;
-        const vehicleImage = optimizeUrl(selectedVehicle.images[0], { w: 1200, h: 630, fit: 'cover', q: 80, output: 'jpeg' });
-        const vehicleDesc = `Año ${selectedVehicle.year} - $${selectedVehicle.price.toLocaleString('es-AR')}. Mirá más detalles en Rago Automotores.`;
+        const image = optimizeUrl(selectedVehicle.images[0], { w: 1200, h: 630, fit: 'cover', q: 80, output: 'jpeg' });
+        const desc = `Año ${selectedVehicle.year} - $${selectedVehicle.price.toLocaleString('es-AR')}. Mirá más detalles.`;
 
-        updateMetaContent('meta[property="og:title"]', `${selectedVehicle.make} ${selectedVehicle.model}`);
-        updateMetaContent('meta[property="og:description"]', vehicleDesc);
-        updateMetaContent('meta[property="og:image"]', vehicleImage);
-        updateMetaContent('meta[property="og:url"]', window.location.href);
-        updateMetaContent('meta[property="og:type"]', 'product');
-        updateMetaContent('meta[name="twitter:title"]', `${selectedVehicle.make} ${selectedVehicle.model}`);
-        updateMetaContent('meta[name="twitter:description"]', vehicleDesc);
-        updateMetaContent('meta[name="twitter:image"]', vehicleImage);
+        updateMeta('meta[property="og:title"]', `${selectedVehicle.make} ${selectedVehicle.model}`);
+        updateMeta('meta[property="og:description"]', desc);
+        updateMeta('meta[property="og:image"]', image);
+        updateMeta('meta[property="og:url"]', window.location.href);
+        updateMeta('meta[name="twitter:title"]', `${selectedVehicle.make} ${selectedVehicle.model}`);
+        updateMeta('meta[name="twitter:description"]', desc);
+        updateMeta('meta[name="twitter:image"]', image);
 
-        return () => {
+        return () => { // Cleanup
             document.title = originalTitle;
-            updateMetaContent('meta[property="og:title"]', 'Rago Automotores - Catálogo de Vehículos');
-            updateMetaContent('meta[property="og:description"]', 'Tu concesionaria de confianza para vehículos seleccionados. Calidad y transparencia en cada venta.');
-            updateMetaContent('meta[property="og:image"]', 'https://i.imgur.com/zOGb0ay.jpeg');
-            updateMetaContent('meta[property="og:url"]', window.location.origin);
-            updateMetaContent('meta[property="og:type"]', 'website');
-            updateMetaContent('meta[name="twitter:title"]', 'Rago Automotores - Catálogo de Vehículos');
-            updateMetaContent('meta[name="twitter:description"]', 'Tu concesionaria de confianza para vehículos seleccionados. Calidad y transparencia en cada venta.');
-            updateMetaContent('meta[name="twitter:image"]', 'https://i.imgur.com/zOGb0ay.jpeg');
+            updateMeta('meta[property="og:title"]', 'Rago Automotores - Catálogo de Vehículos');
+            updateMeta('meta[property="og:description"]', 'Tu concesionaria de confianza.');
+            updateMeta('meta[property="og:image"]', 'https://i.imgur.com/zOGb0ay.jpeg');
+            updateMeta('meta[property="og:url"]', window.location.origin);
         };
     }, [selectedVehicle]);
 
     const uniqueBrands = useMemo(() => Array.from(new Set(vehicles.map(v => v.make))).sort(), [vehicles]);
 
     const filteredVehicles = useMemo(() => {
-        let tempVehicles = [...vehicles];
-        const lowercasedTerm = searchTerm.toLowerCase().trim();
-        if (lowercasedTerm) tempVehicles = tempVehicles.filter(v => `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(lowercasedTerm));
-        if (filters.make) tempVehicles = tempVehicles.filter(v => v.make === filters.make);
-        if (filters.year) tempVehicles = tempVehicles.filter(v => v.year >= parseInt(filters.year, 10));
-        if (filters.price) tempVehicles = tempVehicles.filter(v => v.price <= parseInt(filters.price, 10));
-        return tempVehicles;
+        let temp = [...vehicles];
+        const term = searchTerm.toLowerCase().trim();
+        if (term) temp = temp.filter(v => `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(term));
+        if (filters.make) temp = temp.filter(v => v.make === filters.make);
+        if (filters.year) temp = temp.filter(v => v.year >= parseInt(filters.year, 10));
+        if (filters.price) temp = temp.filter(v => v.price <= parseInt(filters.price, 10));
+        return temp;
     }, [vehicles, searchTerm, filters]);
 
-    const handleCloseModal = () => setModalState({ type: 'none' });
-    const handleFilterChange = useCallback((newFilters: { make: string, year: string, price: string }) => setFilters(newFilters), []);
+    useEffect(() => {
+        setVisibleCount(8);
+    }, [searchTerm, filters]);
 
+    const vehiclesToShow = useMemo(() => filteredVehicles.slice(0, visibleCount), [filteredVehicles, visibleCount]);
+    const hasMoreVehicles = useMemo(() => filteredVehicles.length > visibleCount, [filteredVehicles, visibleCount]);
+
+    const handleLoadMore = () => {
+        setVisibleCount(filteredVehicles.length);
+    };
+
+    const handleFilterChange = useCallback((newFilters: { make: string, year: string, price: string }) => setFilters(newFilters), []);
     const handleAddVehicleClick = () => setModalState({ type: 'form' });
     const handleEditVehicleClick = (vehicle: Vehicle) => setModalState({ type: 'form', vehicle });
     const handleDeleteVehicleClick = (vehicleId: number) => setModalState({ type: 'confirmDelete', vehicleId });
+    const handleCloseModal = () => setModalState({ type: 'none' });
 
     const handleSaveVehicle = async (vehicleData: VehicleFormData) => {
-        const isEdit = !!vehicleData.id;
         try {
-            if (isEdit && vehicleData.id) {
-                const { id, ...dataToUpdate } = vehicleData;
-                const { error } = await supabase.from('vehicles').update(dataToUpdate).eq('id', id);
-                if (error) throw error;
-            } else {
-                // To avoid potential TypeScript type inference issues with complex generic types,
-                // we explicitly construct the object for insertion rather than relying on spreads.
-                const insertPayload: VehicleInsert = {
-                    make: vehicleData.make,
-                    model: vehicleData.model,
-                    year: vehicleData.year,
-                    price: vehicleData.price,
-                    mileage: vehicleData.mileage,
-                    engine: vehicleData.engine,
-                    transmission: vehicleData.transmission,
-                    fuelType: vehicleData.fuelType,
-                    description: vehicleData.description,
-                    images: vehicleData.images,
-                };
-                const { error } = await supabase.from('vehicles').insert([insertPayload]);
-                if (error) throw error;
-            }
+            const response = await fetch('/api/save-vehicle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(vehicleData),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Error al guardar el vehículo.');
+            
             await fetchAllData();
             handleCloseModal();
         } catch (err: any) {
-            console.error("Error saving vehicle:", err);
             alert(`Error al guardar el vehículo: ${err.message}`);
         }
     };
+    
+    const handleToggleFeatured = async (vehicleId: number, currentStatus: boolean) => {
+       try {
+            const response = await fetch('/api/save-vehicle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: vehicleId, is_featured: !currentStatus }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Error al actualizar el vehículo.');
+            await fetchAllData();
+       } catch (err: any) {
+           alert(`Error al actualizar el vehículo: ${err.message}`);
+       }
+   };
+   
+    const handleToggleSold = async (vehicleId: number, currentStatus: boolean) => {
+       try {
+            const updatePayload: VehicleUpdate = { is_sold: !currentStatus };
+            if (!currentStatus === true) { // This means we are marking it as sold
+                updatePayload.is_featured = false;
+            }
+
+            const response = await fetch('/api/save-vehicle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: vehicleId, ...updatePayload }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Error al actualizar el estado del vehículo.');
+
+            await fetchAllData();
+       } catch (err: any) {
+           alert(`Error al actualizar el estado del vehículo: ${err.message}`);
+       }
+   };
 
     const confirmDelete = async () => {
-        if (modalState.type === 'confirmDelete') {
-            try {
-                const { error } = await supabase.from('vehicles').delete().eq('id', modalState.vehicleId);
-                if (error) throw error;
-                await fetchAllData(); 
-                handleCloseModal();
-            } catch (err: any) {
-                console.error("Error deleting vehicle:", err);
-                alert(`Error al eliminar el vehículo: ${err.message}`);
-            }
+        if (modalState.type !== 'confirmDelete') return;
+        setIsDeleting(true);
+        try {
+            const response = await fetch('/api/delete-vehicle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vehicleId: modalState.vehicleId }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Error al eliminar.');
+            await fetchAllData(); 
+            handleCloseModal();
+        } catch (err: any) {
+            alert(`Error al eliminar el vehículo: ${err.message}`);
+        } finally {
+            setIsDeleting(false);
         }
     };
     
     const handleAnalyticsReset = () => fetchAllData();
-
     const NotFoundPage = () => (
-        <div className="text-center py-16">
-            <h1 className="text-4xl font-bold text-rago-burgundy mb-4">404 - Página No Encontrada</h1>
-            <p className="text-xl text-slate-700 dark:text-slate-300">La página que buscas no existe o fue removida.</p>
-            <a href="/" className="mt-8 inline-block px-6 py-3 text-lg font-semibold text-white bg-rago-burgundy rounded-lg hover:bg-rago-burgundy-darker transition-colors">Volver al Inicio</a>
-        </div>
+        <div className="text-center py-16"><h1 className="text-4xl font-bold text-rago-burgundy mb-4">404</h1><p>Página No Encontrada</p><a href="/" className="mt-8 inline-block px-6 py-3 font-semibold text-white bg-rago-burgundy rounded-lg">Volver al Inicio</a></div>
     );
     
-    const renderMainContent = () => {
-        if (pathname === '/login' && !isAdmin) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-        if (isAdmin || isAdminPage) {
-            if (!isAdmin) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-            return <AdminPanel vehicles={vehicles} allEvents={analyticsEvents} onAdd={handleAddVehicleClick} onEdit={handleEditVehicleClick} onDelete={handleDeleteVehicleClick} onLogout={handleLogout} onAnalyticsReset={handleAnalyticsReset} />;
-        }
-        if (loading) return <div className="text-center py-16"><h2 className="text-2xl font-semibold text-slate-700 dark:text-slate-300">Cargando vehículos...</h2></div>;
-        if (dbError) return <div className="text-center py-16 text-red-500"><h2 className="text-2xl font-semibold">{dbError}</h2></div>;
+    const isAdminPage = path.startsWith('/admin');
+    const isLoginPage = pathname === '/login';
+
+    // --- ROUTING ---
+    if (isLoginPage || (!isAdmin && isAdminPage)) {
+        return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+    }
+
+    if (isAdmin && isAdminPage) {
+        return (
+            <div className="bg-slate-100 dark:bg-slate-950 min-h-screen">
+                <main className="container mx-auto px-4 md:px-6 py-8">
+                    <AdminPanel 
+                        vehicles={vehicles} 
+                        allEvents={analyticsEvents} 
+                        onAdd={handleAddVehicleClick} 
+                        onEdit={handleEditVehicleClick} 
+                        onDelete={handleDeleteVehicleClick} 
+                        onLogout={handleLogout} 
+                        onAnalyticsReset={handleAnalyticsReset} 
+                        onToggleFeatured={handleToggleFeatured}
+                        onToggleSold={handleToggleSold}
+                    />
+                </main>
+                {modalState.type === 'form' && <VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} brands={uniqueBrands} />}
+                {modalState.type === 'confirmDelete' && <ConfirmationModal isOpen={true} onClose={handleCloseModal} onConfirm={confirmDelete} title="Confirmar Eliminación" message="¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer." isConfirming={isDeleting} />}
+            </div>
+        );
+    }
+    
+    const renderPublicContent = () => {
+        if (loading) return <div className="text-center py-16">Cargando...</div>;
+        if (dbError) return <div className="text-center py-16 text-red-500">{dbError}</div>;
         if (vehicleId) return selectedVehicle ? <VehicleDetailPage vehicle={selectedVehicle} allVehicles={vehicles} /> : <NotFoundPage />;
-        if (isHomePage) return (<><FilterBar filters={filters} onFilterChange={handleFilterChange} brands={uniqueBrands} /><VehicleList vehicles={filteredVehicles} /><SellYourCarSection /></>);
+        if (isHomePage) return (
+            <>
+                <FilterBar filters={filters} onFilterChange={handleFilterChange} brands={uniqueBrands} />
+                <VehicleList vehicles={vehiclesToShow} />
+                {hasMoreVehicles && (
+                     <div className="text-center mt-12 animate-fade-in">
+                        <button
+                            onClick={handleLoadMore}
+                            className="group inline-flex items-center justify-center gap-3 px-8 py-4 text-xl font-bold text-white bg-rago-burgundy rounded-lg hover:bg-rago-burgundy-darker focus:outline-none focus:ring-4 focus:ring-rago-burgundy/50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                        >
+                            <span>Mostrar {filteredVehicles.length - visibleCount} más</span>
+                            <DownIcon className="h-6 w-6 transition-transform duration-300 group-hover:translate-y-1" />
+                        </button>
+                    </div>
+                )}
+            </>
+        );
         return <NotFoundPage />;
     };
     
@@ -303,7 +375,7 @@ const App: React.FC = () => {
 
     return (
         <div className="bg-slate-800 dark:bg-rago-black min-h-screen overflow-x-hidden">
-            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={hamburgerClasses} aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"} aria-controls="mobile-menu" aria-expanded={isMobileMenuOpen}>
+             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={hamburgerClasses} aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"} aria-controls="mobile-menu" aria-expanded={isMobileMenuOpen}>
                 <div id="nav-icon3" className={isMobileMenuOpen ? 'open' : ''}><span></span><span></span><span></span><span></span></div>
             </button>
             <nav id="mobile-menu" aria-hidden={!isMobileMenuOpen} className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-gradient-to-br from-slate-900 via-rago-burgundy-darker to-rago-black shadow-2xl p-6 pt-20 flex flex-col text-white transform-gpu transition-transform duration-500 ease-in-out z-50 md:hidden ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
@@ -311,6 +383,7 @@ const App: React.FC = () => {
                 <ul className="flex flex-col gap-2">
                     <li><a href="/" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><HomeIcon className="h-7 w-7 text-rago-burgundy" /><span>Inicio</span></a></li>
                     <li><a href="/#catalog" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><CatalogIcon className="h-7 w-7 text-rago-burgundy" /><span>Catálogo</span></a></li>
+                    <li><a href="/#featured-vehicles" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><StarIcon className="h-7 w-7 text-rago-burgundy" /><span>Destacados</span></a></li>
                     <li><a href="/#sell-car-section" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><SellCarIcon className="h-7 w-7 text-rago-burgundy" /><span>Vender mi Auto</span></a></li>
                 </ul>
                 <div className="mt-auto pt-8 border-t border-slate-700/50">
@@ -323,14 +396,14 @@ const App: React.FC = () => {
             <div className={mainAppContainerClasses}>
                 {isMobileMenuOpen && <div role="button" aria-label="Cerrar menú" className="absolute inset-0 z-50" onClick={() => setIsMobileMenuOpen(false)}></div>}
                 <Header />
-                {!isAdmin && isHomePage && <Hero searchTerm={searchTerm} onSearchChange={setSearchTerm} />}
+                {isHomePage && <Hero searchTerm={searchTerm} onSearchChange={setSearchTerm} />}
+                {isHomePage && <FeaturedVehiclesSection vehicles={vehicles} />}
                 <main id="catalog" className="container mx-auto px-4 md:px-6 py-8 flex-grow">
-                     <div key={path} className="animate-fade-in">{renderMainContent()}</div>
+                     <div key={path} className="animate-fade-in">{renderPublicContent()}</div>
                 </main>
+                {isHomePage && <SellYourCarSection />}
                 <Footer />
             </div>
-            {modalState.type === 'form' && <VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} brands={uniqueBrands} />}
-            {modalState.type === 'confirmDelete' && <ConfirmationModal isOpen={true} onClose={handleCloseModal} onConfirm={confirmDelete} title="Confirmar Eliminación" message="¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer." />}
             {isHomePage && <ScrollToTopButton />}
         </div>
     );

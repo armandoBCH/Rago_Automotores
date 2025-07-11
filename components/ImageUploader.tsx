@@ -1,7 +1,9 @@
 
-import React, { useCallback, useMemo } from 'react';
+
+
+import React, { useCallback, useMemo, useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { TrashIcon, UpIcon, DownIcon, PlusIcon } from '../constants';
+import { TrashIcon, GripVerticalIcon, PlusIcon } from '../constants';
 
 export type ImageFile = {
     id: string;
@@ -50,10 +52,12 @@ const darkBaseStyle: React.CSSProperties = {
 };
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ files, setFiles, disabled }) => {
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const dragItemNode = useRef<HTMLDivElement | null>(null);
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         const newImageFiles: ImageFile[] = acceptedFiles.map(file => ({
-            id: `${file.name}-${file.lastModified}`,
+            id: `${file.name}-${file.lastModified}-${Math.random()}`,
             file,
             preview: URL.createObjectURL(file),
             status: 'pending'
@@ -83,13 +87,27 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ files, setFiles, disabled
         setFiles(prev => prev.filter(f => f.id !== id));
     };
 
-    const moveFile = (index: number, direction: 'up' | 'down') => {
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        dragItemNode.current = e.currentTarget;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => {
+            setDraggedIndex(index);
+        }, 0);
+    };
+    
+    const handleDragEnter = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+        if (draggedIndex === null || index === draggedIndex || !dragItemNode.current) return;
+        
         const newFiles = [...files];
-        const targetIndex = direction === 'up' ? index - 1 : index + 1;
-        if (targetIndex >= 0 && targetIndex < newFiles.length) {
-            [newFiles[index], newFiles[targetIndex]] = [newFiles[targetIndex], newFiles[index]];
-            setFiles(newFiles);
-        }
+        const draggedItem = newFiles.splice(draggedIndex, 1)[0];
+        newFiles.splice(index, 0, draggedItem);
+        setDraggedIndex(index);
+        setFiles(newFiles);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+        dragItemNode.current = null;
     };
     
     return (
@@ -103,18 +121,27 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ files, setFiles, disabled
             
             <div className="space-y-3">
                 {files.map((imageFile, index) => (
-                    <div key={imageFile.id} className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-700/50">
+                    <div 
+                        key={imageFile.id}
+                        draggable={!disabled}
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragEnter={(e) => handleDragEnter(e, index)}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={(e) => e.preventDefault()}
+                        className={`flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-700/50 transition-all duration-300 ease-in-out ${draggedIndex === index ? 'opacity-50 shadow-2xl scale-105' : 'opacity-100 shadow-sm'}`}
+                    >
+                        <div className={`flex-shrink-0 ${disabled ? 'cursor-not-allowed' : 'cursor-grab'}`} aria-label="Arrastrar para reordenar">
+                           <GripVerticalIcon className="h-6 w-6 text-slate-400 dark:text-slate-500" />
+                        </div>
                         <div className="relative w-20 h-16 rounded flex-shrink-0">
                              {index === 0 && <span className="absolute -top-1.5 -left-1.5 bg-rago-burgundy text-white text-xs font-bold px-2 py-0.5 rounded-full z-10 select-none">Principal</span>}
-                            <img src={imageFile.preview} alt={`Previsualización de ${imageFile.file?.name || 'imagen'}`} className="w-full h-full object-cover rounded" onLoad={() => { if (imageFile.file) URL.revokeObjectURL(imageFile.preview) }} />
+                            <img src={imageFile.preview} alt={`Previsualización de ${imageFile.file?.name || 'imagen'}`} className="w-full h-full object-cover rounded" onLoad={() => { if (imageFile.file && imageFile.preview.startsWith('blob:')) URL.revokeObjectURL(imageFile.preview) }} />
                         </div>
                         <div className="flex-grow min-w-0">
                             <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{imageFile.file?.name || new URL(imageFile.url || '').pathname.split('/').pop()}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">{imageFile.file ? `${(imageFile.file.size / 1024).toFixed(1)} KB` : 'Subida'}</p>
                         </div>
                         <div className="flex items-center flex-shrink-0">
-                            <button type="button" onClick={() => moveFile(index, 'up')} disabled={index === 0 || disabled} className="p-1.5 disabled:opacity-50 text-slate-500 hover:text-slate-800 dark:hover:text-white"><UpIcon /></button>
-                            <button type="button" onClick={() => moveFile(index, 'down')} disabled={index === files.length - 1 || disabled} className="p-1.5 disabled:opacity-50 text-slate-500 hover:text-slate-800 dark:hover:text-white"><DownIcon /></button>
                             <button type="button" onClick={() => removeFile(imageFile.id)} disabled={disabled} className="p-1.5 disabled:opacity-50 text-red-500 hover:text-red-700"><TrashIcon /></button>
                         </div>
                     </div>

@@ -28,7 +28,8 @@ export type Database = {
           event_type?: string
           vehicle_id?: number | null
         }
-      },
+        Relationships: []
+      }
       vehicles: {
         Row: {
           id: number
@@ -43,6 +44,8 @@ export type Database = {
           fuelType: string
           description: string
           images: string[]
+          is_featured: boolean
+          is_sold: boolean
         }
         Insert: {
           id?: number
@@ -57,6 +60,8 @@ export type Database = {
           fuelType: string
           description: string
           images: string[]
+          is_featured?: boolean
+          is_sold?: boolean
         }
         Update: {
           id?: number
@@ -71,7 +76,10 @@ export type Database = {
           fuelType?: string
           description?: string
           images?: string[]
+          is_featured?: boolean
+          is_sold?: boolean
         }
+        Relationships: []
       }
     }
     Views: {

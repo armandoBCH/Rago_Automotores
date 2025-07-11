@@ -1,15 +1,19 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
-import { ChatBubbleIcon, InstagramIcon } from '../constants';
+import { ChatBubbleIcon, InstagramIcon, StarIcon, SellCarIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
 
-const NavLink: React.FC<{ href: string; children: React.ReactNode; }> = ({ href, children }) => (
+const NavLink: React.FC<{ href: string; children: React.ReactNode; isScrolled: boolean; }> = ({ href, children, isScrolled }) => (
     <a
         href={href}
-        className="relative px-1 py-2 text-lg font-medium text-slate-700 dark:text-slate-300 hover:text-rago-burgundy dark:hover:text-white transition-colors duration-300 after:absolute after:bottom-1 after:left-0 after:h-0.5 after:w-full after:bg-rago-burgundy after:scale-x-0 after:origin-left hover:after:scale-x-100 after:transition-transform after:duration-300 after:ease-out"
+        className={`relative group px-3 py-2 text-lg font-medium transition-colors duration-300
+            ${isScrolled
+                ? 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                : 'text-white hover:text-slate-200'
+            }
+        `}
     >
-        {children}
+        <span>{children}</span>
+        <span className="absolute bottom-1 left-0 w-full h-[2px] bg-rago-burgundy transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-center"></span>
     </a>
 );
 
@@ -31,16 +35,19 @@ const Header: React.FC = () => {
             setIsScrolled(currentScrollY > 10);
         };
         window.addEventListener('scroll', controlHeader, { passive: true });
+        controlHeader(); // Initial check in case page loads scrolled
         return () => window.removeEventListener('scroll', controlHeader);
     }, []);
 
     const headerClasses = `
-        bg-white/70 dark:bg-rago-black/70 backdrop-blur-xl
         sticky top-0
         z-30
         transition-all duration-300 ease-in-out
         ${isVisible ? 'translate-y-0' : '-translate-y-full'}
-        ${isScrolled ? 'shadow-subtle dark:shadow-subtle-dark border-b border-slate-200/80 dark:border-slate-800/80' : 'border-b border-transparent'}
+        ${isScrolled
+            ? 'bg-white/70 dark:bg-rago-black/70 backdrop-blur-xl shadow-subtle dark:shadow-subtle-dark border-b border-slate-200/80 dark:border-slate-800/80'
+            : 'border-b border-transparent'
+        }
     `;
 
     const contactMessage = "Hola, estoy interesado en sus vehículos.";
@@ -56,16 +63,19 @@ const Header: React.FC = () => {
                 </a>
                 
                 {/* Center: Desktop Navigation Links */}
-                <nav className="hidden md:flex items-center gap-x-8">
-                    <NavLink href="/">Inicio</NavLink>
-                    <NavLink href="/#catalog">Catálogo</NavLink>
+                <nav className="hidden md:flex items-center gap-x-4">
+                    <NavLink href="/" isScrolled={isScrolled}>Inicio</NavLink>
+                    <NavLink href="/#catalog" isScrolled={isScrolled}>Catálogo</NavLink>
+                    <NavLink href="/#featured-vehicles" isScrolled={isScrolled}>Destacados</NavLink>
                 </nav>
 
                 {/* Right: Actions and Social */}
                 <div className="hidden md:flex items-center gap-x-4">
                     <a href="/#sell-car-section"
-                       className="shimmer-effect px-4 py-2 text-base font-semibold text-white bg-slate-800 dark:bg-rago-burgundy rounded-lg hover:bg-slate-950 dark:hover:bg-rago-burgundy-darker focus:outline-none focus:ring-4 focus:ring-slate-400/50 dark:focus:ring-rago-burgundy/50 transition-all duration-300 transform hover:-translate-y-px shadow-md hover:shadow-lg">
-                        <span>Vender mi Auto</span>
+                       onClick={() => trackEvent('click_sell_car_header')}
+                       className="shimmer-effect flex items-center gap-x-2 px-4 py-2 text-base font-semibold text-white bg-slate-800 dark:bg-rago-burgundy rounded-lg hover:bg-slate-950 dark:hover:bg-rago-burgundy-darker focus:outline-none focus:ring-4 focus:ring-slate-400/50 dark:focus:ring-rago-burgundy/50 transition-all duration-300 transform hover:-translate-y-px shadow-md hover:shadow-lg">
+                        <SellCarIcon className="h-5 w-5 flex-shrink-0" />
+                        <span className="hidden xl:inline whitespace-nowrap">Vender mi Auto</span>
                     </a>
                     <a
                         href={whatsappLink}
@@ -74,11 +84,23 @@ const Header: React.FC = () => {
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 px-4 py-2 text-base font-semibold text-white bg-rago-burgundy rounded-lg hover:bg-rago-burgundy-darker focus:outline-none focus:ring-4 focus:ring-rago-burgundy/50 transition-all duration-300 transform hover:-translate-y-px shadow-md hover:shadow-lg animate-pulse-burgundy"
                     >
-                        <ChatBubbleIcon className="h-5 w-5" />
-                        <span>Contactar</span>
+                        <ChatBubbleIcon className="h-5 w-5 flex-shrink-0" />
+                        <span className="hidden xl:inline">Contactar</span>
                     </a>
-                     <div className="w-px h-6 bg-slate-300 dark:bg-slate-700"></div>
-                     <a href={instagramUrl} onClick={() => trackEvent('click_instagram')} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-500 dark:text-slate-400 hover:text-rago-burgundy dark:hover:text-white transition-transform duration-300 hover:scale-110">
+                     <div className={`w-px h-6 transition-colors duration-300 ${isScrolled ? 'bg-slate-300 dark:bg-slate-700' : 'bg-white/30'}`}></div>
+                     <a
+                        href={instagramUrl}
+                        onClick={() => trackEvent('click_instagram')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Instagram"
+                        className={`transition-all duration-300 hover:scale-110
+                            ${isScrolled
+                                ? 'text-slate-500 dark:text-slate-400 hover:text-rago-burgundy dark:hover:text-white'
+                                : 'text-white hover:text-slate-200'
+                            }
+                        `}
+                    >
                         <InstagramIcon className="h-7 w-7" />
                     </a>
                 </div>

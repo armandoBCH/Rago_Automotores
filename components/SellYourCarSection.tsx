@@ -1,4 +1,5 @@
 
+
 import React, { useEffect, useRef } from 'react';
 import { CheckIcon, ArrowRightIcon, SellCarIcon, FileCheckIcon, CogIcon, ShieldIcon } from '../constants';
 import { optimizeUrl } from '../utils/image';
@@ -55,8 +56,13 @@ const SellYourCarSection: React.FC = () => {
     const imageUrl = "https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752115790/Gemini_Generated_Image_2lfdwh2lfdwh2lfd_zjz8tq.webp";
 
     return (
-        <section ref={sectionRef} id="sell-car-section" className="text-white my-16 rounded-2xl shadow-2xl overflow-hidden bg-gradient-to-br from-rago-burgundy via-rago-burgundy-darker to-rago-black bg-[size:200%_200%] animate-bg-pan">
-            <div className="container mx-auto px-6 lg:px-8 py-16 md:py-24">
+        <section ref={sectionRef} id="sell-car-section" className="relative text-white overflow-hidden bg-gradient-to-br from-rago-burgundy via-rago-burgundy-darker to-rago-black bg-[size:200%_200%] animate-bg-pan">
+            <div className="absolute top-0 left-0 w-full h-24 overflow-hidden leading-[0]" style={{ transform: 'rotate(180deg) translateY(1px)' }}>
+                <svg viewBox="0 0 960 100" preserveAspectRatio="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 45 L32 49.3 C64 53.7 128 62.3 192 61.2 C256 60 320 49 384 46.7 C448 44.3 512 50.7 576 57.7 C640 64.7 704 72.3 768 70.3 C832 68.3 896 56.7 928 50.8 L960 45 L960 101 L0 101Z" className="fill-slate-100 dark:fill-slate-950" />
+                </svg>
+            </div>
+            <div className="container mx-auto px-6 lg:px-8 pt-20 md:pt-28 pb-16 md:pb-24">
 
                 <div className="text-center mb-12 animate-fade-in-up">
                     <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-lg">

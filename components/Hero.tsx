@@ -19,11 +19,11 @@ const Hero: React.FC<HeroProps> = ({ searchTerm, onSearchChange }) => {
     };
 
     return (
-        <div className="relative border-b border-black text-white overflow-hidden">
+        <div className="relative text-white overflow-hidden">
             {/* Background Image and Overlay */}
             <div className="absolute inset-0 z-0">
                 <img 
-                    src="https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752192365/WhatsApp_Image_2025-07-10_at_20.56.53_ofq0qm.jpg" 
+                    src="https://images.unsplash.com/photo-1555215695-3004980ad54e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                     alt="Vehículo de lujo en un entorno moderno" 
                     className="w-full h-full object-cover"
                 />
@@ -31,7 +31,7 @@ const Hero: React.FC<HeroProps> = ({ searchTerm, onSearchChange }) => {
             </div>
 
             {/* Content - Changed to flex column for easier alignment */}
-            <div className="relative z-10 container mx-auto text-center flex flex-col items-center px-6 pt-20 pb-24 md:pt-28">
+            <div className="relative z-10 container mx-auto text-center flex flex-col items-center px-6 pt-20 pb-32 md:pt-28 md:pb-40">
                 <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
                     <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight drop-shadow-lg">
                         Nuestro Catálogo de Vehículos
@@ -89,6 +89,13 @@ const Hero: React.FC<HeroProps> = ({ searchTerm, onSearchChange }) => {
                         Vender mi Auto
                     </a>
                 </div>
+            </div>
+
+            {/* Shape Divider */}
+            <div className="absolute bottom-0 left-0 w-full h-20 md:h-28 overflow-hidden leading-none z-[5]" style={{ transform: 'translateY(1px)' }}>
+                <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M600,120C300,120,0,0,0,0V120H1200V0C1200,0,900,120,600,120Z" className="fill-slate-900 dark:fill-rago-black"></path>
+                </svg>
             </div>
         </div>
     );

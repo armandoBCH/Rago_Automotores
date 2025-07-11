@@ -5,11 +5,13 @@ export default function handler(
   request: VercelRequest,
   response: VercelResponse,
 ) {
+  // Set CORS headers for all responses
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   // Maneja las solicitudes pre-vuelo (preflight) para CORS
   if (request.method === 'OPTIONS') {
-    response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     return response.status(200).end();
   }
   
@@ -23,6 +25,7 @@ export default function handler(
 
     // Esta variable de entorno SÓLO existe en el servidor.
     // NO lleva el prefijo VITE_, por lo que nunca se expone al navegador.
+    // NOTA: Al cambiar esta variable en Vercel, se debe realizar un nuevo despliegue.
     const adminPassword = process.env.ADMIN_PASSWORD;
 
     if (!adminPassword) {
@@ -30,7 +33,12 @@ export default function handler(
       return response.status(500).json({ message: 'La configuración del servidor está incompleta.' });
     }
 
-    if (password === adminPassword) {
+    if (typeof password !== 'string') {
+        return response.status(400).json({ message: 'El formato de la contraseña es inválido.' });
+    }
+
+    // Usar trim() para eliminar espacios en blanco accidentales al principio o al final
+    if (password.trim() === adminPassword.trim()) {
       return response.status(200).json({ success: true });
     } else {
       return response.status(401).json({ message: 'Contraseña incorrecta.' });

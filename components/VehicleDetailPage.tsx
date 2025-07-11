@@ -63,14 +63,16 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
     const relatedVehicles = useMemo(() => {
         if (!allVehicles || allVehicles.length <= 1) return [];
 
-        const priceRangeVehicles = allVehicles.filter(v => {
+        const availableVehicles = allVehicles.filter(v => !v.is_sold);
+
+        const priceRangeVehicles = availableVehicles.filter(v => {
             if (v.id === vehicle.id) return false;
             if (vehicle.price === 0) return false;
             const priceDiff = Math.abs(v.price - vehicle.price) / vehicle.price;
             return priceDiff <= 0.25;
         });
 
-        const sameMake = allVehicles.filter(v => v.id !== vehicle.id && v.make === vehicle.make);
+        const sameMake = availableVehicles.filter(v => v.id !== vehicle.id && v.make === vehicle.make);
         
         const combined = [...priceRangeVehicles, ...sameMake];
         const uniqueIds = new Set();
@@ -92,24 +94,24 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 lg:gap-x-12">
-                {/* --- Left Column --- */}
-                <div className="lg:col-span-3 space-y-8">
-                    {/* Image Carousel */}
-                     <div className="opacity-0 animate-fade-in-up">
+                {/* --- Image Carousel (Mobile: 1st, Desktop: top-left) --- */}
+                <div className="lg:col-span-3">
+                    <div className="opacity-0 animate-fade-in-up">
                         <div className="-mx-4 md:-mx-6 lg:mx-0">
-                            <div className="lg:rounded-2xl lg:overflow-hidden lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
+                            <div className="relative lg:rounded-2xl lg:overflow-hidden lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
                                 <ImageCarousel images={vehicle.images} />
+                                 {vehicle.is_sold && (
+                                    <div className="absolute inset-0 bg-white/10 dark:bg-black/40 backdrop-blur-sm flex items-center justify-center z-20 pointer-events-none lg:rounded-2xl">
+                                        <img src="https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752208124/toppng.com-vendido-carimbo-la-96-nike-missile-site-432x152_1_ybxv6w.png" alt="Vendido" className="w-2/3 md:w-1/2 opacity-90 transform -rotate-[15deg] drop-shadow-lg" />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
-                    {/* Description Card */}
-                    <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
-                        <DescriptionCard description={vehicle.description} />
-                    </div>
                 </div>
 
-                {/* --- Right Column (Sticky) --- */}
-                <div className="lg:col-span-2 mt-8 lg:mt-0">
+                {/* --- Right Column (Sticky) (Mobile: 2nd, Desktop: right, spanning two rows) --- */}
+                <div className="lg:col-span-2 lg:row-span-2 mt-8 lg:mt-0">
                     <div className="lg:sticky lg:top-28 flex flex-col gap-y-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
                         {/* Main Info Card */}
                         <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6 shadow-subtle dark:shadow-subtle-dark">
@@ -122,20 +124,26 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                                 </span>
                             </div>
                             <div className="mb-6">
-                                <p className="text-5xl md:text-6xl font-extrabold text-rago-burgundy break-words">
+                                <p className="text-[2.1rem] leading-tight sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-rago-burgundy">
                                     ${vehicle.price.toLocaleString('es-AR')}
                                 </p>
                             </div>
-                            <a
-                                href={whatsappLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={handleWhatsAppClick}
-                                className="group w-full flex items-center justify-center gap-3 text-center bg-gradient-to-r from-rago-burgundy to-rago-burgundy-darker hover:shadow-rago-glow text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 text-xl transform hover:-translate-y-0.5 animate-pulse-burgundy"
-                            >
-                                <ChatBubbleIcon className="h-7 w-7 transition-transform duration-300 group-hover:scale-110" />
-                                <span>Contactar por WhatsApp</span>
-                            </a>
+                            {vehicle.is_sold ? (
+                                <div className="group w-full flex items-center justify-center gap-3 text-center bg-slate-400 dark:bg-slate-700 text-white font-bold py-4 px-4 rounded-lg text-xl cursor-not-allowed">
+                                    Vehículo Vendido
+                                </div>
+                            ) : (
+                                <a
+                                    href={whatsappLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={handleWhatsAppClick}
+                                    className="group w-full flex items-center justify-center gap-3 text-center bg-gradient-to-r from-rago-burgundy to-rago-burgundy-darker hover:shadow-rago-glow text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 text-xl transform hover:-translate-y-0.5 animate-pulse-burgundy"
+                                >
+                                    <ChatBubbleIcon className="h-7 w-7 transition-transform duration-300 group-hover:scale-110" />
+                                    <span>Contactar por WhatsApp</span>
+                                </a>
+                            )}
                             <SocialShareButtons vehicle={vehicle} />
                         </div>
                         
@@ -152,6 +160,13 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                                 </div>
                             </div>
                         </section>
+                    </div>
+                </div>
+
+                {/* --- Description (Mobile: 3rd, Desktop: bottom-left) --- */}
+                <div className="lg:col-span-3 mt-8">
+                    <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+                        <DescriptionCard description={vehicle.description} />
                     </div>
                 </div>
             </div>

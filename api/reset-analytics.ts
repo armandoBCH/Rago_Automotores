@@ -7,10 +7,12 @@ export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
 ) {
+  // Set CORS headers
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (request.method === 'OPTIONS') {
-    response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     return response.status(200).end();
   }
 
@@ -32,7 +34,11 @@ export default async function handler(
         return response.status(500).json({ message: 'La configuración de Supabase en el servidor está incompleta.' });
     }
 
-    if (password !== adminPassword) {
+    if (typeof password !== 'string') {
+      return response.status(400).json({ message: 'El formato de la contraseña es inválido.' });
+    }
+    
+    if (password.trim() !== adminPassword.trim()) {
       return response.status(401).json({ message: 'Contraseña incorrecta.' });
     }
 
