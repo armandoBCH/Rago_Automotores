@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ChatBubbleIcon, InstagramIcon, SellCarIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
@@ -17,7 +18,7 @@ const Header: React.FC = () => {
         fixed top-0 left-0 right-0
         z-30
         transition-all duration-300 ease-in-out
-        bg-white/80 dark:bg-rago-black/80 backdrop-blur-xl shadow-subtle dark:shadow-subtle-dark border-b border-slate-200/80 dark:border-slate-800/80
+        bg-white dark:bg-rago-black shadow-lg border-b border-slate-200/50 dark:border-slate-800/50
     `;
 
     const contactMessage = "Hola, estoy interesado en sus vehículos.";
