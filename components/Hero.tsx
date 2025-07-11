@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DownIcon } from '../constants';
+import { DownIcon, SearchIcon } from '../constants';
 
 interface HeroProps {
     searchTerm: string;
@@ -42,14 +42,17 @@ const Hero: React.FC<HeroProps> = ({ searchTerm, onSearchChange }) => {
                 </div>
 
                 <div className="mt-8 max-w-2xl w-full mx-auto opacity-0 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-                    <form onSubmit={handleFormSubmit} className="bg-white/10 backdrop-blur-md p-2 rounded-2xl flex gap-2 border border-white/20 shadow-lg">
+                    <form onSubmit={handleFormSubmit} className="relative bg-white/10 backdrop-blur-md p-2 rounded-2xl flex gap-2 border border-white/20 shadow-lg">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-6 pointer-events-none z-10">
+                            <SearchIcon className="h-6 w-6 text-slate-500" />
+                        </div>
                         <input
                             type="text"
-                            placeholder="Buscar por marca, modelo o año..."
+                            placeholder="¿Qué vehículo buscas?"
                             aria-label="Buscar vehículo"
                             value={searchTerm}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full flex-grow px-5 py-4 text-lg bg-white/95 dark:bg-slate-900/90 border-transparent text-slate-800 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:border-transparent focus:ring-2 focus:ring-rago-burgundy-darker rounded-xl transition-all duration-300"
+                            className="w-full flex-grow pl-14 pr-5 py-4 text-lg bg-white/95 dark:bg-slate-900/90 border-transparent text-slate-800 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:border-transparent focus:ring-2 focus:ring-rago-burgundy-darker rounded-xl transition-all duration-300"
                         />
                         <button
                             type="submit"
