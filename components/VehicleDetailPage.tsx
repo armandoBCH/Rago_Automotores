@@ -222,8 +222,11 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                             <div className="relative overflow-hidden lg:rounded-2xl lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
                                 <ImageCarousel images={vehicle.images} />
                                 {vehicle.is_sold && (
-                                    <div className="absolute top-0 left-0 w-48 h-48 overflow-hidden z-20 pointer-events-none">
-                                        <div className="absolute transform -rotate-45 bg-gradient-to-br from-red-600 to-red-700 text-center text-white font-black uppercase tracking-widest shadow-2xl" style={{ width: '250px', left: '-65px', top: '55px', padding: '10px 0', fontSize: '1.5rem' }}>
+                                    <div className="absolute top-0 left-0 w-64 h-64 overflow-hidden z-20 pointer-events-none">
+                                        <div 
+                                            className="absolute transform -rotate-45 bg-gradient-to-br from-red-600 to-red-700 text-center text-white font-black uppercase tracking-widest shadow-2xl" 
+                                            style={{ width: '350px', left: '-80px', top: '80px', padding: '12px 0', fontSize: '2rem' }}
+                                        >
                                             Vendido
                                         </div>
                                     </div>

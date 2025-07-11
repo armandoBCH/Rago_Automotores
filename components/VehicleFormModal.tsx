@@ -305,8 +305,11 @@ const VehicleDetailPreview: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
             <div className="relative aspect-[4/3] bg-gray-200 dark:bg-black overflow-hidden">
                 <ImageCarousel images={vehicle.images} />
                 {vehicle.is_sold && (
-                    <div className="absolute top-0 left-0 w-36 h-36 overflow-hidden z-20 pointer-events-none">
-                        <div className="absolute transform -rotate-45 bg-red-600 text-center text-white font-extrabold uppercase tracking-widest shadow-xl" style={{ width: '190px', left: '-50px', top: '40px', padding: '7px 0', fontSize: '1rem' }}>
+                    <div className="absolute top-0 left-0 w-64 h-64 overflow-hidden z-20 pointer-events-none">
+                        <div 
+                            className="absolute transform -rotate-45 bg-gradient-to-br from-red-600 to-red-700 text-center text-white font-black uppercase tracking-widest shadow-2xl" 
+                            style={{ width: '350px', left: '-80px', top: '80px', padding: '12px 0', fontSize: '2rem' }}
+                        >
                             Vendido
                         </div>
                     </div>
