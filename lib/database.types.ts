@@ -3,8 +3,8 @@ export type Json =
   | number
   | boolean
   | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+  | { [key: string]: any }
+  | any[]
 
 export type Database = {
   public: {
@@ -43,6 +43,7 @@ export type Database = {
           fuelType: string
           description: string
           images: string[]
+          is_featured: boolean
         }
         Insert: {
           id?: number
@@ -57,6 +58,7 @@ export type Database = {
           fuelType: string
           description: string
           images: string[]
+          is_featured?: boolean
         }
         Update: {
           id?: number
@@ -71,6 +73,7 @@ export type Database = {
           fuelType?: string
           description?: string
           images?: string[]
+          is_featured?: boolean
         }
       }
     }

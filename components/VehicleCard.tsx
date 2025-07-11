@@ -1,8 +1,9 @@
 
+
 import React, { useState } from 'react';
 import { Vehicle } from '../types';
 import { optimizeUrl, slugify } from '../utils/image';
-import { ArrowRightIcon } from '../constants';
+import { ArrowRightIcon, StarIcon } from '../constants';
 
 interface VehicleCardProps {
     vehicle: Vehicle;
@@ -21,8 +22,14 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
 
     return (
         <div 
-            className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden flex flex-col transition-all duration-300 ease-out shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-800 hover:shadow-rago-lg dark:hover:shadow-rago-glow hover:border-rago-burgundy/20 hover:-translate-y-1.5 group"
+            className="relative bg-white dark:bg-slate-900 rounded-xl overflow-hidden flex flex-col transition-all duration-300 ease-out shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-800 hover:shadow-rago-lg dark:hover:shadow-rago-glow hover:border-rago-burgundy/20 hover:-translate-y-1.5 group"
         >
+            {vehicle.is_featured && (
+                <div className="absolute top-0 left-0 bg-rago-burgundy text-white text-xs font-bold px-3 py-1 rounded-br-lg z-10 shadow-md flex items-center gap-1">
+                    <StarIcon className="h-3 w-3" filled={true} />
+                    <span>Destacado</span>
+                </div>
+            )}
             <a href={vehicleUrl} className="block aspect-[4/3] overflow-hidden">
                 <div 
                     className="w-full h-full bg-cover bg-center"

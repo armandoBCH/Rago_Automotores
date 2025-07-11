@@ -223,6 +223,11 @@ export const TargetIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
+export const StarIcon = ({ className, filled }: { className?: string, filled?: boolean }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill={filled ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.31h5.404a.563.563 0 01.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.528 5.345a.562.562 0 01-.82.622l-4.402-2.963a.563.563 0 00-.63 0l-4.402 2.963a.562.562 0 01-.82-.622l1.528-5.345a.563.563 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988h5.404a.563.563 0 00.475-.31l2.125-5.111z" />
+    </svg>
+);
 
 // Social Share Icons
 export const WhatsAppIcon = ({ className }: { className?: string }) => (
