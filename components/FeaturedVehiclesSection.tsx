@@ -28,7 +28,14 @@ const FeaturedVehiclesSection: React.FC<{ vehicles: Vehicle[] }> = ({ vehicles }
     };
 
     return (
-        <section id="featured-vehicles" className="relative bg-slate-900 dark:bg-rago-black pt-16 sm:pt-20 pb-16 sm:pb-20">
+        <section id="featured-vehicles" className="relative bg-slate-900 dark:bg-rago-black pt-28 sm:pt-32 pb-16 sm:pb-20">
+            {/* Shape divider at the top to create a seamless transition */}
+            <div className="absolute top-0 left-0 w-full h-24 md:h-32 overflow-hidden leading-none z-[5]" style={{ transform: 'translateY(-100%)' }}>
+                 <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1200,0C900,100 300,100 0,0 V-1 H1200 Z" className="fill-slate-900 dark:fill-rago-black"></path>
+                </svg>
+            </div>
+            
             <div className="container mx-auto px-4 md:px-6">
                 <div className="text-center mb-12">
                     <h2 className="text-4xl md:text-5xl font-black text-white drop-shadow-sm">

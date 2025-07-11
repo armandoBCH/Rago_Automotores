@@ -185,30 +185,39 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
             {/* Related Vehicles Section */}
             {relatedVehicles.length > 0 && (
-                <section className="mt-16 lg:mt-24 py-16 lg:py-20 -mx-4 md:-mx-6 px-4 md:px-6 bg-slate-100 dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800 opacity-0 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-                     <div className="max-w-screen-xl mx-auto">
-                        <div className="flex justify-between items-center mb-10">
-                            <h2 className="text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white">
-                                Vehículos Similares
-                            </h2>
-                             {relatedVehicles.length > 4 && (
-                                <div className="hidden md:flex gap-3">
-                                    <button onClick={() => scrollSimilar('left')} aria-label="Anterior" className="w-12 h-12 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors shadow-md"><ArrowLeftIcon className="h-6 w-6" /></button>
-                                    <button onClick={() => scrollSimilar('right')} aria-label="Siguiente" className="w-12 h-12 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors shadow-md"><ArrowRightIcon className="h-6 w-6" /></button>
-                                </div>
-                            )}
-                        </div>
+                <section className="mt-16 lg:mt-24 bg-white dark:bg-rago-black border-y border-slate-200 dark:border-slate-800/50">
+                    <div className="max-w-screen-xl mx-auto py-20 lg:py-24 px-4 md:px-6 opacity-0 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
                         <div className="relative">
-                            <div ref={similarVehiclesRef} className="flex gap-6 overflow-x-auto pb-4 hide-scrollbar">
+                            <div className="text-center mb-12">
+                                <h2 className="text-4xl lg:text-5xl font-black text-slate-900 dark:text-white">
+                                    También te podría interesar
+                                </h2>
+                                <p className="mt-4 text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                                    Explora otros vehículos en nuestro inventario que se ajustan a tus intereses.
+                                </p>
+                            </div>
+                
+                            <div ref={similarVehiclesRef} className="flex gap-6 overflow-x-auto pb-4 hide-scrollbar -mx-4 px-4 md:-mx-6 md:px-6">
                                 {relatedVehicles.map((relatedVehicle, index) => (
                                     <div key={relatedVehicle.id} className="flex-shrink-0 w-[85%] sm:w-[45%] md:w-1/3 lg:w-1/4 stagger-child" style={{ animationDelay: `${index * 80}ms` }}>
                                         <VehicleCard vehicle={relatedVehicle} />
                                     </div>
                                 ))}
                             </div>
+                
+                            {relatedVehicles.length > 4 && (
+                                <>
+                                    <button onClick={() => scrollSimilar('left')} aria-label="Anterior" className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex items-center justify-center w-14 h-14 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm rounded-full shadow-lg hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white transition-all duration-300 transform hover:scale-105">
+                                        <ArrowLeftIcon className="h-7 w-7" />
+                                    </button>
+                                    <button onClick={() => scrollSimilar('right')} aria-label="Siguiente" className="absolute -right-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex items-center justify-center w-14 h-14 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm rounded-full shadow-lg hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-white transition-all duration-300 transform hover:scale-105">
+                                        <ArrowRightIcon className="h-7 w-7" />
+                                    </button>
+                                </>
+                            )}
                         </div>
-                     </div>
-                     <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { scrollbar-width: none; }`}</style>
+                    </div>
+                    <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { scrollbar-width: none; }`}</style>
                 </section>
             )}
         </div>

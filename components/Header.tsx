@@ -14,11 +14,12 @@ const NavLink: React.FC<{ href: string; children: React.ReactNode; }> = ({ href,
 );
 
 const Header: React.FC = () => {
+    // Using a solid, opaque background to prevent any filters from the content below from affecting the header's appearance.
     const headerClasses = `
         fixed top-0 left-0 right-0
         z-30
-        transition-all duration-300 ease-in-out
-        bg-white dark:bg-rago-black shadow-lg border-b border-slate-200/50 dark:border-slate-800/50
+        transition-colors duration-300
+        bg-white dark:bg-rago-black shadow-lg
     `;
 
     const contactMessage = "Hola, estoy interesado en sus vehículos.";
