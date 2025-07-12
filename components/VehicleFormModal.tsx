@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Vehicle, VehicleFormData } from '../types';
 import { XIcon } from '../constants';
@@ -11,16 +13,17 @@ import { supabase } from '../lib/supabaseClient';
 
 const DRAFT_STORAGE_KEY = 'rago-new-vehicle-draft';
 
-type FormDataState = Omit<Vehicle, 'id' | 'year' | 'price' | 'mileage' | 'created_at' | 'images' | 'display_order'> & {
+type FormDataState = Omit<Vehicle, 'id' | 'year' | 'price' | 'mileage' | 'created_at' | 'images' | 'display_order' | 'fuelType'> & {
     year: string;
     price: string;
     mileage: string;
+    fuelType: string;
     customFuelType?: string;
 };
 
 const getInitialFormState = (): FormDataState => ({
     make: '', model: '', year: '', price: '', mileage: '', engine: '',
-    transmission: 'Manual', fuelType: 'Nafta', customFuelType: '', description: '',
+    transmission: 'Manual', fuelType: 'Nafta', vehicle_type: '', customFuelType: '', description: '',
     is_featured: false, is_sold: false,
 });
 
@@ -30,9 +33,10 @@ interface VehicleFormModalProps {
     onSubmit: (vehicle: VehicleFormData) => void;
     initialData?: Vehicle;
     brands: string[];
+    uniqueVehicleTypes: string[];
 }
 
-const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, onSubmit, initialData, brands }) => {
+const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, onSubmit, initialData, brands, uniqueVehicleTypes }) => {
     const [formData, setFormData] = useState<FormDataState>(getInitialFormState());
     const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
     const [previewMode, setPreviewMode] = useState<'card' | 'detail'>('card');
@@ -66,6 +70,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
                     year: String(initialData.year),
                     price: String(initialData.price),
                     mileage: String(initialData.mileage),
+                    vehicle_type: initialData.vehicle_type || '',
                     fuelType: isStandard ? initialData.fuelType : 'Otro',
                     customFuelType: isStandard ? '' : initialData.fuelType,
                 });
@@ -112,11 +117,12 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
             engine: formData.engine || 'Motor',
             transmission: formData.transmission,
             fuelType: isOtherFuelType ? formData.customFuelType || 'Combustible' : formData.fuelType,
+            vehicle_type: formData.vehicle_type || 'Tipo',
             description: formData.description || 'Descripción del vehículo.',
             images: validImages.length > 0 ? validImages : ['https://i.imgur.com/g2a4A0a.png'],
             is_featured: formData.is_featured,
             is_sold: formData.is_sold,
-            display_order: initialData?.display_order || null,
+            display_order: initialData?.display_order ?? 0,
         };
     }, [formData, imageFiles, initialData, isOtherFuelType]);
 
@@ -211,6 +217,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
             engine: formData.engine,
             transmission: formData.transmission,
             fuelType: fuelType || 'Nafta',
+            vehicle_type: formData.vehicle_type || 'N/A',
             description: formData.description,
             images: finalImageUrls,
             is_featured: formData.is_featured,
@@ -244,6 +251,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div><label htmlFor="make" className="block text-base font-medium text-gray-700 dark:text-gray-300">Marca</label><input id="make" name="make" list="brands-datalist" value={formData.make} onChange={handleChange} required className="mt-1 form-input" /><datalist id="brands-datalist">{brands.map(brand => <option key={brand} value={brand} />)}</datalist></div>
                                 <InputField label="Modelo" name="model" value={formData.model} onChange={handleChange} required />
+                                <InputField label="Tipo de Vehículo" name="vehicle_type" list="vehicle-types-datalist" value={formData.vehicle_type} onChange={handleChange} required /><datalist id="vehicle-types-datalist">{uniqueVehicleTypes.map(type => <option key={type} value={type} />)}</datalist>
                                 <InputField label="Año" name="year" type="text" inputMode="numeric" value={formData.year} onChange={handleChange} required />
                                 <InputField label="Precio (ARS)" name="price" type="text" inputMode="numeric" value={formData.price} onChange={handleChange} required />
                                 <InputField label="Kilometraje (km)" name="mileage" type="text" inputMode="numeric" value={formData.mileage} onChange={handleChange} required />
@@ -308,9 +316,16 @@ const VehicleDetailPreview: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
                 <ImageCarousel images={vehicle.images} />
                 {vehicle.is_sold && (
                     <div className="absolute top-0 left-0 w-64 h-64 overflow-hidden z-20 pointer-events-none">
-                        <div 
-                            className="absolute transform -rotate-45 bg-gradient-to-br from-red-600 to-red-700 text-center text-white font-black uppercase tracking-widest shadow-2xl" 
-                            style={{ width: '350px', left: '-80px', top: '80px', padding: '12px 0', fontSize: '2rem' }}
+                        <div
+                            className="absolute transform -rotate-45 bg-gradient-to-br from-red-600 to-red-800 text-center text-white font-black uppercase tracking-widest shadow-2xl"
+                            style={{
+                                width: '350px',
+                                left: '-80px',
+                                top: '80px',
+                                padding: '12px 0',
+                                fontSize: '2rem',
+                                textShadow: '1px 1px 3px rgba(0,0,0,0.3)'
+                            }}
                         >
                             Vendido
                         </div>

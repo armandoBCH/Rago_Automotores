@@ -1,9 +1,12 @@
 
 
+
+
 import React, { useState } from 'react';
 import { Vehicle } from '../types';
 import { optimizeUrl, slugify } from '../utils/image';
 import { ArrowRightIcon, StarIcon } from '../constants';
+import { trackEvent } from '../lib/analytics';
 
 interface VehicleCardProps {
     vehicle: Vehicle;
@@ -11,6 +14,7 @@ interface VehicleCardProps {
 
 const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
     const [isLoaded, setIsLoaded] = useState(false);
+    
     const imageSrc = vehicle.images?.[0] || '';
 
     const placeholderUrl = optimizeUrl(imageSrc, { w: 20, h: 15, fit: 'cover', blur: 2, output: 'webp' });
@@ -25,13 +29,10 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
             className={`relative bg-white dark:bg-slate-900 rounded-2xl overflow-hidden flex flex-col transition-all duration-300 ease-out shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-800 ${!vehicle.is_sold && 'hover:shadow-rago-lg dark:hover:shadow-rago-glow dark:hover:border-rago-burgundy/40 hover:-translate-y-1.5'} group`}
         >
              {vehicle.is_sold && (
-                <div className="absolute top-0 left-0 w-48 h-48 overflow-hidden z-20 pointer-events-none">
-                    <div 
-                        className="absolute transform -rotate-45 bg-gradient-to-br from-red-600 to-red-700 text-center text-white font-black text-xl uppercase tracking-wider shadow-2xl" 
-                        style={{ width: '250px', left: '-55px', top: '55px', padding: '10px 0' }}
-                    >
-                        Vendido
-                    </div>
+                <div
+                    className="absolute top-10 -left-16 w-64 transform -rotate-45 bg-gradient-to-br from-red-600 to-red-800 text-center text-white font-black text-2xl py-2 z-20 pointer-events-none shadow-lg"
+                >
+                    Vendido
                 </div>
             )}
             {vehicle.is_featured && !vehicle.is_sold && (
@@ -79,6 +80,7 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
                  <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-700/50">
                     <a 
                         href={vehicleUrl}
+                        onClick={() => trackEvent('click_card_details', vehicle.id)}
                         className="group flex w-full items-center justify-center gap-x-2 overflow-hidden rounded-lg bg-slate-800 dark:bg-gradient-to-br dark:from-rago-burgundy dark:to-rago-burgundy-darker px-4 py-3 text-center text-lg font-semibold text-white transition-all duration-300 hover:bg-slate-950 dark:hover:shadow-rago-lg focus:outline-none focus:ring-4 focus:ring-slate-400/50 dark:focus:ring-rago-burgundy/50"
                     >
                         <span className="transition-transform duration-300 ease-out group-hover:-translate-x-2">

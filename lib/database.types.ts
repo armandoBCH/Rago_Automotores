@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -42,11 +43,12 @@ export type Database = {
           engine: string
           transmission: 'Automática' | 'Manual'
           fuelType: string
+          vehicle_type: string
           description: string
           images: string[]
           is_featured: boolean
           is_sold: boolean
-          display_order: number | null
+          display_order: number
         }
         Insert: {
           id?: number
@@ -59,11 +61,12 @@ export type Database = {
           engine: string
           transmission: 'Automática' | 'Manual'
           fuelType: string
+          vehicle_type: string
           description: string
           images: string[]
           is_featured?: boolean
           is_sold?: boolean
-          display_order?: number | null
+          display_order?: number
         }
         Update: {
           id?: number
@@ -76,11 +79,12 @@ export type Database = {
           engine?: string
           transmission?: 'Automática' | 'Manual'
           fuelType?: string
+          vehicle_type?: string
           description?: string
           images?: string[]
           is_featured?: boolean
           is_sold?: boolean
-          display_order?: number | null
+          display_order?: number
         }
         Relationships: []
       }
@@ -89,7 +93,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      reorder_vehicles: {
+        Args: {
+          updates: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

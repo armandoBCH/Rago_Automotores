@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Vehicle, VehicleFormData, AnalyticsEvent, VehicleUpdate } from './types';
-import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon, DownIcon, StarIcon } from './constants';
+import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon, DownIcon, StarIcon, HeartIcon } from './constants';
 import { supabase } from './lib/supabaseClient';
 import { trackEvent } from './lib/analytics';
 import { optimizeUrl } from './utils/image';
@@ -10,7 +10,7 @@ import Hero from './components/Hero';
 import FilterBar from './components/FilterBar';
 import VehicleList from './components/VehicleList';
 import VehicleDetailPage from './components/VehicleDetailPage';
-import AdminPanel from './components/AdminPanel';
+import { AdminPanel } from './components/AdminPanel';
 import VehicleFormModal from './components/VehicleFormModal';
 import ConfirmationModal from './components/ConfirmationModal';
 import Footer from './components/Footer';
@@ -18,6 +18,8 @@ import LoginPage from './components/LoginPage';
 import SellYourCarSection from './components/SellYourCarSection';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import FeaturedVehiclesSection from './components/FeaturedVehiclesSection';
+import FavoritesPage from './components/FavoritesPage';
+import { useFavorites } from './components/FavoritesProvider';
 
 type ModalState = 
     | { type: 'none' }
@@ -32,10 +34,13 @@ const App: React.FC = () => {
     const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem('rago-admin') === 'true');
     const [modalState, setModalState] = useState<ModalState>({ type: 'none' });
     const [searchTerm, setSearchTerm] = useState('');
-    const [filters, setFilters] = useState({ make: '', year: '', price: '' });
+    const [filters, setFilters] = useState({ make: '', year: '', price: '', vehicleType: '' });
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [visibleCount, setVisibleCount] = useState(8);
+    
+    const { favoriteIds } = useFavorites();
+    const favoritesCount = favoriteIds.length;
     
     const [path, setPath] = useState(() => {
         const currentAdminState = sessionStorage.getItem('rago-admin') === 'true';
@@ -50,8 +55,8 @@ const App: React.FC = () => {
             // Fetch vehicles always, now sorted by the new custom order field
             const vehiclesResult = await supabase
                 .from('vehicles')
-                .select('*')
-                .order('display_order', { ascending: true })
+                .select('id,created_at,make,model,year,price,mileage,engine,transmission,fuelType,vehicle_type,description,images,is_featured,is_sold,display_order')
+                .order('display_order', { ascending: true, nullsFirst: false })
                 .order('is_sold', { ascending: true })
                 .order('created_at', { ascending: false });
             
@@ -169,6 +174,7 @@ const App: React.FC = () => {
     const vehicleIdStr = slug ? slug.split('-').pop() ?? null : null;
     const vehicleId = vehicleIdStr ? parseInt(vehicleIdStr, 10) : null;
     const isHomePage = pathname === '/' || pathname === '/index.html';
+    const isFavoritesPage = pathname === '/favoritos';
     
     const selectedVehicle = useMemo(() => {
         if (!vehicleId || isNaN(vehicleId)) return null;
@@ -233,17 +239,23 @@ const App: React.FC = () => {
             updateMeta('meta[name="twitter:title"]', title);
             updateMeta('meta[name="twitter:description"]', description);
             updateMeta('meta[name="twitter:image"]', imageUrl);
+        } else if (isFavoritesPage) {
+            document.title = 'Mis Favoritos | Rago Automotores';
+            updateMeta('meta[name="description"]', 'Vea sus vehículos guardados en Rago Automotores. Su selección personal de autos de calidad.');
+            updateMeta('meta[property="og:title"]', 'Mis Vehículos Favoritos');
         }
         
-    }, [path, selectedVehicle, isHomePage]);
+    }, [path, selectedVehicle, isHomePage, isFavoritesPage]);
 
     const uniqueBrands = useMemo(() => Array.from(new Set(vehicles.map(v => v.make))).sort(), [vehicles]);
+    const uniqueVehicleTypes = useMemo(() => Array.from(new Set(vehicles.map(v => v.vehicle_type))).sort(), [vehicles]);
 
     const filteredVehicles = useMemo(() => {
         let temp = [...vehicles];
         const term = searchTerm.toLowerCase().trim();
         if (term) temp = temp.filter(v => `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(term));
         if (filters.make) temp = temp.filter(v => v.make === filters.make);
+        if (filters.vehicleType) temp = temp.filter(v => v.vehicle_type === filters.vehicleType);
         if (filters.year) temp = temp.filter(v => v.year >= parseInt(filters.year, 10));
         if (filters.price) temp = temp.filter(v => v.price <= parseInt(filters.price, 10));
         return temp;
@@ -260,7 +272,7 @@ const App: React.FC = () => {
         setVisibleCount(filteredVehicles.length);
     };
 
-    const handleFilterChange = useCallback((newFilters: { make: string, year: string, price: string }) => setFilters(newFilters), []);
+    const handleFilterChange = useCallback((newFilters: { make: string; year: string; price: string; vehicleType: string; }) => setFilters(newFilters), []);
     const handleAddVehicleClick = () => setModalState({ type: 'form' });
     const handleEditVehicleClick = (vehicle: Vehicle) => setModalState({ type: 'form', vehicle });
     const handleDeleteVehicleClick = (vehicleId: number) => setModalState({ type: 'confirmDelete', vehicleId });
@@ -340,31 +352,28 @@ const App: React.FC = () => {
         }
     };
     
-    const handleReorderVehicles = async (reorderedVehicles: Vehicle[]) => {
+    const handleReorder = async (reorderedItems: Vehicle[]) => {
+        const originalVehicles = [...vehicles];
+        
         // Optimistic update
-        setVehicles(reorderedVehicles);
-
-        const orderPayload = reorderedVehicles.map((vehicle, index) => ({
+        setVehicles(reorderedItems);
+    
+        const updatePayload = reorderedItems.map((vehicle, index) => ({
             id: vehicle.id,
-            display_order: index,
+            display_order: index
         }));
-
+        
         try {
             const response = await fetch('/api/reorder-vehicles', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ vehicles: orderPayload }),
+                body: JSON.stringify({ vehicles: updatePayload }),
             });
-            if (!response.ok) {
-                // Revert on error
-                console.error("Failed to save new order, reverting.");
-                await fetchAllData(); 
-                alert("No se pudo guardar el nuevo orden.");
-            }
+            if (!response.ok) throw new Error('API call failed');
         } catch (error) {
-            console.error("Error saving new order:", error);
-            await fetchAllData();
-            alert("Ocurrió un error al guardar el nuevo orden.");
+            alert('No se pudo guardar el nuevo orden.');
+            // Revert optimistic update
+            setVehicles(originalVehicles);
         }
     };
     
@@ -395,10 +404,10 @@ const App: React.FC = () => {
                         onAnalyticsReset={handleAnalyticsReset} 
                         onToggleFeatured={handleToggleFeatured}
                         onToggleSold={handleToggleSold}
-                        onReorder={handleReorderVehicles}
+                        onReorder={handleReorder}
                     />
                 </main>
-                {modalState.type === 'form' && <VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} brands={uniqueBrands} />}
+                {modalState.type === 'form' && <VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} brands={uniqueBrands} uniqueVehicleTypes={uniqueVehicleTypes} />}
                 {modalState.type === 'confirmDelete' && <ConfirmationModal isOpen={true} onClose={handleCloseModal} onConfirm={confirmDelete} title="Confirmar Eliminación" message="¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer." isConfirming={isDeleting} />}
             </div>
         );
@@ -408,9 +417,10 @@ const App: React.FC = () => {
         if (loading) return <div className="text-center py-16">Cargando...</div>;
         if (dbError) return <div className="text-center py-16 text-red-500">{dbError}</div>;
         if (vehicleId) return selectedVehicle ? <VehicleDetailPage vehicle={selectedVehicle} allVehicles={vehicles} /> : <NotFoundPage />;
+        if (isFavoritesPage) return <FavoritesPage allVehicles={vehicles} />;
         if (isHomePage) return (
             <>
-                <FilterBar filters={filters} onFilterChange={handleFilterChange} brands={uniqueBrands} />
+                <FilterBar filters={filters} onFilterChange={handleFilterChange} brands={uniqueBrands} uniqueVehicleTypes={uniqueVehicleTypes} />
                 <VehicleList vehicles={vehiclesToShow} />
                 {hasMoreVehicles && (
                      <div className="text-center mt-12 animate-fade-in">
@@ -446,6 +456,19 @@ const App: React.FC = () => {
                     <li><a href="/" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><HomeIcon className="h-7 w-7 text-rago-burgundy" /><span>Inicio</span></a></li>
                     <li><a href="/#catalog" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><CatalogIcon className="h-7 w-7 text-rago-burgundy" /><span>Catálogo</span></a></li>
                     <li><a href="/#featured-vehicles" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><StarIcon className="h-7 w-7 text-rago-burgundy" /><span>Destacados</span></a></li>
+                    <li>
+                        <a href="/favoritos" className="flex items-center justify-between gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors">
+                            <div className="flex items-center gap-4">
+                                <HeartIcon className="h-7 w-7 text-rago-burgundy" />
+                                <span>Favoritos</span>
+                            </div>
+                            {favoritesCount > 0 && (
+                                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-rago-burgundy text-white text-base font-bold">
+                                    {favoritesCount}
+                                </span>
+                            )}
+                        </a>
+                    </li>
                     <li><a href="/#sell-car-section" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><SellCarIcon className="h-7 w-7 text-rago-burgundy" /><span>Vender mi Auto</span></a></li>
                 </ul>
                 <div className="mt-auto pt-8 border-t border-slate-700/50">

@@ -49,7 +49,7 @@ export default async function handler(
     const { error } = await supabaseAdmin
       .from('analytics_events')
       .delete()
-      .neq('id', 0); // Deletes all rows, .neq is a trick to match all
+      .gt('id', -1); // Deletes all rows, assuming IDs are positive integers
 
     if (error) {
       console.error('Error resetting analytics:', error);

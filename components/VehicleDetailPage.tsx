@@ -1,14 +1,19 @@
 
 
+
+
+
+
 import React, { useMemo, useEffect, useRef } from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';
 import VehicleCard from './VehicleCard';
 import SocialShareButtons from './SocialShareButtons';
 import DescriptionCard from './DescriptionCard';
-import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon, ArrowLeftIcon } from '../constants';
+import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon, ArrowLeftIcon, HeartIcon, CarIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
 import { optimizeUrl, slugify } from '../utils/image';
+import { useFavorites } from './FavoritesProvider';
 
 interface VehicleDetailPageProps {
     vehicle: Vehicle;
@@ -16,9 +21,9 @@ interface VehicleDetailPageProps {
 }
 
 const SpecificationItem: React.FC<{ icon: React.ReactNode; label: string; value: string | number; }> = ({ icon, label, value }) => (
-    <div className="flex items-center justify-between py-4">
+    <div className="flex items-center justify-between py-3">
         <div className="flex items-center">
-            <div className="flex-shrink-0 w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mr-4">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mr-3">
                <span className="text-rago-burgundy">{icon}</span>
             </div>
             <div>
@@ -41,40 +46,44 @@ const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
     </div>
 );
 
-const PriceCard: React.FC<{ vehicle: Vehicle, whatsappLink: string, onWhatsAppClick: () => void }> = ({ vehicle, whatsappLink, onWhatsAppClick }) => (
-    <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6 shadow-subtle dark:shadow-subtle-dark">
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-b dark:border-gray-700 pb-4 mb-6">
-            <h1 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
-                {vehicle.make} {vehicle.model}
-            </h1>
-            <span className="text-xl font-bold inline-block align-baseline py-1 px-4 rounded-full text-rago-burgundy bg-rago-burgundy/10 dark:text-white dark:bg-rago-burgundy">
-                {vehicle.year}
-            </span>
-        </div>
-        <div className="mb-6">
-            <p className="text-[2.1rem] leading-tight sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-rago-burgundy">
-                ${vehicle.price.toLocaleString('es-AR')}
-            </p>
-        </div>
-        {vehicle.is_sold ? (
-            <div className="group w-full flex items-center justify-center gap-3 text-center bg-slate-400 dark:bg-slate-700 text-white font-bold py-4 px-4 rounded-lg text-xl cursor-not-allowed">
-                Vehículo Vendido
+const PriceCard: React.FC<{ vehicle: Vehicle, whatsappLink: string, onWhatsAppClick: () => void }> = ({ vehicle, whatsappLink, onWhatsAppClick }) => {
+    return (
+        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6 shadow-subtle dark:shadow-subtle-dark">
+            <div className="flex justify-between items-center gap-x-4 border-b dark:border-gray-700 pb-4 mb-6 flex-wrap">
+                <h1 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+                    {vehicle.make} {vehicle.model}
+                </h1>
+                <div className="flex items-center gap-x-4">
+                    <span className="text-xl font-bold inline-block align-baseline py-1 px-4 rounded-full text-rago-burgundy bg-rago-burgundy/10 dark:text-white dark:bg-rago-burgundy">
+                        {vehicle.year}
+                    </span>
+                </div>
             </div>
-        ) : (
-            <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={onWhatsAppClick}
-                className="group w-full flex items-center justify-center gap-3 text-center bg-gradient-to-r from-rago-burgundy to-rago-burgundy-darker hover:shadow-rago-glow text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 text-xl transform hover:-translate-y-0.5 animate-pulse-burgundy"
-            >
-                <ChatBubbleIcon className="h-7 w-7 transition-transform duration-300 group-hover:scale-110" />
-                <span>Contactar por WhatsApp</span>
-            </a>
-        )}
-        <SocialShareButtons vehicle={vehicle} />
-    </div>
-);
+            <div className="mb-6">
+                <p className="text-[2.1rem] leading-tight sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-rago-burgundy">
+                    ${vehicle.price.toLocaleString('es-AR')}
+                </p>
+            </div>
+            {vehicle.is_sold ? (
+                <div className="group w-full flex items-center justify-center gap-3 text-center bg-slate-400 dark:bg-slate-700 text-white font-bold py-4 px-4 rounded-lg text-xl cursor-not-allowed">
+                    Vehículo Vendido
+                </div>
+            ) : (
+                <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={onWhatsAppClick}
+                    className="group w-full flex items-center justify-center gap-3 text-center bg-gradient-to-r from-rago-burgundy to-rago-burgundy-darker hover:shadow-rago-glow text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 text-xl transform hover:-translate-y-0.5 animate-pulse-burgundy"
+                >
+                    <ChatBubbleIcon className="h-7 w-7 transition-transform duration-300 group-hover:scale-110" />
+                    <span>Contactar por WhatsApp</span>
+                </a>
+            )}
+            <SocialShareButtons vehicle={vehicle} />
+        </div>
+    );
+};
 
 const SpecsCard: React.FC<{ specs: { icon: JSX.Element; label: string; value: string | number }[] }> = ({ specs }) => (
      <section>
@@ -94,9 +103,21 @@ const SpecsCard: React.FC<{ specs: { icon: JSX.Element; label: string; value: st
 
 const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehicles }) => {
     const similarVehiclesRef = useRef<HTMLDivElement>(null);
+    const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+    const isCurrentlyFavorite = isFavorite(vehicle.id);
+
+    const handleFavoriteClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent any underlying click events
+        if (isCurrentlyFavorite) {
+            removeFavorite(vehicle.id);
+        } else {
+            addFavorite(vehicle.id);
+        }
+    };
 
     useEffect(() => {
-        trackEvent('view_vehicle', vehicle.id);
+        trackEvent('view_vehicle_detail', vehicle.id);
         
         // Add Vehicle JSON-LD structured data
         const schema = {
@@ -111,6 +132,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                 'name': vehicle.make
             },
             'model': vehicle.model,
+            'vehicleCategory': vehicle.vehicle_type,
             'vehicleModelDate': String(vehicle.year),
             'mileageFromOdometer': {
                 '@type': 'QuantitativeValue',
@@ -154,7 +176,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
     }, [vehicle]);
 
     const handleWhatsAppClick = () => {
-        trackEvent('click_whatsapp', vehicle.id);
+        trackEvent('click_whatsapp_vehicle', vehicle.id);
     };
 
     const contactMessage = `Hola, estoy interesado en el ${vehicle.make} ${vehicle.model}.`;
@@ -163,6 +185,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
     const specs = [
         { icon: <ShieldIcon className="h-6 w-6"/>, label: "Marca", value: vehicle.make },
         { icon: <TagIcon className="h-6 w-6"/>, label: "Modelo", value: vehicle.model },
+        { icon: <CarIcon className="h-6 w-6"/>, label: "Tipo", value: vehicle.vehicle_type },
         { icon: <CalendarIcon className="h-6 w-6"/>, label: "Año", value: vehicle.year },
         { icon: <GaugeIcon className="h-6 w-6"/>, label: "Kilometraje", value: `${vehicle.mileage.toLocaleString('es-AR')} km` },
         { icon: <CogIcon className="h-6 w-6"/>, label: "Motor", value: vehicle.engine },
@@ -222,14 +245,23 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                         <div className="-mx-4 md:-mx-6 lg:mx-0">
                             <div className="relative overflow-hidden lg:rounded-2xl lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
                                 <ImageCarousel images={vehicle.images} />
+                                 {!vehicle.is_sold && (
+                                    <button
+                                        onClick={handleFavoriteClick}
+                                        className="absolute top-4 right-4 z-10 p-3 bg-white/70 dark:bg-black/70 backdrop-blur-sm rounded-full transition-all duration-300 ease-in-out hover:scale-110 hover:bg-red-100 dark:hover:bg-red-900/50 focus:outline-none"
+                                        aria-label={isCurrentlyFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                                    >
+                                        <HeartIcon
+                                            className={`h-7 w-7 transition-all duration-300 ${isCurrentlyFavorite ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`}
+                                            filled={isCurrentlyFavorite}
+                                        />
+                                    </button>
+                                )}
                                 {vehicle.is_sold && (
-                                    <div className="absolute top-0 left-0 w-64 h-64 overflow-hidden z-20 pointer-events-none">
-                                        <div 
-                                            className="absolute transform -rotate-45 bg-gradient-to-br from-red-600 to-red-700 text-center text-white font-black uppercase tracking-widest shadow-2xl" 
-                                            style={{ width: '350px', left: '-80px', top: '80px', padding: '12px 0', fontSize: '2rem' }}
-                                        >
-                                            Vendido
-                                        </div>
+                                     <div
+                                        className="absolute top-10 -left-16 w-64 transform -rotate-45 bg-gradient-to-br from-red-600 to-red-800 text-center text-white font-black text-2xl py-2 z-20 pointer-events-none shadow-lg"
+                                    >
+                                        Vendido
                                     </div>
                                 )}
                             </div>
