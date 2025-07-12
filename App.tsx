@@ -3,6 +3,7 @@
 
 
 
+
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Vehicle, VehicleFormData, AnalyticsEvent, VehicleUpdate } from './types';
 import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon, DownIcon, StarIcon, HeartIcon } from './constants';
@@ -260,7 +261,18 @@ const App: React.FC = () => {
     const filteredVehicles = useMemo(() => {
         let temp = [...vehicles];
         const term = searchTerm.toLowerCase().trim();
-        if (term) temp = temp.filter(v => `${v.make} ${v.model} ${v.year}`.toLowerCase().includes(term));
+        if (term) {
+            // Split search term into individual words
+            const searchWords = term.split(' ').filter(word => word.length > 0);
+            // Filter vehicles, ensuring every search word is present
+            temp = temp.filter(v => {
+                // Combine all searchable fields into one string for easier searching
+                const vehicleString = `${v.make} ${v.model} ${v.year} ${v.description} ${v.engine} ${v.transmission} ${v.fuelType} ${v.vehicle_type}`.toLowerCase();
+                return searchWords.every(word => vehicleString.includes(word));
+            });
+        }
+        
+        // The rest of the filters apply on top of the search term filter
         if (filters.make) temp = temp.filter(v => v.make === filters.make);
         if (filters.vehicleType) temp = temp.filter(v => v.vehicle_type === filters.vehicleType);
         if (filters.year) temp = temp.filter(v => v.year >= parseInt(filters.year, 10));
