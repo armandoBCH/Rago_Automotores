@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Vehicle } from '../types';
 import { optimizeUrl, slugify } from '../utils/image';

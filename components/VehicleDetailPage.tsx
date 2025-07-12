@@ -1,11 +1,13 @@
 
+
+
 import React, { useMemo, useEffect, useRef } from 'react';
 import { Vehicle } from '../types';
 import ImageCarousel from './ImageCarousel';
 import VehicleCard from './VehicleCard';
 import SocialShareButtons from './SocialShareButtons';
 import DescriptionCard from './DescriptionCard';
-import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon, ArrowLeftIcon, HeartIcon, CarIcon } from '../constants';
+import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon, ArrowLeftIcon, HeartIcon, CarIcon, ArrowUpDownIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
 import { optimizeUrl, slugify } from '../utils/image';
 import { useFavorites } from './FavoritesProvider';
@@ -31,7 +33,7 @@ const SpecificationItem: React.FC<{ icon: React.ReactNode; label: string; value:
 );
 
 const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
-    <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl py-3 px-5 border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
+    <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm rounded-xl py-3 px-5 border border-slate-200 dark:border-slate-800 shadow-sm">
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-base font-medium text-slate-500 dark:text-slate-400 flex-wrap">
             <a href="/" className="hover:text-rago-burgundy transition-colors">Inicio</a>
             <ArrowRightIcon className="h-4 w-4 text-slate-400" />
@@ -60,6 +62,14 @@ const PriceCard: React.FC<{ vehicle: Vehicle, whatsappLink: string, onWhatsAppCl
                     ${vehicle.price.toLocaleString('es-AR')}
                 </p>
             </div>
+            {!vehicle.is_sold && (
+                <div className="mb-6 -mt-2 p-3 text-center rounded-xl bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300 border border-sky-200 dark:border-sky-700/50">
+                    <p className="font-bold text-base sm:text-lg flex items-center justify-center gap-2 whitespace-nowrap">
+                        <ArrowUpDownIcon className="h-5 w-5" />
+                        <span>¡Aceptamos tu usado en parte de pago!</span>
+                    </p>
+                </div>
+            )}
             {vehicle.is_sold ? (
                 <div className="group w-full flex items-center justify-center gap-3 text-center bg-slate-400 dark:bg-slate-700 text-white font-bold py-4 px-4 rounded-lg text-xl cursor-not-allowed">
                     Vehículo Vendido
@@ -228,7 +238,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
     return (
         <div className="max-w-screen-xl mx-auto">
-            <div className="opacity-0 animate-fade-in-up">
+            <div className="hidden lg:block mb-8 opacity-0 animate-fade-in-up">
                 <Breadcrumb vehicle={vehicle} />
             </div>
 
