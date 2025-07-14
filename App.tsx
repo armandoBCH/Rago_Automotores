@@ -1,10 +1,5 @@
 
-
-
-
-
-
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Vehicle, VehicleFormData, AnalyticsEvent, VehicleUpdate } from './types';
 import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon, DownIcon, StarIcon, HeartIcon } from './constants';
 import { supabase } from './lib/supabaseClient';
@@ -55,6 +50,8 @@ const App: React.FC = () => {
         return window.location.pathname;
     });
 
+    const previousPathRef = useRef(path);
+
     const fetchAllData = useCallback(async () => {
         setLoading(true);
         setDbError(null);
@@ -95,6 +92,19 @@ const App: React.FC = () => {
     useEffect(() => {
         fetchAllData();
     }, [fetchAllData]);
+
+    // Reset search when navigating from a detail page back to home.
+    useEffect(() => {
+        const wasOnDetailPage = /^\/vehiculo\//.test(previousPathRef.current);
+        const isNowOnHomePage = path === '/' || path === '/index.html';
+
+        if (wasOnDetailPage && isNowOnHomePage) {
+            setSearchTerm('');
+            setFilters({ make: '', year: '', price: '', vehicleType: '' });
+        }
+
+        previousPathRef.current = path;
+    }, [path]);
     
     const navigate = useCallback((newPath: string, replace = false) => {
         const currentPath = path + window.location.search + window.location.hash;
@@ -472,12 +482,12 @@ const App: React.FC = () => {
             </button>
             <nav id="mobile-menu" aria-hidden={!isMobileMenuOpen} className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-gradient-to-br from-slate-900 via-rago-burgundy-darker to-rago-black shadow-2xl p-6 pt-20 flex flex-col text-white transform-gpu transition-transform duration-500 ease-in-out z-50 md:hidden ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                 <div className="px-6 mb-12 text-center"><a href="/"><img src="https://i.imgur.com/zOGb0ay.jpeg" alt="Rago Automotores Logo" className="h-20 inline-block" /></a></div>
-                <ul className="flex flex-col gap-2">
-                    <li><a href="/" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><HomeIcon className="h-7 w-7 text-rago-burgundy" /><span>Inicio</span></a></li>
-                    <li><a href="/#catalog" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><CatalogIcon className="h-7 w-7 text-rago-burgundy" /><span>Catálogo</span></a></li>
-                    <li><a href="/#featured-vehicles" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><StarIcon className="h-7 w-7 text-rago-burgundy" /><span>Destacados</span></a></li>
+                <ul className="flex flex-col gap-1">
+                    <li><a href="/" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><HomeIcon className="h-7 w-7 text-rago-burgundy" /><span>Inicio</span></a></li>
+                    <li><a href="/#catalog" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><CatalogIcon className="h-7 w-7 text-rago-burgundy" /><span>Catálogo</span></a></li>
+                    <li><a href="/#featured-vehicles" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><StarIcon className="h-7 w-7 text-rago-burgundy" /><span>Destacados</span></a></li>
                     <li>
-                        <a href="/favoritos" className="flex items-center justify-between gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors">
+                        <a href="/favoritos" className="flex items-center justify-between gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors">
                             <div className="flex items-center gap-4">
                                 <HeartIcon className="h-7 w-7 text-rago-burgundy" />
                                 <span>Favoritos</span>
@@ -489,7 +499,7 @@ const App: React.FC = () => {
                             )}
                         </a>
                     </li>
-                    <li><a href="/#sell-car-section" className="flex items-center gap-4 px-3 py-4 text-2xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><SellCarIcon className="h-7 w-7 text-rago-burgundy" /><span>Vender mi Auto</span></a></li>
+                    <li><a href="/#sell-car-section" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><SellCarIcon className="h-7 w-7 text-rago-burgundy" /><span>Vender mi Auto</span></a></li>
                 </ul>
                 <div className="mt-auto pt-8 border-t border-slate-700/50">
                     <div className="flex justify-center gap-x-8">
