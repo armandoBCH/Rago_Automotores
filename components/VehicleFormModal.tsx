@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Vehicle, VehicleFormData } from '../types';
 import { XIcon } from '../constants';
@@ -27,16 +28,31 @@ const getInitialFormState = (): FormDataState => ({
     is_featured: false, is_sold: false, video_url: '',
 });
 
+const VEHICLE_TYPES = [
+    'Furgón mixto utilitario',
+    'Furgón utilitario',
+    'Hatchback compacto',
+    'Monovolumen compacto',
+    'Moto',
+    'Pick up chica',
+    'Pick up grande',
+    'Pick up mediana',
+    'Rural chica',
+    'Sedan compacto',
+    'Sedan mediano',
+    'SUV',
+].sort();
+
+
 interface VehicleFormModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (vehicle: VehicleFormData) => void;
     initialData?: Vehicle;
     brands: string[];
-    uniqueVehicleTypes: string[];
 }
 
-const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, onSubmit, initialData, brands, uniqueVehicleTypes }) => {
+const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, onSubmit, initialData, brands }) => {
     const [formData, setFormData] = useState<FormDataState>(getInitialFormState());
     const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
     const [previewMode, setPreviewMode] = useState<'card' | 'detail'>('card');
@@ -253,7 +269,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div><label htmlFor="make" className="block text-base font-medium text-gray-700 dark:text-gray-300">Marca</label><input id="make" name="make" list="brands-datalist" value={formData.make} onChange={handleChange} required className="mt-1 form-input" /><datalist id="brands-datalist">{brands.map(brand => <option key={brand} value={brand} />)}</datalist></div>
                                 <InputField label="Modelo" name="model" value={formData.model} onChange={handleChange} required />
-                                <InputField label="Tipo de Vehículo" name="vehicle_type" list="vehicle-types-datalist" value={formData.vehicle_type} onChange={handleChange} required /><datalist id="vehicle-types-datalist">{uniqueVehicleTypes.map(type => <option key={type} value={type} />)}</datalist>
+                                <InputField label="Tipo de Vehículo" name="vehicle_type" list="vehicle-types-datalist" value={formData.vehicle_type} onChange={handleChange} required /><datalist id="vehicle-types-datalist">{VEHICLE_TYPES.map(type => <option key={type} value={type} />)}</datalist>
                                 <InputField label="Año" name="year" type="text" inputMode="numeric" value={formData.year} onChange={handleChange} required />
                                 <InputField label="Precio (ARS)" name="price" type="text" inputMode="numeric" value={formData.price} onChange={handleChange} required />
                                 <InputField label="Kilometraje (km)" name="mileage" type="text" inputMode="numeric" value={formData.mileage} onChange={handleChange} required />
