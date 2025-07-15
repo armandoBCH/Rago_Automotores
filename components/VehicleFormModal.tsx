@@ -16,12 +16,14 @@ type FormDataState = Omit<Vehicle, 'id' | 'year' | 'price' | 'mileage' | 'create
     mileage: string;
     fuelType: string;
     customFuelType?: string;
+    customMake?: string;
+    customVehicleType?: string;
     video_url: string;
 };
 
 const getInitialFormState = (): FormDataState => ({
     make: '', model: '', year: '', price: '', mileage: '', engine: '',
-    transmission: 'Manual', fuelType: 'Nafta', vehicle_type: '', customFuelType: '', description: '',
+    transmission: 'Manual', fuelType: 'Nafta', vehicle_type: '', customFuelType: '', customMake: '', customVehicleType: '', description: '',
     is_featured: false, is_sold: false, video_url: '',
 });
 
@@ -61,6 +63,8 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
     imageFilesRef.current = imageFiles;
 
     const isOtherFuelType = formData.fuelType === 'Otro';
+    const isOtherMake = formData.make === 'Otro';
+    const isOtherVehicleType = formData.vehicle_type === 'Otro';
 
     const resetState = useCallback(() => {
         setFormData(getInitialFormState());
@@ -76,16 +80,22 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
             if (initialData) { // Editing existing vehicle
                 localStorage.removeItem(DRAFT_STORAGE_KEY);
                 const standardFuelTypes = ['Nafta', 'Diesel', 'GNC'];
-                const isStandard = standardFuelTypes.includes(initialData.fuelType);
+                const isStandardFuel = standardFuelTypes.includes(initialData.fuelType);
+                const isStandardMake = brands.includes(initialData.make);
+                const isStandardVehicleType = VEHICLE_TYPES.includes(initialData.vehicle_type);
+
                 const { created_at, id, images, display_order, ...rest } = initialData;
                 setFormData({
                     ...rest,
                     year: String(initialData.year),
                     price: String(initialData.price),
                     mileage: String(initialData.mileage),
-                    vehicle_type: initialData.vehicle_type || '',
-                    fuelType: isStandard ? initialData.fuelType : 'Otro',
-                    customFuelType: isStandard ? '' : initialData.fuelType,
+                    fuelType: isStandardFuel ? initialData.fuelType : 'Otro',
+                    customFuelType: isStandardFuel ? '' : initialData.fuelType,
+                    make: isStandardMake ? initialData.make : 'Otro',
+                    customMake: isStandardMake ? '' : initialData.make,
+                    vehicle_type: isStandardVehicleType ? initialData.vehicle_type : 'Otro',
+                    customVehicleType: isStandardVehicleType ? '' : initialData.vehicle_type,
                     video_url: initialData.video_url || '',
                 });
                 setImageFiles(images.map(url => ({ id: url, file: null, preview: url, url, status: 'complete' })));
@@ -109,7 +119,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
         } else {
             resetState();
         }
-    }, [initialData, isOpen, resetState]);
+    }, [initialData, isOpen, resetState, brands]);
 
     // Save draft for new vehicles
     useEffect(() => {
@@ -123,7 +133,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
         return {
             id: initialData?.id || 0,
             created_at: initialData?.created_at || new Date().toISOString(),
-            make: formData.make || 'Marca',
+            make: isOtherMake ? formData.customMake || 'Marca' : formData.make || 'Marca',
             model: formData.model || 'Modelo',
             year: parseInt(formData.year) || new Date().getFullYear(),
             price: parseInt(formData.price) || 0,
@@ -131,7 +141,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
             engine: formData.engine || 'Motor',
             transmission: formData.transmission,
             fuelType: isOtherFuelType ? formData.customFuelType || 'Combustible' : formData.fuelType,
-            vehicle_type: formData.vehicle_type || 'Tipo',
+            vehicle_type: isOtherVehicleType ? formData.customVehicleType || 'Tipo' : formData.vehicle_type || 'Tipo',
             description: formData.description || 'Descripción del vehículo.',
             images: validImages.length > 0 ? validImages : ['https://i.imgur.com/g2a4A0a.png'],
             is_featured: formData.is_featured,
@@ -139,7 +149,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
             display_order: initialData?.display_order ?? 0,
             video_url: formData.video_url || null,
         };
-    }, [formData, imageFiles, initialData, isOtherFuelType]);
+    }, [formData, imageFiles, initialData, isOtherFuelType, isOtherMake, isOtherVehicleType]);
 
     const handleClose = () => {
         if (isSubmitting) return;
@@ -220,10 +230,25 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
             setIsSubmitting(false);
             return;
         }
+        
+        const make = isOtherMake ? formData.customMake?.trim() : formData.make;
+        if (isOtherMake && !make) {
+            alert("Por favor, especifique la marca del vehículo.");
+            setIsSubmitting(false);
+            return;
+        }
+
+        const vehicle_type = isOtherVehicleType ? formData.customVehicleType?.trim() : formData.vehicle_type;
+        if (isOtherVehicleType && !vehicle_type) {
+            alert("Por favor, especifique el tipo de vehículo.");
+            setIsSubmitting(false);
+            return;
+        }
+
 
         const vehicleToSubmit: VehicleFormData = {
             ...(initialData?.id && { id: initialData.id }),
-            make: formData.make,
+            make: make || 'N/A',
             model: formData.model,
             year: parseInt(formData.year) || 0,
             price: parseInt(formData.price) || 0,
@@ -231,7 +256,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
             engine: formData.engine,
             transmission: formData.transmission,
             fuelType: fuelType || 'Nafta',
-            vehicle_type: formData.vehicle_type || 'N/A',
+            vehicle_type: vehicle_type || 'N/A',
             description: formData.description,
             images: finalImageUrls,
             is_featured: formData.is_featured,
@@ -264,7 +289,20 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8">
                         <form id="vehicle-form" onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div><label htmlFor="make" className="block text-base font-medium text-gray-700 dark:text-gray-300">Marca</label><input id="make" name="make" list="brands-datalist" value={formData.make} onChange={handleChange} required className="mt-1 form-input" /><datalist id="brands-datalist">{brands.map(brand => <option key={brand} value={brand} />)}</datalist></div>
+                                <div>
+                                    <label htmlFor="make" className="block text-base font-medium text-gray-700 dark:text-gray-300">Marca</label>
+                                    <select id="make" name="make" value={formData.make} onChange={handleChange} required className="mt-1 form-input">
+                                        <option value="" disabled>Seleccione una marca</option>
+                                        {brands.map(brand => <option key={brand} value={brand}>{brand}</option>)}
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                {isOtherMake && 
+                                    <div>
+                                        <label htmlFor="customMake" className="block text-base font-medium text-gray-700 dark:text-gray-300">Especificar Marca</label>
+                                        <input id="customMake" name="customMake" type="text" value={formData.customMake || ''} onChange={handleChange} required={isOtherMake} className="mt-1 form-input" placeholder="Ej: Tesla"/>
+                                    </div>
+                                }
                                 <InputField label="Modelo" name="model" value={formData.model} onChange={handleChange} required />
                                 <div>
                                     <label htmlFor="vehicle_type" className="block text-base font-medium text-gray-700 dark:text-gray-300">Tipo de Vehículo</label>
@@ -280,8 +318,15 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
                                         {VEHICLE_TYPES.map(type => (
                                             <option key={type} value={type}>{type}</option>
                                         ))}
+                                        <option value="Otro">Otro</option>
                                     </select>
                                 </div>
+                                 {isOtherVehicleType && 
+                                    <div>
+                                        <label htmlFor="customVehicleType" className="block text-base font-medium text-gray-700 dark:text-gray-300">Especificar Tipo</label>
+                                        <input id="customVehicleType" name="customVehicleType" type="text" value={formData.customVehicleType || ''} onChange={handleChange} required={isOtherVehicleType} className="mt-1 form-input" placeholder="Ej: Sedan deportivo"/>
+                                    </div>
+                                }
                                 <InputField label="Año" name="year" type="text" inputMode="numeric" value={formData.year} onChange={handleChange} required />
                                 <InputField label="Precio (ARS)" name="price" type="text" inputMode="numeric" value={formData.price} onChange={handleChange} required />
                                 <InputField label="Kilometraje (km)" name="mileage" type="text" inputMode="numeric" value={formData.mileage} onChange={handleChange} required />
