@@ -1,33 +1,36 @@
 
-
-import React, { useMemo, useEffect, useRef } from 'react';
-import { Vehicle } from '../types';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
+import { Vehicle, FinancingConfig, Review } from '../types';
 import ImageCarousel from './ImageCarousel';
 import VehicleCard from './VehicleCard';
 import SocialShareButtons from './SocialShareButtons';
 import DescriptionCard from './DescriptionCard';
-import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon, ArrowLeftIcon, HeartIcon, CarIcon, ArrowUpDownIcon } from '../constants';
+import { ShieldIcon, TagIcon, CalendarIcon, GaugeIcon, CogIcon, SlidersIcon, GasPumpIcon, ChatBubbleIcon, ArrowRightIcon, ArrowLeftIcon, CarIcon, ArrowUpDownIcon, CalculatorIcon, SteeringWheelIcon, HeartIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
-import { optimizeUrl, slugify } from '../utils/image';
+import { optimizeUrl } from '../utils/image';
 import { useFavorites } from './FavoritesProvider';
+import FinancingCalculator from './FinancingCalculator';
+import TestDriveSection from './TestDriveSection';
+import VehicleReviews from './VehicleReviews';
+import ActionModal from './ActionModal';
 
 interface VehicleDetailPageProps {
     vehicle: Vehicle;
     allVehicles: Vehicle[];
     onPlayVideo: (url: string) => void;
+    financingConfig: FinancingConfig;
+    reviews: Review[];
 }
 
 const SpecificationItem: React.FC<{ icon: React.ReactNode; label: string; value: string | number; }> = ({ icon, label, value }) => (
-    <div className="flex items-center justify-between py-3">
-        <div className="flex items-center">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mr-3">
-               <span className="text-rago-burgundy">{icon}</span>
+    <div className="flex items-start justify-between py-4">
+        <div className="flex items-center gap-4">
+            <div className="flex-shrink-0 text-rago-burgundy">
+               {icon}
             </div>
-            <div>
-                <p className="text-base text-gray-500 dark:text-gray-400">{label}</p>
-                <p className="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-200">{value}</p>
-            </div>
+            <span className="text-base text-gray-600 dark:text-gray-400">{label}</span>
         </div>
+        <span className="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-200 text-right">{value}</span>
     </div>
 );
 
@@ -43,88 +46,108 @@ const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
     </div>
 );
 
-const PriceCard: React.FC<{ vehicle: Vehicle, whatsappLink: string, onWhatsAppClick: () => void }> = ({ vehicle, whatsappLink, onWhatsAppClick }) => {
-    return (
-        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 sm:p-6 shadow-subtle dark:shadow-subtle-dark">
-            <div className="flex justify-between items-center gap-x-4 border-b dark:border-gray-700 pb-4 mb-6 flex-wrap">
-                <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
-                    {vehicle.make} {vehicle.model}
-                </h1>
-                <div className="flex items-center gap-x-4">
-                    <span className="text-xl font-bold inline-block align-baseline py-1 px-4 rounded-full text-rago-burgundy bg-rago-burgundy/10 dark:text-white dark:bg-rago-burgundy">
-                        {vehicle.year}
-                    </span>
-                </div>
-            </div>
-            <div className="mb-6">
-                <p className="text-[2.1rem] leading-tight sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-rago-burgundy">
-                    ${vehicle.price.toLocaleString('es-AR')}
-                </p>
-            </div>
-            {!vehicle.is_sold && (
-                <div className="mb-6 -mt-2 p-3 text-center rounded-xl bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300 border border-sky-200 dark:border-sky-700/50">
-                    <p className="font-bold text-base sm:text-lg flex items-center justify-center gap-2 whitespace-nowrap">
-                        <ArrowUpDownIcon className="h-5 w-5" />
-                        <span>¡Aceptamos tu usado en parte de pago!</span>
-                    </p>
-                </div>
-            )}
-            {vehicle.is_sold ? (
-                <div className="group w-full flex items-center justify-center gap-3 text-center bg-slate-400 dark:bg-slate-700 text-white font-bold py-4 px-4 rounded-lg text-lg sm:text-xl cursor-not-allowed">
-                    Vehículo Vendido
-                </div>
-            ) : (
-                <a
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={onWhatsAppClick}
-                    className="group w-full flex items-center justify-center gap-3 text-center bg-gradient-to-r from-rago-burgundy to-rago-burgundy-darker hover:shadow-rago-glow text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 text-lg sm:text-xl transform hover:-translate-y-0.5 animate-pulse-burgundy"
-                >
-                    <ChatBubbleIcon className="h-7 w-7 transition-transform duration-300 group-hover:scale-110" />
-                    <span>Contactar por WhatsApp</span>
-                </a>
-            )}
-            <SocialShareButtons vehicle={vehicle} />
-        </div>
-    );
-};
-
 const SpecsCard: React.FC<{ specs: { icon: JSX.Element; label: string; value: string | number }[] }> = ({ specs }) => (
-     <section>
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark overflow-hidden border border-gray-200 dark:border-gray-800">
-            <div className="border-b border-gray-200 dark:border-gray-800 px-6 py-4">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Especificaciones</h3>
-            </div>
-            <div className="p-4 sm:p-6 divide-y divide-gray-200 dark:divide-gray-800">
-                {specs.map(spec => (
-                    <SpecificationItem key={spec.label} icon={spec.icon} label={spec.label} value={spec.value} />
-                ))}
-            </div>
+     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark overflow-hidden border border-slate-200 dark:border-slate-800">
+        <div className="border-b border-slate-200 dark:border-slate-800 px-6 py-4">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Especificaciones</h3>
         </div>
-    </section>
+        <div className="p-4 sm:p-6 divide-y divide-slate-200 dark:divide-slate-800">
+             {specs.map((spec) => (
+                <SpecificationItem key={spec.label} icon={spec.icon} label={spec.label} value={spec.value} />
+            ))}
+        </div>
+    </div>
 );
 
+const ActionCard: React.FC<{ vehicle: Vehicle, onWhatsAppClick: () => void, onModalOpen: (type: 'financing' | 'test-drive')=> void }> = ({ vehicle, onWhatsAppClick, onModalOpen }) => {
+    const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+    const isFav = isFavorite(vehicle.id);
+    const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(`Hola, estoy interesado en el ${vehicle.make} ${vehicle.model} (${vehicle.year}).`)}`;
 
-const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehicles, onPlayVideo }) => {
-    const similarVehiclesRef = useRef<HTMLDivElement>(null);
-    const { addFavorite, removeFavorite, isFavorite } = useFavorites();
-    const isCurrentlyFavorite = isFavorite(vehicle.id);
-
-    const handleFavoriteClick = (e: React.MouseEvent) => {
+    const toggleFavorite = (e: React.MouseEvent) => {
         e.preventDefault();
-        e.stopPropagation(); // Prevent any underlying click events
-        if (isCurrentlyFavorite) {
+        e.stopPropagation();
+        if (isFav) {
             removeFavorite(vehicle.id);
         } else {
             addFavorite(vehicle.id);
         }
     };
+    
+    return (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-800 p-6 flex flex-col h-full">
+            <div className="flex justify-between items-start gap-x-4">
+                <h1 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{vehicle.make} {vehicle.model}</h1>
+                <button
+                    onClick={toggleFavorite}
+                    className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 hover:text-rago-burgundy dark:hover:text-rago-burgundy transition-colors"
+                    aria-label={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}
+                >
+                    <HeartIcon className="h-6 w-6" filled={isFav} />
+                </button>
+            </div>
+             <span className="text-base font-bold inline-block align-baseline py-1 px-3 mt-2 rounded-full text-rago-burgundy bg-rago-burgundy/10 dark:text-white dark:bg-rago-burgundy w-fit">{vehicle.year}</span>
+
+            <div className="my-5">
+                <p className="text-5xl lg:text-6xl font-extrabold text-rago-burgundy">${vehicle.price.toLocaleString('es-AR')}</p>
+            </div>
+
+            {!vehicle.is_sold && (
+                <div className="my-3 p-3 flex items-center justify-center gap-3 text-center rounded-lg bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300">
+                     <ArrowUpDownIcon className="h-5 w-5"/>
+                    <p className="font-semibold text-base">¡Aceptamos tu usado en parte de pago!</p>
+                </div>
+            )}
+
+            <div className="mt-2 space-y-3">
+                {vehicle.is_sold ? (
+                    <div className="w-full flex items-center justify-center gap-3 text-center bg-slate-400 dark:bg-slate-700 text-white font-bold py-3.5 px-4 rounded-lg text-lg cursor-not-allowed">Vehículo Vendido</div>
+                ) : (
+                    <>
+                        <a
+                            href={whatsappLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={onWhatsAppClick}
+                            className="group w-full flex items-center justify-center gap-2 text-center bg-rago-burgundy hover:bg-rago-burgundy-darker text-white font-bold py-3.5 px-4 rounded-lg transition-all duration-300 transform hover:-translate-y-px"
+                        >
+                            <ChatBubbleIcon className="h-5 w-5" />
+                            <span>Contactar por WhatsApp</span>
+                        </a>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button onClick={() => onModalOpen('financing')} className="group w-full flex items-center justify-center gap-2 text-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-3 px-4 rounded-lg transition-all duration-300">
+                                <CalculatorIcon className="h-5 w-5"/>
+                                <span>Financiación</span>
+                            </button>
+                            <button onClick={() => onModalOpen('test-drive')} className="group w-full flex items-center justify-center gap-2 text-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-3 px-4 rounded-lg transition-all duration-300">
+                                <SteeringWheelIcon className="h-5 w-5"/>
+                                <span>Test Drive</span>
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            <div className="mt-auto pt-6">
+                <SocialShareButtons vehicle={vehicle} />
+            </div>
+        </div>
+    );
+};
+
+
+const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehicles, onPlayVideo, financingConfig, reviews }) => {
+    const similarVehiclesRef = useRef<HTMLDivElement>(null);
+    const [modalContent, setModalContent] = useState<'financing' | 'test-drive' | null>(null);
+
+    const vehicleReviews = useMemo(() => {
+        if (!reviews) return [];
+        return reviews.filter(r => r.vehicle_id === vehicle.id && r.is_visible === true);
+    }, [reviews, vehicle.id]);
 
     useEffect(() => {
         trackEvent('view_vehicle_detail', vehicle.id);
         
-        // Add Vehicle JSON-LD structured data
         const schema = {
             '@context': 'https://schema.org',
             '@type': 'Vehicle',
@@ -144,7 +167,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                 'value': vehicle.mileage,
                 'unitCode': 'KMT'
             },
-            'fuelType': vehicle.fuelType,
+            'fuelType': vehicle.fuel_type,
             'vehicleEngine': {
                 '@type': 'EngineSpecification',
                 'name': vehicle.engine
@@ -180,12 +203,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
     }, [vehicle]);
 
-    const handleWhatsAppClick = () => {
-        trackEvent('click_whatsapp_vehicle', vehicle.id);
-    };
-
-    const contactMessage = `Hola, estoy interesado en el ${vehicle.make} ${vehicle.model}.`;
-    const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(contactMessage)}`;
+    const handleWhatsAppClick = () => trackEvent('click_whatsapp_vehicle', vehicle.id);
 
     const specs = [
         { icon: <ShieldIcon className="h-6 w-6"/>, label: "Marca", value: vehicle.make },
@@ -195,110 +213,73 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
         { icon: <GaugeIcon className="h-6 w-6"/>, label: "Kilometraje", value: `${vehicle.mileage.toLocaleString('es-AR')} km` },
         { icon: <CogIcon className="h-6 w-6"/>, label: "Motor", value: vehicle.engine },
         { icon: <SlidersIcon className="h-6 w-6"/>, label: "Transmisión", value: vehicle.transmission },
-        { icon: <GasPumpIcon className="h-6 w-6"/>, label: "Combustible", value: vehicle.fuelType },
+        { icon: <GasPumpIcon className="h-6 w-6"/>, label: "Combustible", value: vehicle.fuel_type },
     ];
     
     const relatedVehicles = useMemo(() => {
         if (!allVehicles || allVehicles.length <= 1) return [];
-
         const availableVehicles = allVehicles.filter(v => !v.is_sold);
-
         const priceRangeVehicles = availableVehicles.filter(v => {
             if (v.id === vehicle.id) return false;
             if (vehicle.price === 0) return false;
             const priceDiff = Math.abs(v.price - vehicle.price) / vehicle.price;
             return priceDiff <= 0.25;
         });
-
         const sameMake = availableVehicles.filter(v => v.id !== vehicle.id && v.make === vehicle.make);
-        
         const combined = [...priceRangeVehicles, ...sameMake];
         const uniqueIds = new Set();
         const uniqueVehicles = combined.filter(v => {
-            if (uniqueIds.has(v.id)) {
-                return false;
-            }
+            if (uniqueIds.has(v.id)) { return false; }
             uniqueIds.add(v.id);
             return true;
         });
-
         return uniqueVehicles.slice(0, 8);
     }, [vehicle, allVehicles]);
 
     const scrollSimilarVehicles = (direction: 'left' | 'right') => {
         if (similarVehiclesRef.current) {
             const scrollAmount = similarVehiclesRef.current.clientWidth * 0.9;
-            similarVehiclesRef.current.scrollBy({
-                left: direction === 'left' ? -scrollAmount : scrollAmount,
-                behavior: 'smooth',
-            });
+            similarVehiclesRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
         }
     };
 
     return (
         <div className="max-w-screen-xl mx-auto">
-            <div className="hidden lg:block mb-8 opacity-0 animate-fade-in-up">
+            <div className="mb-8 opacity-0 animate-fade-in-up">
                 <Breadcrumb vehicle={vehicle} />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-5 lg:gap-x-12">
-                
-                {/* --- Left Column: Image & Description --- */}
-                <div className="lg:col-span-3 flex flex-col gap-y-8">
-                    {/* Image Carousel */}
-                    <div className="opacity-0 animate-fade-in-up">
-                        <div className="-mx-4 md:-mx-6 lg:mx-0">
-                            <div className="relative overflow-hidden lg:rounded-2xl lg:shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
-                                <ImageCarousel images={vehicle.images} videoUrl={vehicle.video_url} onPlayVideo={onPlayVideo} />
-                                 {!vehicle.is_sold && (
-                                    <button
-                                        onClick={handleFavoriteClick}
-                                        className="absolute top-4 right-4 z-10 p-3 bg-white/70 dark:bg-black/70 backdrop-blur-sm rounded-full transition-all duration-300 ease-in-out hover:scale-110 hover:bg-red-100 dark:hover:bg-red-900/50 focus:outline-none"
-                                        aria-label={isCurrentlyFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-                                    >
-                                        <HeartIcon
-                                            className={`h-7 w-7 transition-all duration-300 ${isCurrentlyFavorite ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`}
-                                            filled={isCurrentlyFavorite}
-                                        />
-                                    </button>
-                                )}
-                                {vehicle.is_sold && (
-                                     <div
-                                        className="absolute top-10 -left-16 w-64 transform -rotate-45 bg-gradient-to-br from-red-600 to-red-800 text-center text-white font-black text-2xl py-2 z-20 pointer-events-none shadow-lg"
-                                    >
-                                        Vendido
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+            {/* This single grid handles layout for both mobile and desktop */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 animate-fade-in">
 
-                    {/* Content for Mobile */}
-                    <div className="lg:hidden space-y-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-                        <PriceCard vehicle={vehicle} whatsappLink={whatsappLink} onWhatsAppClick={handleWhatsAppClick} />
-                        <SpecsCard specs={specs} />
-                        <DescriptionCard description={vehicle.description} />
-                    </div>
-                    
-                    {/* Description for Desktop */}
-                    <div className="hidden lg:block opacity-0 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
-                        <DescriptionCard description={vehicle.description} />
+                {/* Mobile Order: 1. Image */}
+                <div className="lg:col-span-7">
+                    <div className="relative overflow-hidden rounded-2xl shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
+                        <ImageCarousel images={vehicle.images} videoUrl={vehicle.video_url} onPlayVideo={onPlayVideo} />
+                        {vehicle.is_sold && (
+                            <div className="absolute top-10 -left-16 w-64 transform -rotate-45 bg-gradient-to-br from-red-600 to-red-800 text-center text-white font-black text-2xl py-2 z-20 pointer-events-none shadow-lg">Vendido</div>
+                        )}
                     </div>
                 </div>
 
-                {/* --- Right Column (Sticky on Desktop) --- */}
-                <div className="hidden lg:block lg:col-span-2">
-                    <div className="lg:sticky lg:top-28 space-y-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-                        <PriceCard vehicle={vehicle} whatsappLink={whatsappLink} onWhatsAppClick={handleWhatsAppClick} />
-                        <SpecsCard specs={specs} />
-                    </div>
+                {/* Mobile Order: 2 & 3. Action and Specs cards */}
+                {/* On desktop, this whole block moves to the right column and becomes sticky */}
+                <div className="lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-2 h-fit lg:sticky top-28 space-y-8">
+                    <ActionCard vehicle={vehicle} onWhatsAppClick={handleWhatsAppClick} onModalOpen={setModalContent} />
+                    <SpecsCard specs={specs} />
+                </div>
+
+                {/* Mobile Order: 4 & 5. Description and Reviews */}
+                {/* On desktop, this block moves back to the left column, under the image */}
+                <div className="lg:col-span-7 lg:col-start-1 space-y-8">
+                    <DescriptionCard description={vehicle.description} />
+                    <VehicleReviews reviews={vehicleReviews} />
                 </div>
             </div>
 
-            {/* Similar Vehicles Section */}
             {relatedVehicles.length > 0 && (
-                <section className="mt-12 lg:mt-16">
-                     <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 shadow-xl border border-slate-200 dark:border-slate-800">
+                <section className="mt-16 lg:mt-24">
+                     <div className="relative bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 shadow-xl border border-slate-200 dark:border-slate-800">
                         <div className="text-center mb-8">
                             <h2 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-white">
                                 Vehículos similares
@@ -334,6 +315,28 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
                     </div>
                     <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
                 </section>
+            )}
+
+            {modalContent === 'financing' && financingConfig && (
+                <ActionModal 
+                    isOpen={modalContent === 'financing'}
+                    onClose={() => setModalContent(null)}
+                    title="Calculadora de Financiación"
+                    icon={<CalculatorIcon className="h-6 w-6"/>}
+                >
+                    <FinancingCalculator config={financingConfig} vehiclePrice={vehicle.price} />
+                </ActionModal>
+            )}
+            
+            {modalContent === 'test-drive' && (
+                <ActionModal 
+                    isOpen={modalContent === 'test-drive'}
+                    onClose={() => setModalContent(null)}
+                    title="Agendar Prueba de Manejo"
+                    icon={<SteeringWheelIcon className="h-6 w-6"/>}
+                >
+                    <TestDriveSection vehicle={vehicle} />
+                </ActionModal>
             )}
         </div>
     );

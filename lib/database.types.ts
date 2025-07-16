@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -7,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       analytics_events: {
@@ -31,6 +30,57 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          id: number
+          created_at: string
+          customer_name: string
+          rating: number
+          comment: string | null
+          is_visible: boolean
+          response_from_owner: string | null
+          vehicle_id: number | null
+          show_on_homepage: boolean
+        }
+        Insert: {
+          id?: number
+          created_at?: string
+          customer_name: string
+          rating: number
+          comment?: string | null
+          is_visible?: boolean
+          response_from_owner?: string | null
+          vehicle_id?: number | null
+          show_on_homepage?: boolean
+        }
+        Update: {
+          id?: number
+          created_at?: string
+          customer_name?: string
+          rating?: number
+          comment?: string | null
+          is_visible?: boolean
+          response_from_owner?: string | null
+          vehicle_id?: number | null
+          show_on_homepage?: boolean
+        }
+        Relationships: []
+      }
+      site_config: {
+        Row: {
+          key: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       vehicles: {
         Row: {
           id: number
@@ -42,7 +92,7 @@ export type Database = {
           mileage: number
           engine: string
           transmission: 'Automática' | 'Manual'
-          fuelType: string
+          fuel_type: string
           vehicle_type: string
           description: string
           images: string[]
@@ -61,7 +111,7 @@ export type Database = {
           mileage: number
           engine: string
           transmission: 'Automática' | 'Manual'
-          fuelType: string
+          fuel_type: string
           vehicle_type: string
           description: string
           images: string[]
@@ -80,7 +130,7 @@ export type Database = {
           mileage?: number
           engine?: string
           transmission?: 'Automática' | 'Manual'
-          fuelType?: string
+          fuel_type?: string
           vehicle_type?: string
           description?: string
           images?: string[]
