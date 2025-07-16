@@ -51,16 +51,30 @@ const KeyMetricCard: React.FC<{ title: string; value: string | number; icon: Rea
 
 // --- STATS VIEW ---
 const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; onAnalyticsReset: () => void; }> = ({ vehicles, allEvents, onAnalyticsReset }) => {
-    const [dateRange, setDateRange] = useState<'7d' | '30d' | 'all'>('7d');
+    const [dateRange, setDateRange] = useState<'today' | '7d' | '30d' | 'all'>('7d');
     const [isResetting, setIsResetting] = useState(false);
     const [password, setPassword] = useState('');
 
     const filteredEvents = useMemo(() => {
-        if (dateRange === 'all') return allEvents;
         const now = new Date();
-        const daysToSubtract = dateRange === '7d' ? 6 : 29; // Show 7 or 30 days inclusive
-        const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysToSubtract);
-        startDate.setHours(0, 0, 0, 0);
+        const startDate = new Date(now);
+
+        if (dateRange === 'all') return allEvents;
+
+        switch(dateRange) {
+            case 'today':
+                startDate.setHours(0, 0, 0, 0);
+                break;
+            case '7d':
+                startDate.setDate(now.getDate() - 6);
+                startDate.setHours(0, 0, 0, 0);
+                break;
+            case '30d':
+                startDate.setDate(now.getDate() - 29);
+                startDate.setHours(0, 0, 0, 0);
+                break;
+        }
+        
         return allEvents.filter(event => new Date(event.created_at) >= startDate);
     }, [allEvents, dateRange]);
 
@@ -78,43 +92,99 @@ const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; on
     }, [vehicles, filteredEvents]);
     
     const totalViews = useMemo(() => filteredEvents.filter(e => e.event_type === 'view_vehicle_detail').length, [filteredEvents]);
+    const totalPageViews = useMemo(() => filteredEvents.filter(e => e.event_type === 'page_view').length, [filteredEvents]);
     const totalContacts = useMemo(() => filteredEvents.filter(e => e.event_type === 'click_whatsapp_vehicle').length, [filteredEvents]);
     const totalFavorites = useMemo(() => filteredEvents.filter(e => e.event_type === 'favorite_add').length, [filteredEvents]);
     const conversionRate = totalViews > 0 ? ((totalContacts / totalViews) * 100).toFixed(1) + '%' : '0%';
 
     const chartData = useMemo(() => {
-        const pageViewsByDay: { [key: string]: number } = {};
         const topVehiclesMap: { [key: number]: number } = {};
         const eventDistributionMap: { [key: string]: number } = {};
 
-        const today = new Date();
-        const days = dateRange === '7d' ? 7 : (dateRange === '30d' ? 30 : 90);
-        for (let i = 0; i < days; i++) {
-            const d = new Date(today);
-            d.setDate(today.getDate() - i);
-            pageViewsByDay[d.toISOString().split('T')[0]] = 0;
-        }
-
         filteredEvents.forEach(event => {
-            if (event.event_type === 'page_view') {
-                const date = new Date(event.created_at).toISOString().split('T')[0];
-                if (pageViewsByDay[date] !== undefined) {
-                    pageViewsByDay[date] = (pageViewsByDay[date] || 0) + 1;
-                }
-            }
             if (event.event_type === 'view_vehicle_detail' && event.vehicle_id) {
                 topVehiclesMap[event.vehicle_id] = (topVehiclesMap[event.vehicle_id] || 0) + 1;
             }
             eventDistributionMap[event.event_type] = (eventDistributionMap[event.event_type] || 0) + 1;
         });
 
-        const sortedPageViews = Object.entries(pageViewsByDay).sort((a,b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
-        
+        const getPageViewsData = () => {
+            const now = new Date();
+            let dataMap = new Map<string, number>();
+            let labels: string[] = [];
+
+            if (dateRange === 'today') {
+                for (let i = 0; i < 24; i++) {
+                    const label = `${i.toString().padStart(2, '0')}:00`;
+                    labels.push(label);
+                    dataMap.set(label, 0);
+                }
+                filteredEvents.forEach(event => {
+                    if (event.event_type === 'page_view') {
+                        const hour = new Date(event.created_at).getHours();
+                        const label = `${hour.toString().padStart(2, '0')}:00`;
+                        dataMap.set(label, (dataMap.get(label) || 0) + 1);
+                    }
+                });
+                return { labels, data: Array.from(dataMap.values()) };
+
+            } else if (dateRange === '7d' || dateRange === '30d') {
+                const days = dateRange === '7d' ? 7 : 30;
+                const tempMap = new Map<string, number>();
+                
+                for (let i = days - 1; i >= 0; i--) {
+                    const d = new Date(now);
+                    d.setDate(now.getDate() - i);
+                    const dateKey = d.toISOString().split('T')[0];
+                    tempMap.set(dateKey, 0);
+                }
+
+                filteredEvents.forEach(event => {
+                    if (event.event_type === 'page_view') {
+                        const dateKey = new Date(event.created_at).toISOString().split('T')[0];
+                        if (tempMap.has(dateKey)) {
+                            tempMap.set(dateKey, (tempMap.get(dateKey) || 0) + 1);
+                        }
+                    }
+                });
+
+                Array.from(tempMap.keys()).forEach(dateKey => {
+                    const d = new Date(`${dateKey}T12:00:00Z`); // use T12 to avoid timezone issues with date boundaries
+                    const label = dateRange === '7d' 
+                        ? d.toLocaleDateString('es-AR', { weekday: 'short', timeZone: 'UTC' }).replace('.', '')
+                        : d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+                    labels.push(label);
+                });
+                
+                return { labels, data: Array.from(tempMap.values()) };
+
+            } else { // 'all'
+                const sortedEvents = allEvents.filter(e => e.event_type === 'page_view').sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                if (sortedEvents.length === 0) return { labels: [], data: [] };
+
+                const firstDate = new Date(sortedEvents[0].created_at);
+                let currentDate = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+
+                while (currentDate <= now) {
+                    const monthKey = currentDate.toLocaleDateString('es-AR', { month: 'short', year: '2-digit' });
+                    labels.push(monthKey);
+                    dataMap.set(monthKey, 0);
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                }
+
+                sortedEvents.forEach(event => {
+                    const date = new Date(event.created_at);
+                    const monthKey = date.toLocaleDateString('es-AR', { month: 'short', year: '2-digit' });
+                    if (dataMap.has(monthKey)) {
+                        dataMap.set(monthKey, (dataMap.get(monthKey) || 0) + 1);
+                    }
+                });
+                return { labels, data: Array.from(dataMap.values()) };
+            }
+        };
+
         return {
-            pageViews: {
-                labels: sortedPageViews.map(entry => new Date(entry[0]).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })),
-                data: sortedPageViews.map(entry => entry[1]),
-            },
+            pageViews: getPageViewsData(),
             topVehicles: Object.entries(topVehiclesMap).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, views]) => {
                 const vehicle = vehicles.find(v => v.id === Number(id));
                 return {
@@ -124,7 +194,7 @@ const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; on
             }),
             eventDistribution: eventDistributionMap,
         };
-    }, [filteredEvents, vehicles, dateRange]);
+    }, [filteredEvents, vehicles, dateRange, allEvents]);
 
 
     const handleResetConfirm = async () => {
@@ -152,9 +222,9 @@ const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; on
              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Rendimiento General</h2>
                 <div className="flex bg-slate-200 dark:bg-slate-700/50 p-1 rounded-lg">
-                    {(['7d', '30d', 'all'] as const).map(range => (
-                        <button key={range} onClick={() => setDateRange(range)} className={`px-4 py-1.5 text-base font-semibold rounded-md transition-colors ${dateRange === range ? 'bg-white dark:bg-slate-800 text-rago-burgundy shadow-sm' : 'text-slate-600 dark:text-slate-300'}`}>
-                            {range === '7d' ? '7 días' : range === '30d' ? '30 días' : 'Todo'}
+                    {(['today', '7d', '30d', 'all'] as const).map(range => (
+                        <button key={range} onClick={() => setDateRange(range)} className={`px-3 sm:px-4 py-1.5 text-sm sm:text-base font-semibold rounded-md transition-colors ${dateRange === range ? 'bg-white dark:bg-slate-800 text-rago-burgundy shadow-sm' : 'text-slate-600 dark:text-slate-300'}`}>
+                            {range === 'today' ? 'Hoy' : range === '7d' ? '7 días' : range === '30d' ? '30 días' : 'Todo'}
                         </button>
                     ))}
                 </div>
@@ -168,8 +238,7 @@ const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; on
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
                 <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-700">
-                    <h3 className="text-lg font-bold mb-4">Visitas a la Página por Día</h3>
-                    <PageViewsChart data={chartData.pageViews} />
+                    <PageViewsChart data={chartData.pageViews} total={totalPageViews} />
                 </div>
                  <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-700">
                     <h3 className="text-lg font-bold mb-4">Top 5 Vehículos Más Vistos</h3>

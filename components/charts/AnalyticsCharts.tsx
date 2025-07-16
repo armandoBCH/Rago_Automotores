@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend);
 
@@ -16,7 +16,7 @@ const useChartColors = () => {
     }, []);
 
     return {
-        gridColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+        gridColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
         textColor: isDarkMode ? '#e2e8f0' : '#334155',
         tooltipBg: isDarkMode ? '#1e293b' : '#fff',
         tooltipTitle: isDarkMode ? '#fff' : '#334155',
@@ -33,30 +33,45 @@ const useChartColors = () => {
     };
 };
 
-export const PageViewsChart: React.FC<{ data: { labels: string[], data: number[] } }> = ({ data }) => {
+export const PageViewsChart: React.FC<{ data: { labels: string[], data: number[] }, total: number }> = ({ data, total }) => {
     const colors = useChartColors();
     const chartData = {
         labels: data.labels,
         datasets: [{
             label: 'Visitas',
             data: data.data,
-            fill: true,
             backgroundColor: colors.burgundyMuted,
             borderColor: colors.burgundy,
-            tension: 0.3,
-            pointBackgroundColor: colors.burgundy,
-            pointHoverBorderColor: colors.burgundy,
+            borderWidth: 0,
+            borderRadius: 4,
+            barPercentage: 0.8,
+            categoryPercentage: 0.8,
         }],
     };
     const options = {
         responsive: true,
-        plugins: { legend: { display: false }, tooltip: { backgroundColor: colors.tooltipBg, titleColor: colors.tooltipTitle, bodyColor: colors.tooltipBody } },
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: colors.tooltipBg, titleColor: colors.tooltipTitle, bodyColor: colors.tooltipBody, displayColors: false, padding: 10, cornerRadius: 4 } },
         scales: {
-            y: { ticks: { color: colors.textColor, stepSize: 1 }, grid: { color: colors.gridColor } },
-            x: { ticks: { color: colors.textColor }, grid: { color: colors.gridColor } },
+            y: { ticks: { color: colors.textColor, precision: 0 }, grid: { color: colors.gridColor } },
+            x: { ticks: { color: colors.textColor }, grid: { display: false } },
         },
     };
-    return <Line options={options} data={chartData} />;
+    
+    return (
+        <div>
+            <div className="flex justify-between items-baseline mb-4">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Visitas a la Página</h3>
+                <div className="text-right">
+                    <p className="text-3xl font-extrabold text-slate-900 dark:text-white">{total.toLocaleString('es-AR')}</p>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total en período</p>
+                </div>
+            </div>
+            <div className="h-64 sm:h-72">
+                <Bar options={options} data={chartData} />
+            </div>
+        </div>
+    );
 };
 
 export const TopVehiclesChart: React.FC<{ data: { label: string, views: number }[] }> = ({ data }) => {
@@ -77,7 +92,7 @@ export const TopVehiclesChart: React.FC<{ data: { label: string, views: number }
         plugins: { legend: { display: false }, tooltip: { backgroundColor: colors.tooltipBg, titleColor: colors.tooltipTitle, bodyColor: colors.tooltipBody } },
         scales: {
             y: { ticks: { color: colors.textColor }, grid: { color: colors.gridColor } },
-            x: { ticks: { color: colors.textColor, stepSize: 1 }, grid: { color: colors.gridColor } },
+            x: { ticks: { color: colors.textColor, precision: 0 }, grid: { color: colors.gridColor } },
         },
     };
     return <Bar options={options} data={chartData} />;
