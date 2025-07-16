@@ -91,7 +91,7 @@ export interface Database {
           price: number
           mileage: number
           engine: string
-          transmission: 'Automática' | 'Manual'
+          transmission: "Automática" | "Manual"
           fuel_type: string
           vehicle_type: string
           description: string
@@ -110,7 +110,7 @@ export interface Database {
           price: number
           mileage: number
           engine: string
-          transmission: 'Automática' | 'Manual'
+          transmission: "Automática" | "Manual"
           fuel_type: string
           vehicle_type: string
           description: string
@@ -129,7 +129,7 @@ export interface Database {
           price?: number
           mileage?: number
           engine?: string
-          transmission?: 'Automática' | 'Manual'
+          transmission?: "Automática" | "Manual"
           fuel_type?: string
           vehicle_type?: string
           description?: string
