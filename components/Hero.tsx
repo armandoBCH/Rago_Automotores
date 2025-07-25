@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { DownIcon, SearchIcon, ArrowUpDownIcon } from '../constants';
+import { optimizeUrl } from '../utils/image';
 
 interface HeroProps {
     searchTerm: string;
@@ -18,15 +19,25 @@ const Hero: React.FC<HeroProps> = ({ searchTerm, onSearchChange }) => {
             section.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     };
+    
+    const heroImageUrl = "https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752339636/WhatsApp_Image_2025-07-12_at_13.57.13_1_va1jyr.webp";
+    const srcSet = [480, 800, 1280, 1920, 2560]
+        .map(w => `${optimizeUrl(heroImageUrl, { w, q: 75, output: 'webp' })} ${w}w`)
+        .join(', ');
 
     return (
         <div className="relative text-white overflow-hidden">
             {/* Background Image and Overlay */}
             <div className="absolute inset-0 z-0">
                 <img 
-                    src="https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752339636/WhatsApp_Image_2025-07-12_at_13.57.13_1_va1jyr.webp" 
+                    src={optimizeUrl(heroImageUrl, { w: 1920, q: 75, output: 'webp' })} 
+                    srcSet={srcSet}
+                    sizes="100vw"
                     alt="Frente de la concesionaria Rago Automotores" 
                     className="w-full h-full object-cover"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
                 />
                 <div className="absolute inset-0 bg-gradient-to-tr from-rago-black/80 via-rago-burgundy-darker/40 to-black/30 bg-[size:200%_200%] animate-bg-pan"></div>
             </div>

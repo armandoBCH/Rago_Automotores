@@ -1,11 +1,14 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { Vehicle, AnalyticsEvent, SiteData, Review, FinancingConfig, ReviewUpdate } from '../types';
 import { PlusIcon, EditIcon, TrashIcon, SearchIcon, LogoutIcon, EyeIcon, ChatBubbleIcon, TargetIcon, StarIcon, CircleDollarSignIcon, GripVerticalIcon, FileCheckIcon, StatsIcon, ShareIcon, ArrowUpDownIcon, MessageSquareIcon, HeartIcon, MousePointerClickIcon, GlobeIcon, CogIcon } from '../constants';
 import { optimizeUrl } from '../utils/image';
 import ConfirmationModal from './ConfirmationModal';
 import VehiclePerformanceTable, { PerformanceData } from './VehiclePerformanceTable';
-import { PageViewsChart, TopVehiclesChart, EventDistributionChart } from './charts/AnalyticsCharts';
 import ReviewEditModal from './ReviewEditModal';
+
+const PageViewsChart = lazy(() => import('./charts/AnalyticsCharts').then(module => ({ default: module.PageViewsChart })));
+const TopVehiclesChart = lazy(() => import('./charts/AnalyticsCharts').then(module => ({ default: module.TopVehiclesChart })));
+const EventDistributionChart = lazy(() => import('./charts/AnalyticsCharts').then(module => ({ default: module.EventDistributionChart })));
 
 interface AdminPanelProps {
     vehicles: Vehicle[];
@@ -216,6 +219,13 @@ const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; on
             alert(error.message);
         }
     };
+    
+    const ChartSuspenseFallback: React.FC<{ className?: string }> = ({ className }) => (
+        <div className={`flex items-center justify-center text-slate-500 ${className}`}>
+            <svg className="animate-spin h-6 w-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" className="opacity-75"></path></svg>
+            Cargando gráfico...
+        </div>
+    );
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -238,15 +248,21 @@ const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; on
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
                 <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-700">
-                    <PageViewsChart data={chartData.pageViews} total={totalPageViews} />
+                    <Suspense fallback={<ChartSuspenseFallback className="h-80" />}>
+                        <PageViewsChart data={chartData.pageViews} total={totalPageViews} />
+                    </Suspense>
                 </div>
                  <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-700">
                     <h3 className="text-lg font-bold mb-4">Top 5 Vehículos Más Vistos</h3>
-                    <TopVehiclesChart data={chartData.topVehicles} />
+                    <Suspense fallback={<ChartSuspenseFallback className="h-64" />}>
+                        <TopVehiclesChart data={chartData.topVehicles} />
+                    </Suspense>
                 </div>
                  <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-700">
                     <h3 className="text-lg font-bold mb-4">Distribución de Eventos</h3>
-                    <EventDistributionChart data={chartData.eventDistribution} />
+                    <Suspense fallback={<ChartSuspenseFallback className="h-64" />}>
+                        <EventDistributionChart data={chartData.eventDistribution} />
+                    </Suspense>
                 </div>
             </div>
 

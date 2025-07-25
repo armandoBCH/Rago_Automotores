@@ -55,6 +55,9 @@ const SellYourCarSection: React.FC = () => {
     const contactMessage = "Hola, estoy interesado en vender mi vehículo con ustedes. Me gustaría recibir una cotización.";
     const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(contactMessage)}`;
     const imageUrl = "https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752115790/Gemini_Generated_Image_2lfdwh2lfdwh2lfd_zjz8tq.webp";
+    const srcSet = [400, 600, 800, 1200]
+        .map(w => `${optimizeUrl(imageUrl, { w, h: Math.round(w * 0.75), fit: 'cover', output: 'webp', q: 75 })} ${w}w`)
+        .join(', ');
 
     return (
         <section ref={sectionRef} id="sell-car-section" className="relative text-white overflow-hidden bg-gradient-to-br from-rago-burgundy via-rago-burgundy-darker to-rago-black bg-[size:200%_200%] animate-bg-pan">
@@ -79,10 +82,13 @@ const SellYourCarSection: React.FC = () => {
                     <div className="animate-fade-in-up lg:col-span-3" style={{ animationDelay: '100ms' }}>
                         <div className="rounded-xl shadow-2xl overflow-hidden group">
                             <img 
-                                src={optimizeUrl(imageUrl, { w: 800, h: 600, fit: 'cover', output: 'webp', q: 80 })}
+                                src={optimizeUrl(imageUrl, { w: 800, h: 600, fit: 'cover', output: 'webp', q: 75 })}
+                                srcSet={srcSet}
+                                sizes="(max-width: 1023px) 100vw, 60vw"
                                 alt="Hombre entregando llaves de auto en concesionaria" 
                                 className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
                                 loading="lazy"
+                                decoding="async"
                             />
                         </div>
                     </div>
