@@ -39,7 +39,7 @@ const Hero: React.FC<HeroProps> = ({ searchTerm, onSearchChange }) => {
                     fetchPriority="high"
                     decoding="async"
                 />
-                <div className="absolute inset-0 bg-gradient-to-tr from-rago-black/80 via-rago-burgundy-darker/40 to-black/30 bg-[size:200%_200%] animate-bg-pan"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-rago-black/80 via-rago-burgundy-darker/40 to-black/30"></div>
             </div>
 
             {/* Content - Changed to flex column for easier alignment */}

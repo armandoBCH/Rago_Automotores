@@ -1,12 +1,5 @@
 
-
-
-
-
-
-
-
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { Vehicle, VehicleFormData, AnalyticsEvent, VehicleUpdate, SiteData, Review } from './types';
 import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon, DownIcon, StarIcon, HeartIcon, SlidersIcon, XIcon } from './constants';
@@ -17,20 +10,23 @@ import Header from './components/Header';
 import Hero from './components/Hero';
 import FilterBar from './components/FilterBar';
 import VehicleList from './components/VehicleList';
-import VehicleDetailPage from './components/VehicleDetailPage';
-import { AdminPanel } from './components/AdminPanel';
-import VehicleFormModal from './components/VehicleFormModal';
-import ConfirmationModal from './components/ConfirmationModal';
-import Footer from './components/Footer';
-import LoginPage from './components/LoginPage';
-import SellYourCarSection from './components/SellYourCarSection';
-import ScrollToTopButton from './components/ScrollToTopButton';
 import FeaturedVehiclesSection from './components/FeaturedVehiclesSection';
-import FavoritesPage from './components/FavoritesPage';
+import Footer from './components/Footer';
+import ScrollToTopButton from './components/ScrollToTopButton';
 import { useFavorites } from './components/FavoritesProvider';
-import VerticalVideoPlayer from './components/VerticalVideoPlayer';
-import ReviewsSection from './components/ReviewsSection';
-import LeaveReviewPage from './components/LeaveReviewPage';
+import Loader from './components/Loader';
+
+// Lazy-loaded components
+const VehicleDetailPage = lazy(() => import('./components/VehicleDetailPage'));
+const AdminPanel = lazy(() => import('./components/AdminPanel').then(module => ({ default: module.AdminPanel })));
+const VehicleFormModal = lazy(() => import('./components/VehicleFormModal'));
+const ConfirmationModal = lazy(() => import('./components/ConfirmationModal'));
+const LoginPage = lazy(() => import('./components/LoginPage'));
+const SellYourCarSection = lazy(() => import('./components/SellYourCarSection'));
+const FavoritesPage = lazy(() => import('./components/FavoritesPage'));
+const VerticalVideoPlayer = lazy(() => import('./components/VerticalVideoPlayer'));
+const ReviewsSection = lazy(() => import('./components/ReviewsSection'));
+const LeaveReviewPage = lazy(() => import('./components/LeaveReviewPage'));
 
 type ModalState = 
     | { type: 'none' }
@@ -450,39 +446,37 @@ const App: React.FC = () => {
     const isLoginPage = pathname === '/login';
 
     if (isLoginPage || (!isAdmin && isAdminPage)) {
-        return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+        return <Suspense fallback={<Loader />}><LoginPage onLoginSuccess={handleLoginSuccess} /></Suspense>;
     }
 
     if (isAdmin && isAdminPage) {
         return (
-            <div className="bg-slate-100 dark:bg-slate-950 min-h-screen">
-                <main className="container mx-auto px-4 md:px-6 py-8">
-                    <AdminPanel 
-                        vehicles={vehicles} 
-                        allEvents={analyticsEvents}
-                        siteData={siteData}
-                        onAdd={handleAddVehicleClick} 
-                        onEdit={handleEditVehicleClick} 
-                        onDelete={handleDeleteVehicleClick} 
-                        onLogout={handleLogout} 
-                        onDataUpdate={handleDataUpdate}
-                        onToggleFeatured={handleToggleFeatured}
-                        onToggleSold={handleToggleSold}
-                        onReorder={handleReorder}
-                    />
-                </main>
-                {modalState.type === 'form' && <VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} brands={uniqueBrands} />}
-                {modalState.type === 'confirmDelete' && <ConfirmationModal isOpen={true} onClose={handleCloseModal} onConfirm={confirmDelete} title="Confirmar Eliminación" message="¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer." isConfirming={isDeleting} />}
-            </div>
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader text="Cargando panel de administración..." /></div>}>
+                <AdminPanel 
+                    vehicles={vehicles} 
+                    allEvents={analyticsEvents}
+                    siteData={siteData}
+                    onAdd={handleAddVehicleClick} 
+                    onEdit={handleEditVehicleClick} 
+                    onDelete={handleDeleteVehicleClick} 
+                    onLogout={handleLogout} 
+                    onDataUpdate={handleDataUpdate}
+                    onToggleFeatured={handleToggleFeatured}
+                    onToggleSold={handleToggleSold}
+                    onReorder={handleReorder}
+                />
+                {modalState.type === 'form' && <Suspense fallback={<Loader />}><VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} brands={uniqueBrands} /></Suspense>}
+                {modalState.type === 'confirmDelete' && <Suspense fallback={<Loader />}><ConfirmationModal isOpen={true} onClose={handleCloseModal} onConfirm={confirmDelete} title="Confirmar Eliminación" message="¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer." isConfirming={isDeleting} /></Suspense>}
+            </Suspense>
         );
     }
     
     const renderPublicContent = () => {
-        if (loading) return <div className="text-center py-16">Cargando...</div>;
+        if (loading) return <Loader />;
         if (dbError) return <div className="text-center py-16 text-red-500">{dbError}</div>;
-        if (vehicleId) return selectedVehicle ? <VehicleDetailPage vehicle={selectedVehicle} allVehicles={vehicles} onPlayVideo={setPlayingVideoUrl} financingConfig={siteData.financingConfig} reviews={siteData.reviews} /> : <NotFoundPage />;
-        if (isFavoritesPage) return <FavoritesPage allVehicles={vehicles} onPlayVideo={setPlayingVideoUrl}/>;
-        if (isLeaveReviewPage) return <LeaveReviewPage vehicles={vehicles} />;
+        if (vehicleId) return selectedVehicle ? <Suspense fallback={<Loader />}><VehicleDetailPage vehicle={selectedVehicle} allVehicles={vehicles} onPlayVideo={setPlayingVideoUrl} financingConfig={siteData.financingConfig} reviews={siteData.reviews} /></Suspense> : <NotFoundPage />;
+        if (isFavoritesPage) return <Suspense fallback={<Loader />}><FavoritesPage allVehicles={vehicles} onPlayVideo={setPlayingVideoUrl}/></Suspense>;
+        if (isLeaveReviewPage) return <Suspense fallback={<Loader />}><LeaveReviewPage vehicles={vehicles} /></Suspense>;
         if (isHomePage) return (
             <>
                 <div className="hidden md:block">
@@ -525,7 +519,7 @@ const App: React.FC = () => {
 
     return (
         <div className="bg-slate-800 dark:bg-rago-black min-h-screen overflow-x-hidden">
-             {playingVideoUrl && <VerticalVideoPlayer url={playingVideoUrl} onClose={() => setPlayingVideoUrl(null)} />}
+             {playingVideoUrl && <Suspense fallback={null}><VerticalVideoPlayer url={playingVideoUrl} onClose={() => setPlayingVideoUrl(null)} /></Suspense>}
              <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={hamburgerClasses} aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"} aria-controls="mobile-menu" aria-expanded={isMobileMenuOpen}>
                 <div id="nav-icon3" className={isMobileMenuOpen ? 'open' : ''}><span></span><span></span><span></span><span></span></div>
             </button>
@@ -565,8 +559,8 @@ const App: React.FC = () => {
                 <main id="catalog" className="container mx-auto px-4 md:px-6 py-8 flex-grow">
                      <div key={path} className="animate-fade-in">{renderPublicContent()}</div>
                 </main>
-                {isHomePage && <ReviewsSection reviews={siteData.reviews} />}
-                {isHomePage && <SellYourCarSection />}
+                {isHomePage && <Suspense fallback={null}><ReviewsSection reviews={siteData.reviews} /></Suspense>}
+                {isHomePage && <Suspense fallback={null}><SellYourCarSection /></Suspense>}
                 <Footer />
             </div>
             {isHomePage && <ScrollToTopButton />}
