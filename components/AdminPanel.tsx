@@ -59,26 +59,32 @@ const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; on
     const [password, setPassword] = useState('');
 
     const filteredEvents = useMemo(() => {
-        const now = new Date();
-        const startDate = new Date(now);
-
         if (dateRange === 'all') return allEvents;
+
+        const now = new Date();
+        // Use UTC date for calculations to avoid timezone issues.
+        const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+        let startDateUTC: Date;
 
         switch(dateRange) {
             case 'today':
-                startDate.setHours(0, 0, 0, 0);
+                startDateUTC = todayUTC;
                 break;
             case '7d':
-                startDate.setDate(now.getDate() - 6);
-                startDate.setHours(0, 0, 0, 0);
+                startDateUTC = new Date(todayUTC);
+                startDateUTC.setUTCDate(todayUTC.getUTCDate() - 6);
                 break;
             case '30d':
-                startDate.setDate(now.getDate() - 29);
-                startDate.setHours(0, 0, 0, 0);
+                startDateUTC = new Date(todayUTC);
+                startDateUTC.setUTCDate(todayUTC.getUTCDate() - 29);
                 break;
+            default:
+                // Should not happen, but as a fallback, return all events
+                return allEvents;
         }
         
-        return allEvents.filter(event => new Date(event.created_at) >= startDate);
+        return allEvents.filter(event => new Date(event.created_at) >= startDateUTC);
     }, [allEvents, dateRange]);
 
     const performanceData = useMemo<PerformanceData[]>(() => {
@@ -113,9 +119,10 @@ const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; on
 
         const getPageViewsData = () => {
             const now = new Date();
+            const todayUTCStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
             let dataMap = new Map<string, number>();
             let labels: string[] = [];
-
+        
             if (dateRange === 'today') {
                 for (let i = 0; i < 24; i++) {
                     const label = `${i.toString().padStart(2, '0')}:00`;
@@ -124,24 +131,26 @@ const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; on
                 }
                 filteredEvents.forEach(event => {
                     if (event.event_type === 'page_view') {
-                        const hour = new Date(event.created_at).getHours();
+                        const hour = new Date(event.created_at).getUTCHours();
                         const label = `${hour.toString().padStart(2, '0')}:00`;
-                        dataMap.set(label, (dataMap.get(label) || 0) + 1);
+                        if (dataMap.has(label)) {
+                            dataMap.set(label, (dataMap.get(label) || 0) + 1);
+                        }
                     }
                 });
                 return { labels, data: Array.from(dataMap.values()) };
-
+        
             } else if (dateRange === '7d' || dateRange === '30d') {
                 const days = dateRange === '7d' ? 7 : 30;
                 const tempMap = new Map<string, number>();
                 
                 for (let i = days - 1; i >= 0; i--) {
-                    const d = new Date(now);
-                    d.setDate(now.getDate() - i);
+                    const d = new Date(todayUTCStart);
+                    d.setUTCDate(todayUTCStart.getUTCDate() - i);
                     const dateKey = d.toISOString().split('T')[0];
                     tempMap.set(dateKey, 0);
                 }
-
+        
                 filteredEvents.forEach(event => {
                     if (event.event_type === 'page_view') {
                         const dateKey = new Date(event.created_at).toISOString().split('T')[0];
@@ -150,9 +159,9 @@ const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; on
                         }
                     }
                 });
-
+        
                 Array.from(tempMap.keys()).forEach(dateKey => {
-                    const d = new Date(`${dateKey}T12:00:00Z`); // use T12 to avoid timezone issues with date boundaries
+                    const d = new Date(`${dateKey}T12:00:00Z`);
                     const label = dateRange === '7d' 
                         ? d.toLocaleDateString('es-AR', { weekday: 'short', timeZone: 'UTC' }).replace('.', '')
                         : d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', timeZone: 'UTC' });
@@ -160,24 +169,27 @@ const StatsView: React.FC<{ vehicles: Vehicle[]; allEvents: AnalyticsEvent[]; on
                 });
                 
                 return { labels, data: Array.from(tempMap.values()) };
-
+        
             } else { // 'all'
-                const sortedEvents = allEvents.filter(e => e.event_type === 'page_view').sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-                if (sortedEvents.length === 0) return { labels: [], data: [] };
-
+                const allPageViewEvents = allEvents.filter(e => e.event_type === 'page_view');
+                if (allPageViewEvents.length === 0) return { labels: [], data: [] };
+                
+                const sortedEvents = allPageViewEvents.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                
                 const firstDate = new Date(sortedEvents[0].created_at);
-                let currentDate = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
-
-                while (currentDate <= now) {
-                    const monthKey = currentDate.toLocaleDateString('es-AR', { month: 'short', year: '2-digit' });
+                const firstMonthUTC = new Date(Date.UTC(firstDate.getUTCFullYear(), firstDate.getUTCMonth(), 1));
+                let currentDate = firstMonthUTC;
+        
+                while (currentDate <= todayUTCStart) {
+                    const monthKey = currentDate.toLocaleDateString('es-AR', { month: 'short', year: '2-digit', timeZone: 'UTC' });
                     labels.push(monthKey);
                     dataMap.set(monthKey, 0);
-                    currentDate.setMonth(currentDate.getMonth() + 1);
+                    currentDate.setUTCMonth(currentDate.getUTCMonth() + 1);
                 }
-
+        
                 sortedEvents.forEach(event => {
                     const date = new Date(event.created_at);
-                    const monthKey = date.toLocaleDateString('es-AR', { month: 'short', year: '2-digit' });
+                    const monthKey = date.toLocaleDateString('es-AR', { month: 'short', year: '2-digit', timeZone: 'UTC' });
                     if (dataMap.has(monthKey)) {
                         dataMap.set(monthKey, (dataMap.get(monthKey) || 0) + 1);
                     }
