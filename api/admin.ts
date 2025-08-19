@@ -1,4 +1,5 @@
 
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
@@ -39,18 +40,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             switch (action) {
                 // ... existing vehicle cases
                 case 'saveVehicle': {
-                    const { id, ...dataToSave } = payload as VehicleInsert;
+                    const vehicleData = payload as VehicleInsert;
                     let result;
-                    if (id) {
-                        const { data, error } = await supabaseAdmin.from('vehicles').update(dataToSave).eq('id', id).select().single();
+                    
+                    // If a truthy ID is present, it's an update.
+                    if (vehicleData.id) {
+                        const { id, ...dataToUpdate } = vehicleData;
+                        const { data, error } = await supabaseAdmin.from('vehicles').update(dataToUpdate).eq('id', id).select().single();
                         if (error) throw error;
                         result = data;
                     } else {
+                        // For inserts, we create a new object and explicitly delete the 'id' property
+                        // to ensure the database auto-generates it. This is more robust.
+                        const dataToInsert = { ...vehicleData };
+                        delete (dataToInsert as Partial<VehicleInsert>).id;
+
                         const { data: allOrders } = await supabaseAdmin.from('vehicles').select('display_order');
                         const maxOrder = (allOrders || []).reduce((max, v) => (v && typeof v.display_order === 'number' && v.display_order > max) ? v.display_order : max, -1);
-                        dataToSave.display_order = maxOrder + 1;
-                        if (!dataToSave.vehicle_type) dataToSave.vehicle_type = 'N/A';
-                        const { data, error } = await supabaseAdmin.from('vehicles').insert(dataToSave).select().single();
+                        
+                        dataToInsert.display_order = maxOrder + 1;
+                        if (!dataToInsert.vehicle_type) dataToInsert.vehicle_type = 'N/A';
+
+                        const { data, error } = await supabaseAdmin.from('vehicles').insert(dataToInsert).select().single();
                         if (error) throw error;
                         result = data;
                     }
