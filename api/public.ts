@@ -64,10 +64,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 const { honeypot, ...consignmentData } = payload;
                 if (honeypot) return res.status(400).json({ message: 'Spam detected.' });
 
-                const { error } = await supabaseAdmin.from('consignments').insert([consignmentData]);
+                const { error } = await supabaseAdmin.from('consignments').insert([{ ...consignmentData, status: 'pending' }]);
                 if (error) throw error;
                 
                 return res.status(201).json({ success: true, message: 'Tu vehículo fue enviado para revisión. ¡Pronto nos pondremos en contacto!' });
+             }
+
+             if (action === 'submit_direct_sale') {
+                const { honeypot, ...consignmentData } = payload;
+                if (honeypot) return res.status(400).json({ message: 'Spam detected.' });
+
+                const dataToInsert = {
+                    ...consignmentData,
+                    status: 'pending' as const,
+                    internal_notes: `[SOLICITUD DE COMPRA DIRECTA]\n${consignmentData.extra_info || ''}`
+                };
+
+                const { error } = await supabaseAdmin.from('consignments').insert([dataToInsert]);
+                if (error) throw error;
+                
+                return res.status(201).json({ success: true, message: 'Tu solicitud fue enviada. ¡Nos pondremos en contacto pronto con una oferta!' });
              }
              
              return res.status(400).json({ message: 'Invalid action.'});

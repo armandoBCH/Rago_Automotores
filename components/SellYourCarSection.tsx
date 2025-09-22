@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { CheckIcon, ArrowRightIcon, FileCheckIcon, CogIcon, ShieldIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
@@ -17,8 +18,6 @@ const QualityCard: React.FC<{ icon: React.ReactNode; title: string; children: Re
 
 const SellYourCarSection: React.FC = () => {
     const sectionRef = useRef<HTMLElement>(null);
-    const directSaleMessage = "Hola, quisiera cotizar mi auto para una venta directa.";
-    const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(directSaleMessage)}`;
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -56,53 +55,57 @@ const SellYourCarSection: React.FC = () => {
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
                     {/* Card 1: Venta Directa */}
-                    <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl p-8 flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-rago-glow animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-                        <div>
-                            <h3 className="text-3xl font-bold text-white">Opción 1: Compra Directa</h3>
-                            <p className="text-lg text-sky-300 font-semibold mt-1">¿Necesitás vender rápido?</p>
+                    <div className="group relative bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl p-8 flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-rago-glow animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+                        <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-sky-400/50 via-rose-400/50 to-amber-400/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-lg"></div>
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div>
+                                <h3 className="text-3xl font-bold text-white">Opción 1: Compra Directa</h3>
+                                <p className="text-lg text-sky-300 font-semibold mt-1">¿Necesitás vender rápido?</p>
+                            </div>
+                            <p className="my-6 text-slate-300 flex-grow">
+                                Si buscás una solución inmediata y sin complicaciones, te compramos el auto hoy. Tasación justa y pago en el acto.
+                            </p>
+                            <ul className="space-y-3 mb-8 text-slate-200">
+                                <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-green-400" /><span>Pago inmediato y seguro.</span></li>
+                                <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-green-400" /><span>Sin vueltas ni esperas.</span></li>
+                                <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-green-400" /><span>Nos encargamos de todo el trámite.</span></li>
+                            </ul>
+                            <a 
+                                href="/venta-directa"
+                                onClick={() => trackEvent('click_cta_direct_buy')}
+                                className="group/button mt-auto w-full inline-flex items-center justify-center gap-3 px-6 py-4 text-lg font-bold text-rago-burgundy bg-white rounded-lg hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all"
+                            >
+                                <span>Comenzar Venta Directa</span>
+                                <ArrowRightIcon className="h-5 w-5 transition-transform duration-300 group-hover/button:translate-x-1" />
+                            </a>
                         </div>
-                        <p className="my-6 text-slate-300 flex-grow">
-                            Si buscás una solución inmediata y sin complicaciones, te compramos el auto hoy. Tasación justa y pago en el acto.
-                        </p>
-                        <ul className="space-y-3 mb-8 text-slate-200">
-                            <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-green-400" /><span>Pago inmediato y seguro.</span></li>
-                            <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-green-400" /><span>Sin vueltas ni esperas.</span></li>
-                            <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-green-400" /><span>Nos encargamos de todo el trámite.</span></li>
-                        </ul>
-                        <a 
-                            href={whatsappLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => trackEvent('click_cta_direct_buy')}
-                            className="group mt-auto w-full inline-flex items-center justify-center gap-3 px-6 py-4 text-lg font-bold text-rago-burgundy bg-white rounded-lg hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all"
-                        >
-                            <span>Contactar por Venta Directa</span>
-                            <ArrowRightIcon className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-                        </a>
                     </div>
 
                     {/* Card 2: Consignación */}
-                    <div className="bg-rago-burgundy/80 backdrop-blur-md border border-white/20 text-white rounded-2xl p-8 flex flex-col shadow-rago-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-rago-glow animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-                        <div>
-                            <h3 className="text-3xl font-bold">Opción 2: Consignación</h3>
-                            <p className="text-lg text-white/80 font-semibold mt-1">Maximizá el valor de tu vehículo.</p>
+                    <div className="group relative bg-rago-burgundy/80 backdrop-blur-md border border-white/20 text-white rounded-2xl p-8 flex flex-col shadow-rago-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-rago-glow animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+                         <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-amber-400/50 via-rose-400/50 to-sky-400/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-lg"></div>
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div>
+                                <h3 className="text-3xl font-bold">Opción 2: Consignación</h3>
+                                <p className="text-lg text-white/80 font-semibold mt-1">Maximizá el valor de tu vehículo.</p>
+                            </div>
+                            <p className="my-6 text-white/90 flex-grow">
+                                Nos encargamos de todo el proceso de venta: preparación, publicación, negociación y transferencia. Vos solo esperás la mejor oferta.
+                            </p>
+                            <ul className="space-y-3 mb-8">
+                                <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-white" /><span>Obtené el mejor precio de mercado.</span></li>
+                                <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-white" /><span>Exposición en nuestro salón y redes.</span></li>
+                                <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-white" /><span>Gestión profesional y segura.</span></li>
+                            </ul>
+                            <a 
+                                href="/vender-mi-auto"
+                                onClick={() => trackEvent('click_cta_consign')}
+                                className="group/button mt-auto w-full inline-flex items-center justify-center gap-3 px-6 py-4 text-lg font-bold text-rago-burgundy bg-white rounded-lg hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all"
+                            >
+                                <span>Comenzar Proceso de Consignación</span>
+                                <ArrowRightIcon className="h-5 w-5 transition-transform duration-300 group-hover/button:translate-x-1" />
+                            </a>
                         </div>
-                        <p className="my-6 text-white/90 flex-grow">
-                            Nos encargamos de todo el proceso de venta: preparación, publicación, negociación y transferencia. Vos solo esperás la mejor oferta.
-                        </p>
-                        <ul className="space-y-3 mb-8">
-                            <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-white" /><span>Obtené el mejor precio de mercado.</span></li>
-                            <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-white" /><span>Exposición en nuestro salón y redes.</span></li>
-                            <li className="flex items-center gap-3"><CheckIcon className="h-6 w-6 text-white" /><span>Gestión profesional y segura.</span></li>
-                        </ul>
-                        <a 
-                            href="/vender-mi-auto"
-                            onClick={() => trackEvent('click_cta_consign')}
-                            className="group mt-auto w-full inline-flex items-center justify-center gap-3 px-6 py-4 text-lg font-bold text-rago-burgundy bg-white rounded-lg hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all"
-                        >
-                            <span>Comenzar Proceso de Consignación</span>
-                            <ArrowRightIcon className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-                        </a>
                     </div>
                 </div>
 

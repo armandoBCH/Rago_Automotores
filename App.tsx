@@ -24,6 +24,7 @@ const ConfirmationModal = lazy(() => import('./components/ConfirmationModal'));
 const LoginPage = lazy(() => import('./components/LoginPage'));
 const SellYourCarSection = lazy(() => import('./components/SellYourCarSection'));
 const SellMyCarPage = lazy(() => import('./components/SellMyCarPage'));
+const DirectSalePage = lazy(() => import('./components/DirectSalePage'));
 const FavoritesPage = lazy(() => import('./components/FavoritesPage'));
 const VerticalVideoPlayer = lazy(() => import('./components/VerticalVideoPlayer'));
 const ReviewsSection = lazy(() => import('./components/ReviewsSection'));
@@ -219,6 +220,7 @@ const App: React.FC = () => {
     const isHomePage = pathname === '/' || pathname === '/index.html';
     const isFavoritesPage = pathname === '/favoritos';
     const isSellMyCarPage = pathname === '/vender-mi-auto';
+    const isDirectSalePage = pathname === '/venta-directa';
     const isLeaveReviewPage = pathname === '/dejar-resena';
     
     const selectedVehicle = useMemo(() => {
@@ -291,12 +293,16 @@ const App: React.FC = () => {
             updateMeta('meta[name="description"]', 'Contanos tu experiencia con Rago Automotores. Tu opinión es muy valiosa para nosotros.');
             updateMeta('meta[property="og:title"]', 'Dejar una Reseña | Rago Automotores');
         } else if (isSellMyCarPage) {
-            document.title = 'Vender mi Auto | Rago Automotores';
+            document.title = 'Vender mi Auto por Consignación | Rago Automotores';
             updateMeta('meta[name="description"]', 'Vende tu auto con nosotros de forma rápida, segura y al mejor precio. Ofrecemos compra directa o gestión por consignación.');
             updateMeta('meta[property="og:title"]', 'Vende tu auto con Rago Automotores');
+        } else if (isDirectSalePage) {
+            document.title = 'Venta Directa de Auto | Rago Automotores';
+            updateMeta('meta[name="description"]', 'Vende tu auto de forma inmediata. Te lo compramos hoy. Recibí una oferta rápida y segura en Rago Automotores.');
+            updateMeta('meta[property="og:title"]', 'Venta Directa de Auto | Rago Automotores');
         }
         
-    }, [path, selectedVehicle, isHomePage, isFavoritesPage, isLeaveReviewPage, isSellMyCarPage]);
+    }, [path, selectedVehicle, isHomePage, isFavoritesPage, isLeaveReviewPage, isSellMyCarPage, isDirectSalePage]);
 
     const uniqueBrands = useMemo(() => Array.from(new Set(vehicles.map(v => v.make))).sort(), [vehicles]);
     const uniqueVehicleTypes = useMemo(() => Array.from(new Set(vehicles.map(v => v.vehicle_type))).sort(), [vehicles]);
@@ -488,6 +494,7 @@ const App: React.FC = () => {
         if (isFavoritesPage) return <Suspense fallback={<Loader />}><FavoritesPage allVehicles={vehicles} onPlayVideo={setPlayingVideoUrl}/></Suspense>;
         if (isLeaveReviewPage) return <Suspense fallback={<Loader />}><LeaveReviewPage vehicles={vehicles} /></Suspense>;
         if (isSellMyCarPage) return <Suspense fallback={<Loader />}><SellMyCarPage brands={uniqueBrands} vehicleTypes={uniqueVehicleTypes} /></Suspense>;
+        if (isDirectSalePage) return <Suspense fallback={<Loader />}><DirectSalePage brands={uniqueBrands} /></Suspense>;
         if (isHomePage) return (
             <>
                 <div className="hidden md:block">

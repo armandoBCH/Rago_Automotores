@@ -6,9 +6,8 @@ import ImageUploader, { ImageFile } from './ImageUploader';
 import { supabase } from '../lib/supabaseClient';
 import { compressImage } from '../utils/image';
 
-interface SellMyCarPageProps {
+interface DirectSalePageProps {
     brands: string[];
-    vehicleTypes: string[];
 }
 
 type FormData = {
@@ -37,7 +36,8 @@ const FloatingLabelInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> &
     </div>
 );
 
-const SellMyCarPage: React.FC<SellMyCarPageProps> = ({ brands }) => {
+
+const DirectSalePage: React.FC<DirectSalePageProps> = ({ brands }) => {
     const [formData, setFormData] = useState<FormData>({
         owner_name: '', owner_phone: '', owner_email: '',
         make: '', model: '', year: '', mileage: '', engine: '',
@@ -134,7 +134,7 @@ const SellMyCarPage: React.FC<SellMyCarPageProps> = ({ brands }) => {
             const response = await fetch('/api/public', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'submit_consignment', honeypot, ...consignmentPayload }),
+                body: JSON.stringify({ action: 'submit_direct_sale', honeypot, ...consignmentPayload }),
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Ocurrió un error al enviar tu solicitud.');
@@ -164,9 +164,9 @@ const SellMyCarPage: React.FC<SellMyCarPageProps> = ({ brands }) => {
     
     return (
         <div className="max-w-4xl mx-auto py-12 animate-fade-in">
-             <div className="text-center mb-10">
-                <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tight">Vender por Consignación</h1>
-                <p className="mt-3 text-lg text-slate-500 dark:text-slate-400">Completá los datos y te contactaremos para coordinar una inspección y maximizar el valor de tu vehículo.</p>
+            <div className="text-center mb-10">
+                <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tight">Venta Directa de tu Auto</h1>
+                <p className="mt-3 text-lg text-slate-500 dark:text-slate-400">Completá los datos de tu vehículo y te enviaremos una oferta de compra a la brevedad.</p>
             </div>
             
             <form onSubmit={handleSubmit} noValidate className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-800 space-y-8">
@@ -222,7 +222,7 @@ const SellMyCarPage: React.FC<SellMyCarPageProps> = ({ brands }) => {
                     <button type="submit" disabled={status === 'submitting'} className="w-full flex items-center justify-center gap-2 px-5 py-4 text-xl font-bold text-white bg-rago-burgundy rounded-lg hover:bg-rago-burgundy-darker disabled:opacity-60 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-rago-lg">
                         {status === 'submitting' 
                             ? `Enviando... ${submitProgress.completed}/${submitProgress.total} imágenes`
-                            : 'Enviar para Tasación'
+                            : 'Enviar para Cotización'
                         }
                     </button>
                 </div>
@@ -232,4 +232,4 @@ const SellMyCarPage: React.FC<SellMyCarPageProps> = ({ brands }) => {
     );
 };
 
-export default SellMyCarPage;
+export default DirectSalePage;
