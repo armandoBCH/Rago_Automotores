@@ -6,6 +6,8 @@ import { Database } from '../lib/database.types';
 type VehicleInsert = Database['public']['Tables']['vehicles']['Insert'];
 type ReviewUpdate = Database['public']['Tables']['reviews']['Update'];
 type SiteConfigValue = Database['public']['Tables']['site_config']['Row']['value'];
+type ConsignmentUpdate = Database['public']['Tables']['consignments']['Update'];
+
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -125,14 +127,56 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     if (error) throw error;
                     return res.status(200).json(data || []);
                 }
+                
+                case 'get_consignment_details': {
+                    const { id } = payload;
+                    if (!id) return res.status(400).json({ message: 'ID de consignación requerido.'});
+                    const { data, error } = await supabaseAdmin.from('consignment_history').select('*').eq('consignment_id', id).order('created_at', { ascending: false });
+                    if (error) throw error;
+                    return res.status(200).json(data || []);
+                }
 
                 case 'update_consignment': {
-                    const { id, ...dataToUpdate } = payload;
+                    const { id, ...dataToUpdate } = payload as ConsignmentUpdate & { id: number };
                     if (!id) return res.status(400).json({ message: 'ID de consignación requerido.'});
+
+                    if (dataToUpdate.status) {
+                        const { data: currentConsignment, error: fetchError } = await supabaseAdmin.from('consignments').select('status').eq('id', id).single();
+                        if (fetchError) throw fetchError;
+                        
+                        if (currentConsignment.status !== dataToUpdate.status) {
+                            await supabaseAdmin.from('consignment_history').insert({
+                                consignment_id: id,
+                                old_status: currentConsignment.status,
+                                new_status: dataToUpdate.status
+                            });
+                        }
+                    }
+
                     const { data, error } = await supabaseAdmin.from('consignments').update(dataToUpdate).eq('id', id).select().single();
                     if (error) throw error;
                     return res.status(200).json({ success: true, consignment: data });
                 }
+                
+                case 'delete_consignment': {
+                    const { id } = payload;
+                    if (!id) return res.status(400).json({ message: 'ID de consignación es requerido.' });
+
+                    const { data: consignment, error: fetchErr } = await supabaseAdmin.from('consignments').select('images').eq('id', id).single();
+                    if (fetchErr) return res.status(404).json({ message: 'Consignación no encontrada.' });
+
+                    if (consignment.images && consignment.images.length > 0) {
+                        const filePaths = consignment.images.map(url => { try { return new URL(url).pathname.split('/vehicle-images/')[1]; } catch { return null; }}).filter(Boolean) as string[];
+                        if(filePaths.length > 0) await supabaseAdmin.storage.from('vehicle-images').remove(filePaths);
+                    }
+                    
+                    await supabaseAdmin.from('consignment_history').delete().eq('consignment_id', id);
+                    const { error: deleteErr } = await supabaseAdmin.from('consignments').delete().eq('id', id);
+                    if (deleteErr) throw deleteErr;
+
+                    return res.status(200).json({ success: true, message: 'Consignación eliminada.'});
+                }
+
 
                 case 'reorderVehicles': {
                     const { vehicles } = payload;

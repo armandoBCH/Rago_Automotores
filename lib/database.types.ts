@@ -37,6 +37,40 @@ export interface Database {
           }
         ]
       }
+      consignment_history: {
+        Row: {
+          id: number
+          created_at: string
+          consignment_id: number
+          old_status: string | null
+          new_status: string
+          notes: string | null
+        }
+        Insert: {
+          id?: number
+          created_at?: string
+          consignment_id: number
+          old_status?: string | null
+          new_status: string
+          notes?: string | null
+        }
+        Update: {
+          id?: number
+          created_at?: string
+          consignment_id?: number
+          old_status?: string | null
+          new_status?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignment_history_consignment_id_fkey"
+            columns: ["consignment_id"]
+            referencedRelation: "consignments"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       consignments: {
         Row: {
           id: number
@@ -62,6 +96,10 @@ export interface Database {
             | "rejected"
           internal_notes: string | null
           vehicle_id: number | null
+          appraisal_value: number | null
+          market_price_suggestion: number | null
+          final_agreed_price: number | null
+          inspection_checklist: Json | null
         }
         Insert: {
           id?: number
@@ -87,6 +125,10 @@ export interface Database {
             | "rejected"
           internal_notes?: string | null
           vehicle_id?: number | null
+          appraisal_value?: number | null
+          market_price_suggestion?: number | null
+          final_agreed_price?: number | null
+          inspection_checklist?: Json | null
         }
         Update: {
           id?: number
@@ -112,6 +154,10 @@ export interface Database {
             | "rejected"
           internal_notes?: string | null
           vehicle_id?: number | null
+          appraisal_value?: number | null
+          market_price_suggestion?: number | null
+          final_agreed_price?: number | null
+          inspection_checklist?: Json | null
         }
         Relationships: [
           {

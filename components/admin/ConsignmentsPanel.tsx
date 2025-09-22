@@ -3,6 +3,8 @@ import React, { useState, useMemo } from 'react';
 import { Consignment } from '../../types';
 import { optimizeUrl } from '../../utils/image';
 import ConsignmentDetailModal from './ConsignmentDetailModal';
+import ConfirmationModal from '../ConfirmationModal';
+import { TrashIcon } from '../../constants';
 
 type Status = Consignment['status'];
 
@@ -25,7 +27,7 @@ interface ConsignmentsPanelProps {
 
 const ConsignmentsPanel: React.FC<ConsignmentsPanelProps> = ({ consignments, isLoading, onRefresh, onApprove, onDataUpdate }) => {
     const [activeFilter, setActiveFilter] = useState<Status | 'all'>('all');
-    const [selectedConsignment, setSelectedConsignment] = useState<Consignment | null>(null);
+    const [modalState, setModalState] = useState<{ type: 'detail' | 'delete', consignment: Consignment } | null>(null);
 
     const filteredConsignments = useMemo(() => {
         if (activeFilter === 'all') return consignments;
@@ -33,8 +35,24 @@ const ConsignmentsPanel: React.FC<ConsignmentsPanelProps> = ({ consignments, isL
     }, [consignments, activeFilter]);
     
     const handleModalClose = () => {
-        setSelectedConsignment(null);
-        onRefresh(); // Refresh data when modal closes
+        setModalState(null);
+        onRefresh();
+    };
+
+    const handleDelete = async () => {
+        if (modalState?.type !== 'delete') return;
+        try {
+            const response = await fetch('/api/admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete_consignment', payload: { id: modalState.consignment.id } })
+            });
+            if (!response.ok) throw new Error('La eliminación falló');
+            handleModalClose();
+        } catch (error) {
+            console.error(error);
+            alert('Error al eliminar la consignación.');
+        }
     };
 
     return (
@@ -68,17 +86,18 @@ const ConsignmentsPanel: React.FC<ConsignmentsPanelProps> = ({ consignments, isL
                             <th className="p-4">Precio Solicitado</th>
                             <th className="p-4">Fecha</th>
                             <th className="p-4 text-center">Estado</th>
+                            <th className="p-4 text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {isLoading ? (
-                            <tr><td colSpan={5} className="text-center p-12">Cargando...</td></tr>
+                            <tr><td colSpan={6} className="text-center p-12">Cargando...</td></tr>
                         ) : filteredConsignments.length === 0 ? (
-                             <tr><td colSpan={5} className="text-center p-12 text-slate-500">No hay consignaciones en este estado.</td></tr>
+                             <tr><td colSpan={6} className="text-center p-12 text-slate-500">No hay consignaciones en este estado.</td></tr>
                         ) : (
                             filteredConsignments.map(c => (
-                                <tr key={c.id} onClick={() => setSelectedConsignment(c)} className="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer">
-                                    <td className="p-4">
+                                <tr key={c.id} className="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 group">
+                                    <td className="p-4 cursor-pointer" onClick={() => setModalState({ type: 'detail', consignment: c })}>
                                         <div className="flex items-center gap-3">
                                             <img src={optimizeUrl(c.images[0], { w: 80, h: 60, fit: 'cover' })} alt={`${c.make} ${c.model}`} className="w-20 h-14 object-cover rounded-md flex-shrink-0 bg-slate-200 dark:bg-slate-700" />
                                             <div>
@@ -87,16 +106,19 @@ const ConsignmentsPanel: React.FC<ConsignmentsPanelProps> = ({ consignments, isL
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="p-4">
+                                    <td className="p-4 cursor-pointer" onClick={() => setModalState({ type: 'detail', consignment: c })}>
                                         <p className="font-semibold">{c.owner_name}</p>
                                         <p className="text-sm text-slate-500">{c.owner_phone}</p>
                                     </td>
-                                    <td className="p-4 font-semibold text-slate-800 dark:text-slate-200">${c.price_requested.toLocaleString('es-AR')}</td>
-                                    <td className="p-4 text-sm text-slate-500">{new Date(c.created_at).toLocaleDateString('es-AR')}</td>
-                                    <td className="p-4 text-center">
+                                    <td className="p-4 font-semibold text-slate-800 dark:text-slate-200 cursor-pointer" onClick={() => setModalState({ type: 'detail', consignment: c })}>${c.price_requested.toLocaleString('es-AR')}</td>
+                                    <td className="p-4 text-sm text-slate-500 cursor-pointer" onClick={() => setModalState({ type: 'detail', consignment: c })}>{new Date(c.created_at).toLocaleDateString('es-AR')}</td>
+                                    <td className="p-4 text-center cursor-pointer" onClick={() => setModalState({ type: 'detail', consignment: c })}>
                                         <span className={`px-3 py-1 text-xs font-bold rounded-full ${STATUS_MAP[c.status].classes}`}>
                                             {STATUS_MAP[c.status].text}
                                         </span>
+                                    </td>
+                                    <td className="p-4 text-right">
+                                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'delete', consignment: c }); }} className="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-slate-700/50 transition-colors opacity-0 group-hover:opacity-100" title="Eliminar"><TrashIcon /></button>
                                     </td>
                                 </tr>
                             ))
@@ -105,13 +127,22 @@ const ConsignmentsPanel: React.FC<ConsignmentsPanelProps> = ({ consignments, isL
                 </table>
             </div>
 
-            {selectedConsignment && (
+            {modalState?.type === 'detail' && (
                 <ConsignmentDetailModal
-                    isOpen={!!selectedConsignment}
+                    isOpen={true}
                     onClose={handleModalClose}
-                    consignment={selectedConsignment}
+                    consignment={modalState.consignment}
                     onApproveAndCreateListing={onApprove}
                     onDataUpdate={onDataUpdate}
+                />
+            )}
+            {modalState?.type === 'delete' && (
+                <ConfirmationModal
+                    isOpen={true}
+                    onClose={handleModalClose}
+                    onConfirm={handleDelete}
+                    title="Eliminar Consignación"
+                    message={`¿Estás seguro de que quieres eliminar la solicitud para el ${modalState.consignment.make} ${modalState.consignment.model}? Se borrarán también las imágenes asociadas. Esta acción es irreversible.`}
                 />
             )}
         </div>
