@@ -1,5 +1,4 @@
 
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
@@ -49,7 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         if (error) throw error;
                         result = data;
                     } else {
-                        const dataToInsert = { ...restOfVehicleData };
+                        const dataToInsert = { ...restOfVehicleData, consignment_id };
                         delete (dataToInsert as Partial<VehicleInsert>).id;
 
                         const { data: allOrders } = await supabaseAdmin.from('vehicles').select('display_order');

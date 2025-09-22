@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Vehicle, VehicleFormData, Consignment } from '../types';
 import { XIcon } from '../constants';
@@ -11,7 +10,7 @@ import { supabase } from '../lib/supabaseClient';
 
 const DRAFT_STORAGE_KEY = 'rago-new-vehicle-draft';
 
-type FormDataState = Omit<Vehicle, 'id' | 'year' | 'price' | 'mileage' | 'created_at' | 'images' | 'display_order' | 'fuel_type' | 'video_url'> & {
+type FormDataState = Omit<Vehicle, 'id' | 'year' | 'price' | 'mileage' | 'created_at' | 'images' | 'display_order' | 'fuel_type' | 'video_url' | 'consignment_id'> & {
     year: string;
     price: string;
     mileage: string;
@@ -87,7 +86,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
                 const isStandardMake = brands.includes(initialData.make);
                 const isStandardVehicleType = VEHICLE_TYPES.includes(initialData.vehicle_type);
 
-                const { created_at, id, images, display_order, ...rest } = initialData;
+                const { created_at, id, images, display_order, consignment_id, ...rest } = initialData;
                 setFormData({
                     ...rest,
                     year: String(initialData.year),
@@ -100,6 +99,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
                     vehicle_type: isStandardVehicleType ? initialData.vehicle_type : 'Otro',
                     customVehicleType: isStandardVehicleType ? '' : initialData.vehicle_type,
                     video_url: initialData.video_url || '',
+                    consignment_id: initialData.consignment_id
                 });
                 setImageFiles(images.map(url => ({ id: url, file: null, preview: url, url, status: 'complete' })));
             } else if (initialDataFromConsignment) { // Creating from consignment
@@ -164,6 +164,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
             is_sold: formData.is_sold,
             display_order: initialData?.display_order ?? 0,
             video_url: formData.video_url || null,
+            consignment_id: formData.consignment_id || null,
         };
     }, [formData, imageFiles, initialData, isOtherFuelType, isOtherMake, isOtherVehicleType]);
 

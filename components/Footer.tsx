@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { LocationPinIcon, InstagramIcon, ChatBubbleIcon, ClockIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';

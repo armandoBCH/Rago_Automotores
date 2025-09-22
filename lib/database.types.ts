@@ -199,6 +199,7 @@ export interface Database {
           is_sold: boolean
           display_order: number
           video_url: string | null
+          consignment_id: number | null
         }
         Insert: {
           id?: number
@@ -240,7 +241,14 @@ export interface Database {
           video_url?: string | null
           consignment_id?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_consignment_id_fkey"
+            columns: ["consignment_id"]
+            referencedRelation: "consignments"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

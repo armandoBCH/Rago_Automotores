@@ -78,18 +78,21 @@ const SellMyCarPage: React.FC<SellMyCarPageProps> = ({ brands, vehicleTypes }) =
             });
             const uploadedUrls = (await Promise.all(uploadPromises)).filter((url): url is string => !!url);
             
-            const consignmentPayload: Omit<ConsignmentInsert, 'id' | 'created_at' | 'status'> = {
-                ...formData,
-                year: parseInt(formData.year) || 0,
-                mileage: parseInt(formData.mileage) || 0,
-                price_requested: parseInt(formData.price_requested) || 0,
+            // Fix: Construct payload correctly to match ConsignmentInsert type and handle honeypot field.
+            const { honeypot, ...consignmentData } = formData;
+            const consignmentPayload: Omit<ConsignmentInsert, 'id' | 'created_at' | 'status' | 'internal_notes' | 'vehicle_id'> = {
+                ...consignmentData,
+                year: parseInt(consignmentData.year) || 0,
+                mileage: parseInt(consignmentData.mileage) || 0,
+                price_requested: parseInt(consignmentData.price_requested) || 0,
                 images: uploadedUrls,
+                transmission: consignmentData.transmission as "Automática" | "Manual",
             };
 
             const response = await fetch('/api/public', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'submit_consignment', ...consignmentPayload }),
+                body: JSON.stringify({ action: 'submit_consignment', honeypot, ...consignmentPayload }),
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Ocurrió un error al enviar tu solicitud.');

@@ -12,11 +12,10 @@ interface ConsignmentDetailModalProps {
     onDataUpdate: () => void;
 }
 
-// Fix: Define the Status type alias to be used in the component.
 type Status = Consignment['status'];
 
-const statusOptions: Consignment['status'][] = ['pending', 'in_review', 'approved', 'published', 'sold', 'rejected'];
-const STATUS_TEXT: Record<Consignment['status'], string> = {
+const statusOptions: Status[] = ['pending', 'in_review', 'approved', 'published', 'sold', 'rejected'];
+const STATUS_TEXT: Record<Status, string> = {
     pending: 'Pendiente', in_review: 'En Revisión', approved: 'Aprobado',
     published: 'Publicado', sold: 'Vendido', rejected: 'Rechazado'
 };
@@ -136,9 +135,9 @@ const ConsignmentDetailModal: React.FC<ConsignmentDetailModalProps> = ({ isOpen,
                             <button onClick={handleSaveNotes} disabled={isSaving} className="mt-2 px-3 py-1 text-sm font-semibold text-white bg-slate-600 rounded-md hover:bg-slate-700 disabled:opacity-50">Guardar Nota</button>
                         </div>
 
-                        {consignment.status === 'in_review' && (
+                        {(consignment.status === 'in_review' || consignment.status === 'approved') && !consignment.vehicle_id && (
                             <button onClick={handleApprove} disabled={isSaving} className="w-full mt-4 px-4 py-3 text-base font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50">
-                                Aprobar y Crear Publicación
+                                {consignment.status === 'approved' ? 'Crear Publicación' : 'Aprobar y Crear Publicación'}
                             </button>
                         )}
                          {consignment.vehicle_id && (

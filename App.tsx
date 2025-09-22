@@ -23,6 +23,7 @@ const VehicleFormModal = lazy(() => import('./components/VehicleFormModal'));
 const ConfirmationModal = lazy(() => import('./components/ConfirmationModal'));
 const LoginPage = lazy(() => import('./components/LoginPage'));
 const SellYourCarSection = lazy(() => import('./components/SellYourCarSection'));
+const BuyYourCarSection = lazy(() => import('./components/BuyYourCarSection'));
 const SellMyCarPage = lazy(() => import('./components/SellMyCarPage'));
 const FavoritesPage = lazy(() => import('./components/FavoritesPage'));
 const VerticalVideoPlayer = lazy(() => import('./components/VerticalVideoPlayer'));
@@ -71,7 +72,7 @@ const App: React.FC = () => {
         try {
             const vehiclesResult = await supabase
                 .from('vehicles')
-                .select('id,created_at,make,model,year,price,mileage,engine,transmission,fuel_type,vehicle_type,description,images,is_featured,is_sold,display_order,video_url')
+                .select('id,created_at,make,model,year,price,mileage,engine,transmission,fuel_type,vehicle_type,description,images,is_featured,is_sold,display_order,video_url,consignment_id')
                 .order('display_order', { ascending: true })
                 .order('is_sold', { ascending: true })
                 .order('created_at', { ascending: false });
@@ -571,6 +572,7 @@ const App: React.FC = () => {
                      <div key={path} className="animate-fade-in">{renderPublicContent()}</div>
                 </main>
                 {isHomePage && <Suspense fallback={null}><ReviewsSection reviews={siteData.reviews} /></Suspense>}
+                {isHomePage && <Suspense fallback={null}><BuyYourCarSection /></Suspense>}
                 {isHomePage && <Suspense fallback={null}><SellYourCarSection /></Suspense>}
                 <Footer />
             </div>
