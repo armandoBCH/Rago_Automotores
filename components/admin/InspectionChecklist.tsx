@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { Json } from '../../lib/database.types';
 import { CheckIcon, XIcon, ClockIcon } from '../../constants';
@@ -97,10 +98,10 @@ const InspectionChecklist: React.FC<InspectionChecklistProps> = ({ checklistData
                                         <button
                                             key={status}
                                             onClick={() => handleStatusChange(sectionKey, itemKey, status)}
-                                            className={`p-1.5 rounded-full transition-all duration-200 ${item.status === status ? 'ring-2 ring-offset-2 dark:ring-offset-slate-900 ring-rago-burgundy' : 'opacity-40 hover:opacity-100'}`}
+                                            className={`p-1 rounded-full transition-all duration-300 ease-in-out transform focus:outline-none ${item.status === status ? 'scale-110 opacity-100' : 'scale-100 opacity-50 hover:opacity-100 focus:opacity-100'}`}
                                             title={STATUS_CONFIG[status].text}
                                         >
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${STATUS_CONFIG[status].classes}`}>
+                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-shadow ${STATUS_CONFIG[status].classes} ${item.status === status ? 'shadow-lg' : ''}`}>
                                                 {STATUS_CONFIG[status].icon}
                                             </div>
                                         </button>
