@@ -67,7 +67,7 @@ const Header: React.FC = () => {
 
                 {/* Right: Actions and Social */}
                 <div className="hidden md:flex items-center gap-x-4">
-                    <a href="/vender-mi-auto"
+                    <a href="/#sell-car-section"
                        onClick={() => trackEvent('click_sell_car_header')}
                        className="shimmer-effect flex items-center gap-x-2 px-4 py-2 text-base font-semibold text-white bg-slate-800 dark:bg-rago-burgundy rounded-lg hover:bg-slate-950 dark:hover:bg-rago-burgundy-darker focus:outline-none focus:ring-4 focus:ring-slate-400/50 dark:focus:ring-rago-burgundy/50 transition-all duration-300 transform hover:-translate-y-px shadow-md hover:shadow-lg">
                         <SellCarIcon className="h-5 w-5 flex-shrink-0" />

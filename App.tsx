@@ -23,7 +23,6 @@ const VehicleFormModal = lazy(() => import('./components/VehicleFormModal'));
 const ConfirmationModal = lazy(() => import('./components/ConfirmationModal'));
 const LoginPage = lazy(() => import('./components/LoginPage'));
 const SellYourCarSection = lazy(() => import('./components/SellYourCarSection'));
-const BuyYourCarSection = lazy(() => import('./components/BuyYourCarSection'));
 const SellMyCarPage = lazy(() => import('./components/SellMyCarPage'));
 const FavoritesPage = lazy(() => import('./components/FavoritesPage'));
 const VerticalVideoPlayer = lazy(() => import('./components/VerticalVideoPlayer'));
@@ -554,7 +553,7 @@ const App: React.FC = () => {
                             )}
                         </a>
                     </li>
-                    <li><a href="/vender-mi-auto" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><SellCarIcon className="h-7 w-7 text-rago-burgundy" /><span>Vender mi Auto</span></a></li>
+                    <li><a href="/#sell-car-section" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><SellCarIcon className="h-7 w-7 text-rago-burgundy" /><span>Vender mi Auto</span></a></li>
                 </ul>
                 <div className="mt-auto pt-8 border-t border-slate-700/50">
                     <div className="flex justify-center gap-x-8">
@@ -572,7 +571,6 @@ const App: React.FC = () => {
                      <div key={path} className="animate-fade-in">{renderPublicContent()}</div>
                 </main>
                 {isHomePage && <Suspense fallback={null}><ReviewsSection reviews={siteData.reviews} /></Suspense>}
-                {isHomePage && <Suspense fallback={null}><BuyYourCarSection /></Suspense>}
                 {isHomePage && <Suspense fallback={null}><SellYourCarSection /></Suspense>}
                 <Footer />
             </div>
