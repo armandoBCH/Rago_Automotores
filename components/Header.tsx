@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { ChatBubbleIcon, InstagramIcon, SellCarIcon, HeartIcon } from '../constants';
+import { ChatBubbleIcon, InstagramIcon, HeartIcon, CarFrontIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
 import { useFavorites } from './FavoritesProvider';
 
@@ -70,7 +69,7 @@ const Header: React.FC = () => {
                     <a href="/#sell-car-section"
                        onClick={() => trackEvent('click_sell_car_header')}
                        className="shimmer-effect flex items-center gap-x-2 px-4 py-2 text-base font-semibold text-white bg-slate-800 dark:bg-rago-burgundy rounded-lg hover:bg-slate-950 dark:hover:bg-rago-burgundy-darker focus:outline-none focus:ring-4 focus:ring-slate-400/50 dark:focus:ring-rago-burgundy/50 transition-all duration-300 transform hover:-translate-y-px shadow-md hover:shadow-lg">
-                        <SellCarIcon className="h-5 w-5 flex-shrink-0" />
+                        <CarFrontIcon className="h-5 w-5 flex-shrink-0" />
                         <span className="hidden lg:inline whitespace-nowrap">Vender mi Auto</span>
                     </a>
                     <a

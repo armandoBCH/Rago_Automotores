@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { Vehicle, VehicleFormData, AnalyticsEvent, VehicleUpdate, SiteData, Review } from './types';
@@ -460,6 +459,7 @@ const App: React.FC = () => {
     
     const isAdminPage = path.startsWith('/admin');
     const isLoginPage = pathname === '/login';
+    const isDetailPage = !!vehicleId;
 
     if (isLoginPage || (!isAdmin && isAdminPage)) {
         return <Suspense fallback={<Loader />}><LoginPage onLoginSuccess={handleLoginSuccess} /></Suspense>;
@@ -574,7 +574,7 @@ const App: React.FC = () => {
                 <Header />
                 {isHomePage && <Hero searchTerm={searchTerm} onSearchChange={setSearchTerm} />}
                 {isHomePage && <FeaturedVehiclesSection vehicles={vehicles} onPlayVideo={setPlayingVideoUrl} />}
-                <main id="catalog" className="container mx-auto px-4 md:px-6 py-8 flex-grow">
+                <main id="catalog" className={`container mx-auto py-8 flex-grow ${isDetailPage ? 'px-0 md:px-6' : 'px-4 md:px-6'}`}>
                      <div key={path} className="animate-fade-in">{renderPublicContent()}</div>
                 </main>
                 {isHomePage && <Suspense fallback={null}><ReviewsSection reviews={siteData.reviews} /></Suspense>}

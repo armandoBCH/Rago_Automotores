@@ -1,4 +1,3 @@
-
 import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { Vehicle, FinancingConfig, Review } from '../types';
 import ImageCarousel from './ImageCarousel';
@@ -117,11 +116,11 @@ const ActionCard: React.FC<{ vehicle: Vehicle, onWhatsAppClick: () => void, onMo
                         </a>
                         <div className="grid grid-cols-2 gap-3">
                             <button onClick={() => onModalOpen('financing')} className="group w-full flex items-center justify-center gap-2 text-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-3 px-4 rounded-lg transition-all duration-300">
-                                <CalculatorIcon className="h-5 w-5"/>
+                                <CalculatorIcon className="h-6 w-6"/>
                                 <span>Financiación</span>
                             </button>
                             <button onClick={() => onModalOpen('test-drive')} className="group w-full flex items-center justify-center gap-2 text-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-3 px-4 rounded-lg transition-all duration-300">
-                                <SteeringWheelIcon className="h-5 w-5"/>
+                                <SteeringWheelIcon className="h-6 w-6"/>
                                 <span>Test Drive</span>
                             </button>
                         </div>
@@ -245,8 +244,8 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
     };
 
     return (
-        <div className="max-w-screen-xl mx-auto">
-            <div className="mb-8 opacity-0 animate-fade-in-up">
+        <div className="max-w-screen-xl mx-auto px-4 md:px-0">
+            <div className="hidden lg:block mb-8 opacity-0 animate-fade-in-up">
                 <Breadcrumb vehicle={vehicle} />
             </div>
 
@@ -255,7 +254,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
                 {/* Mobile Order: 1. Image */}
                 <div className="lg:col-span-7">
-                    <div className="relative overflow-hidden rounded-2xl shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
+                    <div className="-mx-4 md:mx-0 md:rounded-2xl relative overflow-hidden shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
                         <ImageCarousel images={vehicle.images} videoUrl={vehicle.video_url} onPlayVideo={onPlayVideo} />
                         {vehicle.is_sold && (
                             <div className="absolute top-10 -left-16 w-64 transform -rotate-45 bg-gradient-to-br from-red-600 to-red-800 text-center text-white font-black text-2xl py-2 z-20 pointer-events-none shadow-lg">Vendido</div>
