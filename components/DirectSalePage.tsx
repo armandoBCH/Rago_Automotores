@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { ConsignmentInsert } from '../types';
-import { CheckIcon, ArrowRightIcon } from '../constants';
+import { CheckIcon } from '../constants';
 import ImageUploader, { ImageFile } from './ImageUploader';
 import { supabase } from '../lib/supabaseClient';
 import { compressImage } from '../utils/image';
@@ -22,16 +22,31 @@ const FloatingLabelInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> &
             id={props.name} 
             placeholder=" "
             {...props} 
-            className={`peer form-input pt-6 ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/50' : ''}`}
+            className={`peer block w-full appearance-none rounded-lg border bg-transparent px-4 pb-2.5 pt-5 text-base text-slate-900 dark:text-white focus:outline-none focus:ring-0 ${error ? 'border-red-500 focus:border-red-500' : 'border-slate-300 dark:border-slate-700 focus:border-rago-burgundy'}`}
             aria-invalid={!!error}
             aria-describedby={error ? `${props.name}-error` : undefined}
         />
         <label 
             htmlFor={props.name} 
-            className="absolute text-base text-slate-500 dark:text-slate-400 duration-300 transform -translate-y-3.5 scale-75 top-4 z-10 origin-[0] start-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3.5"
+            className={`absolute left-4 top-4 z-10 origin-[0] -translate-y-4 scale-75 transform text-base duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 ${error ? 'text-red-600 dark:text-red-500' : 'text-slate-500 dark:text-slate-400 peer-focus:text-rago-burgundy'}`}
         >
             {label}
         </label>
+        {error && <p id={`${props.name}-error`} className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
+    </div>
+);
+
+const SelectInput: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { label: string, error?: string, children: React.ReactNode }> = ({ label, error, children, ...props }) => (
+     <div>
+        <label htmlFor={props.name} className="block text-base font-medium text-slate-700 dark:text-slate-400 mb-2">{label}</label>
+        <select
+            id={props.name}
+            {...props}
+            className={`block w-full rounded-lg border bg-white dark:bg-slate-900 px-4 py-4 text-base text-slate-900 dark:text-white focus:outline-none focus:ring-0 appearance-none bg-no-repeat ${error ? 'border-red-500 focus:border-red-500' : 'border-slate-300 dark:border-slate-700 focus:border-rago-burgundy'}`}
+            style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem' }}
+        >
+            {children}
+        </select>
         {error && <p id={`${props.name}-error`} className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>
 );
@@ -51,6 +66,8 @@ const DirectSalePage: React.FC<DirectSalePageProps> = ({ brands }) => {
 
     const validate = (): boolean => {
         const newErrors: Partial<Record<keyof FormData, string>> = {};
+        const MAX_PRICE = 2147483647;
+        
         if (!formData.make) newErrors.make = 'La marca es requerida.';
         if (!formData.model.trim()) newErrors.model = 'El modelo es requerido.';
         if (!formData.year) newErrors.year = 'El año es requerido.';
@@ -58,6 +75,7 @@ const DirectSalePage: React.FC<DirectSalePageProps> = ({ brands }) => {
         if (!formData.mileage) newErrors.mileage = 'El kilometraje es requerido.';
         if (!formData.engine.trim()) newErrors.engine = 'El motor es requerido.';
         if (!formData.price_requested) newErrors.price_requested = 'El precio es requerido.';
+        else if (parseInt(formData.price_requested, 10) > MAX_PRICE) newErrors.price_requested = `El precio no puede exceder $${MAX_PRICE.toLocaleString('es-AR')}.`;
         if (!formData.owner_name.trim()) newErrors.owner_name = 'Tu nombre es requerido.';
         if (!formData.owner_phone.trim()) newErrors.owner_phone = 'Tu teléfono es requerido.';
         else if (!/^\+?[0-9\s-]{7,}$/.test(formData.owner_phone)) newErrors.owner_phone = 'Formato de teléfono inválido.';
@@ -169,44 +187,46 @@ const DirectSalePage: React.FC<DirectSalePageProps> = ({ brands }) => {
                 <p className="mt-3 text-lg text-slate-500 dark:text-slate-400">Completá los datos de tu vehículo y te enviaremos una oferta de compra a la brevedad.</p>
             </div>
             
-            <form onSubmit={handleSubmit} noValidate className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-800 space-y-8">
+            <form onSubmit={handleSubmit} noValidate className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-800 space-y-10">
                 <fieldset className="space-y-6">
-                    <legend className="text-2xl font-bold text-rago-burgundy border-b-2 border-rago-burgundy/30 pb-2 mb-4">1. Datos del Vehículo</legend>
+                    <legend className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3 w-full border-b border-slate-200 dark:border-slate-700 pb-3 mb-6">
+                        <span className="bg-rago-burgundy text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-base flex-shrink-0">1</span>
+                        <span>Datos del Vehículo</span>
+                    </legend>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label htmlFor="make" className="block text-base font-medium text-slate-500 dark:text-slate-400 mb-1">Marca</label>
-                            <select id="make" name="make" value={formData.make} onChange={handleChange} required className={`form-input ${errors.make ? 'border-red-500' : ''}`}>
-                                <option value="" disabled>Seleccionar</option>
-                                {brands.map(b => <option key={b} value={b}>{b}</option>)}
-                            </select>
-                            {errors.make && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.make}</p>}
-                        </div>
+                        <SelectInput label="Marca" name="make" value={formData.make} onChange={handleChange} required error={errors.make}>
+                            <option value="" disabled>Seleccionar</option>
+                            {brands.map(b => <option key={b} value={b}>{b}</option>)}
+                        </SelectInput>
                         <FloatingLabelInput label="Modelo" name="model" value={formData.model} onChange={handleChange} required error={errors.model} />
                         <FloatingLabelInput label="Año" name="year" type="text" inputMode="numeric" value={formData.year} onChange={handleChange} required error={errors.year} />
                         <FloatingLabelInput label="Kilometraje" name="mileage" type="text" inputMode="numeric" value={formData.mileage} onChange={handleChange} required error={errors.mileage} />
                         <FloatingLabelInput label="Motor" name="engine" value={formData.engine} onChange={handleChange} required error={errors.engine} />
-                        <div>
-                            <label htmlFor="transmission" className="block text-base font-medium text-slate-500 dark:text-slate-400 mb-1">Transmisión</label>
-                            <select id="transmission" name="transmission" value={formData.transmission} onChange={handleChange} required className="form-input">
-                                <option value="Manual">Manual</option>
-                                <option value="Automática">Automática</option>
-                            </select>
-                        </div>
+                        <SelectInput label="Transmisión" name="transmission" value={formData.transmission} onChange={handleChange} required>
+                            <option value="Manual">Manual</option>
+                            <option value="Automática">Automática</option>
+                        </SelectInput>
                         <FloatingLabelInput label="Precio deseado (ARS)" name="price_requested" type="text" inputMode="numeric" value={formData.price_requested} onChange={handleChange} required error={errors.price_requested} />
                     </div>
                      <div>
-                        <label htmlFor="extra_info" className="block text-base font-medium text-slate-500 dark:text-slate-400 mb-1">Información extra</label>
-                        <textarea id="extra_info" name="extra_info" value={formData.extra_info} onChange={handleChange} rows={4} className="form-input" placeholder="Ej: Único dueño, service oficial, cubiertas nuevas, detalles a mencionar..."></textarea>
+                        <label htmlFor="extra_info" className="block text-base font-medium text-slate-700 dark:text-slate-400 mb-2">Información extra</label>
+                        <textarea id="extra_info" name="extra_info" value={formData.extra_info} onChange={handleChange} rows={4} className="block w-full rounded-lg border bg-white dark:bg-slate-900 px-4 py-4 text-base text-slate-900 dark:text-white focus:outline-none focus:ring-0 border-slate-300 dark:border-slate-700 focus:border-rago-burgundy" placeholder="Ej: Único dueño, service oficial, cubiertas nuevas, detalles a mencionar..."></textarea>
                     </div>
                 </fieldset>
                 
                  <fieldset className="space-y-6">
-                    <legend className="text-2xl font-bold text-rago-burgundy border-b-2 border-rago-burgundy/30 pb-2 mb-4">2. Fotos del Vehículo</legend>
+                    <legend className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3 w-full border-b border-slate-200 dark:border-slate-700 pb-3 mb-6">
+                        <span className="bg-rago-burgundy text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-base flex-shrink-0">2</span>
+                        <span>Fotos del Vehículo</span>
+                    </legend>
                     <ImageUploader files={imageFiles} setFiles={setImageFiles} disabled={status === 'submitting'} />
                 </fieldset>
 
                 <fieldset className="space-y-6">
-                    <legend className="text-2xl font-bold text-rago-burgundy border-b-2 border-rago-burgundy/30 pb-2 mb-4">3. Datos de Contacto</legend>
+                    <legend className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3 w-full border-b border-slate-200 dark:border-slate-700 pb-3 mb-6">
+                        <span className="bg-rago-burgundy text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-base flex-shrink-0">3</span>
+                        <span>Datos de Contacto</span>
+                    </legend>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <FloatingLabelInput label="Nombre Completo" name="owner_name" value={formData.owner_name} onChange={handleChange} required error={errors.owner_name} />
                         <FloatingLabelInput label="Teléfono" name="owner_phone" type="tel" value={formData.owner_phone} onChange={handleChange} required error={errors.owner_phone} />
@@ -227,7 +247,6 @@ const DirectSalePage: React.FC<DirectSalePageProps> = ({ brands }) => {
                     </button>
                 </div>
             </form>
-            <style>{`.form-input{display:block;width:100%;padding:1rem;background-color:#fff;border:1px solid #d1d5db;border-radius:0.5rem;box-shadow:0 1px 2px 0 rgba(0,0,0,0.05);transition:border-color .2s,box-shadow .2s;font-size:1rem;line-height:1.5rem}.dark .form-input{background-color:#1f2937;border-color:#4b5563;color:#e5e7eb}.form-input:focus{outline:0;box-shadow:0 0 0 2px rgba(108,30,39,.5);border-color:#6c1e27}`}</style>
         </div>
     );
 };

@@ -14,6 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const supabaseUrl = process.env.VITE_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+    const MAX_VALUE = 2147483647; // PostgreSQL integer max value
 
     if (!supabaseUrl || !supabaseServiceKey) {
         return res.status(500).json({ message: 'Server configuration is incomplete.' });
@@ -64,6 +65,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 const { honeypot, ...consignmentData } = payload;
                 if (honeypot) return res.status(400).json({ message: 'Spam detected.' });
 
+                if (consignmentData.price_requested && Number(consignmentData.price_requested) > MAX_VALUE) {
+                    return res.status(400).json({ message: 'El precio solicitado excede el límite del sistema.' });
+                }
+
                 const { error } = await supabaseAdmin.from('consignments').insert([{ ...consignmentData, status: 'pending' }]);
                 if (error) throw error;
                 
@@ -73,6 +78,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
              if (action === 'submit_direct_sale') {
                 const { honeypot, ...consignmentData } = payload;
                 if (honeypot) return res.status(400).json({ message: 'Spam detected.' });
+
+                if (consignmentData.price_requested && Number(consignmentData.price_requested) > MAX_VALUE) {
+                    return res.status(400).json({ message: 'El precio solicitado excede el límite del sistema.' });
+                }
 
                 const dataToInsert = {
                     ...consignmentData,

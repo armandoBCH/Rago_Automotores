@@ -56,7 +56,6 @@ const SellYourCarSection: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
                     {/* Card 1: Venta Directa */}
                     <div className="group relative bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl p-8 flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-rago-glow animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-                        <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-sky-400/50 via-rose-400/50 to-amber-400/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-lg"></div>
                         <div className="relative z-10 flex flex-col h-full">
                             <div>
                                 <h3 className="text-3xl font-bold text-white">Opción 1: Compra Directa</h3>
@@ -83,7 +82,6 @@ const SellYourCarSection: React.FC = () => {
 
                     {/* Card 2: Consignación */}
                     <div className="group relative bg-rago-burgundy/80 backdrop-blur-md border border-white/20 text-white rounded-2xl p-8 flex flex-col shadow-rago-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-rago-glow animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-                         <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-amber-400/50 via-rose-400/50 to-sky-400/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-lg"></div>
                         <div className="relative z-10 flex flex-col h-full">
                             <div>
                                 <h3 className="text-3xl font-bold">Opción 2: Consignación</h3>
