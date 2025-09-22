@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-// Fix: Import `Json` type from `lib/database.types.ts` as `types.ts` does not export it.
 import { Consignment, ConsignmentUpdate } from '../../types';
 import type { Database, Json } from '../../lib/database.types';
 import { XIcon, WhatsAppIcon, HistoryIcon } from '../../constants';

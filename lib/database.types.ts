@@ -165,7 +165,7 @@ export interface Database {
             columns: ["vehicle_id"]
             referencedRelation: "vehicles"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       reviews: {

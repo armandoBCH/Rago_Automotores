@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-// Fix: Import `Json` type from `lib/database.types.ts` as `types.ts` does not export it.
+import React, { useState, useEffect } from 'react';
 import type { Json } from '../../lib/database.types';
 import { CheckIcon, XIcon, ClockIcon } from '../../constants';
 

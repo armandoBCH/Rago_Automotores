@@ -115,7 +115,7 @@ const Hero: React.FC<HeroProps> = ({ searchTerm, onSearchChange }) => {
             {/* Shape Divider */}
             <div className="absolute bottom-0 left-0 w-full h-20 md:h-28 overflow-hidden leading-none z-[5]" style={{ transform: 'translateY(1px)' }}>
                 <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M600,120C300,120,0,0,0,0V120H1200V0C1200,0,900,120,600,120Z" className="fill-slate-100 dark:fill-slate-950"></path>
+                    <path d="M0 80 C 300 130, 900 30, 1200 80 L 1200 120 L 0 120 Z" className="fill-slate-100 dark:fill-slate-950"></path>
                 </svg>
             </div>
         </div>

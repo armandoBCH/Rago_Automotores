@@ -40,11 +40,11 @@ const SellYourCarSection: React.FC = () => {
     return (
         <section ref={sectionRef} id="sell-car-section" className="relative text-white overflow-hidden bg-gradient-to-br from-rago-burgundy via-rago-burgundy-darker to-rago-black">
             <div className="absolute top-0 left-0 w-full h-24 overflow-hidden leading-[0]" style={{ transform: 'rotate(180deg) translateY(1px)' }}>
-                <svg viewBox="0 0 960 100" preserveAspectRatio="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0 45 L32 49.3 C64 53.7 128 62.3 192 61.2 C256 60 320 49 384 46.7 C448 44.3 512 50.7 576 57.7 C640 64.7 704 72.3 768 70.3 C832 68.3 896 56.7 928 50.8 L960 45 L960 101 L0 101Z" className="fill-slate-100 dark:fill-slate-950" />
+                <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 80 C 300 30, 900 130, 1200 80 L 1200 120 L 0 120 Z" className="fill-slate-100 dark:fill-slate-950" />
                 </svg>
             </div>
-            <div className="container mx-auto px-6 lg:px-8 pt-20 md:pt-28 pb-16 md:pb-24">
+            <div className="container mx-auto px-4 md:px-6 py-20 md:py-28 text-center md:text-left">
                 <div className="text-center mb-12 animate-fade-in-up">
                     <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white drop-shadow-lg">
                         ¿Querés vender tu auto?
