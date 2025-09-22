@@ -1,4 +1,5 @@
 
+
 import React, { useEffect, useRef } from 'react';
 import { CheckIcon, ArrowRightIcon, FileCheckIcon, CogIcon, ShieldIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
@@ -59,7 +60,7 @@ const SellYourCarSection: React.FC = () => {
                         <div className="relative z-10 flex flex-col h-full">
                             <div>
                                 <h3 className="text-3xl font-bold text-white">Opción 1: Compra Directa</h3>
-                                <p className="text-lg text-sky-300 font-semibold mt-1">¿Necesitás vender rápido?</p>
+                                <p className="text-lg text-slate-200 font-semibold mt-1">¿Necesitás vender rápido?</p>
                             </div>
                             <p className="my-6 text-slate-300 flex-grow">
                                 Si buscás una solución inmediata y sin complicaciones, te compramos el auto hoy. Tasación justa y pago en el acto.

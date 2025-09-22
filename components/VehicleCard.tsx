@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { Vehicle } from '../types';
 import { optimizeUrl, slugify } from '../utils/image';
-import { ArrowRightIcon, StarIcon, PlayIcon } from '../constants';
+import { ArrowRightIcon, StarIcon, PlayIcon, SellCarIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
 
 interface VehicleCardProps {
@@ -43,12 +43,20 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onPlayVideo }) => {
                     Vendido
                 </div>
             )}
-            {vehicle.is_featured && !vehicle.is_sold && (
-                <div className="absolute top-4 left-4 bg-gradient-to-br from-rago-burgundy to-amber-500 text-white text-sm font-extrabold px-4 py-2 rounded-lg z-10 shadow-lg flex items-center gap-2 border border-amber-300/50 transition-transform duration-300 group-hover:scale-105">
-                    <StarIcon className="h-4 w-4" filled={true} />
-                    <span className="tracking-wide">DESTACADO</span>
-                </div>
-            )}
+            <div className="absolute top-4 left-4 z-10 flex flex-col items-start gap-2">
+                {vehicle.is_featured && !vehicle.is_sold && (
+                    <div className="bg-gradient-to-br from-rago-burgundy to-amber-500 text-white text-sm font-extrabold px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 border border-amber-300/50 transition-transform duration-300 group-hover:scale-105">
+                        <StarIcon className="h-4 w-4" filled={true} />
+                        <span className="tracking-wide">DESTACADO</span>
+                    </div>
+                )}
+                {vehicle.consignment_id && !vehicle.is_sold && (
+                    <div className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-2 border border-slate-300/50 dark:border-slate-700/50 transition-transform duration-300 group-hover:scale-105">
+                        <SellCarIcon className="h-4 w-4" />
+                        <span>CONSIGNACIÓN</span>
+                    </div>
+                )}
+            </div>
              {vehicle.video_url && !vehicle.is_sold && (
                 <button
                     onClick={handlePlayClick}

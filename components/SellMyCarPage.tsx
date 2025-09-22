@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { ConsignmentInsert } from '../types';
 import { CheckIcon } from '../constants';
@@ -37,17 +38,24 @@ const FloatingLabelInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> &
     </div>
 );
 
-const SelectInput: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { label: string, error?: string, children: React.ReactNode }> = ({ label, error, children, ...props }) => (
-     <div>
-        <label htmlFor={props.name} className="block text-base font-medium text-slate-700 dark:text-slate-400 mb-2">{label}</label>
+const FloatingLabelSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { label: string, error?: string, children: React.ReactNode }> = ({ label, error, children, ...props }) => (
+    <div className="relative">
         <select
             id={props.name}
             {...props}
-            className={`block w-full rounded-lg border bg-white dark:bg-slate-900 px-4 py-4 text-base text-slate-900 dark:text-white focus:outline-none focus:ring-0 appearance-none bg-no-repeat ${error ? 'border-red-500 focus:border-red-500' : 'border-slate-300 dark:border-slate-700 focus:border-rago-burgundy'}`}
-            style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem' }}
+            className={`peer block w-full appearance-none rounded-lg border bg-transparent px-4 pb-2.5 pt-5 text-base text-slate-900 dark:text-white focus:outline-none focus:ring-0 invalid:text-transparent focus:invalid:text-slate-900 dark:focus:invalid:text-white ${error ? 'border-red-500 focus:border-red-500' : 'border-slate-300 dark:border-slate-700 focus:border-rago-burgundy'}`}
         >
             {children}
         </select>
+        <label
+            htmlFor={props.name}
+            className={`absolute left-4 top-4 z-10 origin-[0] -translate-y-4 scale-75 transform text-base duration-300 peer-invalid:translate-y-0 peer-invalid:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 ${error ? 'text-red-600 dark:text-red-500' : 'text-slate-500 dark:text-slate-400 peer-focus:text-rago-burgundy'}`}
+        >
+            {label}
+        </label>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 dark:text-slate-400">
+             <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 8l4 4 4-4"/></svg>
+        </div>
         {error && <p id={`${props.name}-error`} className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>
 );
@@ -195,18 +203,18 @@ const SellMyCarPage: React.FC<SellMyCarPageProps> = ({ brands }) => {
                         <span>Datos del Vehículo</span>
                     </legend>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <SelectInput label="Marca" name="make" value={formData.make} onChange={handleChange} required error={errors.make}>
+                        <FloatingLabelSelect label="Marca" name="make" value={formData.make} onChange={handleChange} required error={errors.make}>
                             <option value="" disabled>Seleccionar</option>
                             {brands.map(b => <option key={b} value={b}>{b}</option>)}
-                        </SelectInput>
+                        </FloatingLabelSelect>
                         <FloatingLabelInput label="Modelo" name="model" value={formData.model} onChange={handleChange} required error={errors.model} />
                         <FloatingLabelInput label="Año" name="year" type="text" inputMode="numeric" value={formData.year} onChange={handleChange} required error={errors.year} />
                         <FloatingLabelInput label="Kilometraje" name="mileage" type="text" inputMode="numeric" value={formData.mileage} onChange={handleChange} required error={errors.mileage} />
                         <FloatingLabelInput label="Motor" name="engine" value={formData.engine} onChange={handleChange} required error={errors.engine} />
-                         <SelectInput label="Transmisión" name="transmission" value={formData.transmission} onChange={handleChange} required>
+                         <FloatingLabelSelect label="Transmisión" name="transmission" value={formData.transmission} onChange={handleChange} required>
                             <option value="Manual">Manual</option>
                             <option value="Automática">Automática</option>
-                        </SelectInput>
+                        </FloatingLabelSelect>
                         <FloatingLabelInput label="Precio deseado (ARS)" name="price_requested" type="text" inputMode="numeric" value={formData.price_requested} onChange={handleChange} required error={errors.price_requested} />
                     </div>
                      <div>
