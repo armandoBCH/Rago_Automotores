@@ -12,15 +12,24 @@ export type Review = Database['public']['Tables']['reviews']['Row'];
 export type ReviewInsert = Database['public']['Tables']['reviews']['Insert'];
 export type ReviewUpdate = Database['public']['Tables']['reviews']['Update'];
 
+export type Consignment = Database['public']['Tables']['consignments']['Row'];
+export type ConsignmentInsert = Database['public']['Tables']['consignments']['Insert'];
+export type ConsignmentUpdate = Database['public']['Tables']['consignments']['Update'];
+
 export type FinancingConfig = {
     maxAmount: number;
     maxTerm: number;
     interestRate: number; // monthly percentage
 };
 
+export type ConsignmentConfig = {
+    commissionRate: number; // percentage
+};
+
 export type SiteData = {
     reviews: Review[];
     financingConfig: FinancingConfig;
+    consignmentConfig: ConsignmentConfig;
 };
 
 // Type for the form data. It's based on the Insert type from Supabase,

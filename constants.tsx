@@ -1,5 +1,6 @@
 
 
+import React from 'react';
 import { Vehicle } from './types';
 
 export const SearchIcon = ({ className }: { className?: string }) => (
@@ -266,7 +267,8 @@ export const TargetIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-export const StarIcon = ({ className, filled }: { className?: string, filled?: boolean }) => (
+// Fix: Changed to React.FC to properly handle the `key` prop in loops.
+export const StarIcon: React.FC<{ className?: string, filled?: boolean }> = ({ className, filled }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill={filled ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z" />
     </svg>

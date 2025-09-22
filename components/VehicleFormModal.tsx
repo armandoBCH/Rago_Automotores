@@ -1,8 +1,7 @@
 
 
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Vehicle, VehicleFormData } from '../types';
+import { Vehicle, VehicleFormData, Consignment } from '../types';
 import { XIcon } from '../constants';
 import VehicleCard from './VehicleCard';
 import ImageCarousel from './ImageCarousel';
@@ -21,12 +20,13 @@ type FormDataState = Omit<Vehicle, 'id' | 'year' | 'price' | 'mileage' | 'create
     customMake?: string;
     customVehicleType?: string;
     video_url: string;
+    consignment_id?: number | null;
 };
 
 const getInitialFormState = (): FormDataState => ({
     make: '', model: '', year: '', price: '', mileage: '', engine: '',
     transmission: 'Manual', fuel_type: 'Nafta', vehicle_type: '', customFuelType: '', customMake: '', customVehicleType: '', description: '',
-    is_featured: false, is_sold: false, video_url: '',
+    is_featured: false, is_sold: false, video_url: '', consignment_id: null
 });
 
 const VEHICLE_TYPES = [
@@ -50,10 +50,11 @@ interface VehicleFormModalProps {
     onClose: () => void;
     onSubmit: (vehicle: VehicleFormData) => void;
     initialData?: Vehicle;
+    initialDataFromConsignment?: Consignment;
     brands: string[];
 }
 
-const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, onSubmit, initialData, brands }) => {
+const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, onSubmit, initialData, initialDataFromConsignment, brands }) => {
     const [formData, setFormData] = useState<FormDataState>(getInitialFormState());
     const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
     const [previewMode, setPreviewMode] = useState<'card' | 'detail'>('card');
@@ -101,6 +102,19 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
                     video_url: initialData.video_url || '',
                 });
                 setImageFiles(images.map(url => ({ id: url, file: null, preview: url, url, status: 'complete' })));
+            } else if (initialDataFromConsignment) { // Creating from consignment
+                const { id, images, price_requested, extra_info, ...consignmentData } = initialDataFromConsignment;
+                setFormData({
+                    ...getInitialFormState(),
+                    ...consignmentData,
+                    year: String(consignmentData.year),
+                    price: String(price_requested),
+                    mileage: String(consignmentData.mileage),
+                    description: extra_info || '',
+                    consignment_id: id,
+                });
+                setImageFiles(images.map(url => ({ id: url, file: null, preview: url, url, status: 'complete' })));
+
             } else { // Adding a new vehicle
                 const savedDraftJSON = localStorage.getItem(DRAFT_STORAGE_KEY);
                 if (savedDraftJSON) {
@@ -121,14 +135,14 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
         } else {
             resetState();
         }
-    }, [initialData, isOpen, resetState, brands]);
+    }, [initialData, initialDataFromConsignment, isOpen, resetState, brands]);
 
     // Save draft for new vehicles
     useEffect(() => {
-        if (isOpen && !initialData) {
+        if (isOpen && !initialData && !initialDataFromConsignment) {
             localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(formData));
         }
-    }, [formData, isOpen, initialData]);
+    }, [formData, isOpen, initialData, initialDataFromConsignment]);
 
     const previewVehicle: Vehicle = useMemo(() => {
         const validImages = imageFiles.map(f => f.preview).filter(Boolean);
@@ -267,6 +281,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, onClose, on
             is_featured: formData.is_featured,
             is_sold: formData.is_sold,
             video_url: formData.video_url || null,
+            consignment_id: formData.consignment_id,
         };
 
         onSubmit(vehicleToSubmit);

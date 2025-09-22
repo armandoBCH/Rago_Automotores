@@ -1,6 +1,5 @@
 
 
-
 import React from 'react';
 import { LocationPinIcon, InstagramIcon, ChatBubbleIcon, ClockIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
@@ -34,7 +33,7 @@ const Footer: React.FC = () => {
                         <ul className="space-y-4">
                              <li><a href="/" className="text-slate-400 hover:text-white transition-colors duration-300">Inicio</a></li>
                             <li><a href="/#catalog" className="text-slate-400 hover:text-white transition-colors duration-300">Catálogo</a></li>
-                            <li><a href="/#sell-car-section" className="text-slate-400 hover:text-white transition-colors duration-300">Vender mi Auto</a></li>
+                            <li><a href="/vender-mi-auto" className="text-slate-400 hover:text-white transition-colors duration-300">Vender mi Auto</a></li>
                             <li><a href="/dejar-resena" className="text-slate-400 hover:text-white transition-colors duration-300">Dejar una Reseña</a></li>
                         </ul>
                     </div>

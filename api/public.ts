@@ -22,54 +22,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         if (req.method === 'GET') {
-            const [reviewsRes, financingConfigRes] = await Promise.all([
+            const [reviewsRes, financingConfigRes, consignmentConfigRes] = await Promise.all([
                 supabaseAdmin.from('reviews').select('*').or('is_visible.eq.true,show_on_homepage.eq.true').order('created_at', { ascending: false }),
-                supabaseAdmin.from('site_config').select('value').eq('key', 'financing').single()
+                supabaseAdmin.from('site_config').select('value').eq('key', 'financing').single(),
+                supabaseAdmin.from('site_config').select('value').eq('key', 'consignment').single()
             ]);
 
             if (reviewsRes.error) throw reviewsRes.error;
-            if (financingConfigRes.error) {
-                // If config doesn't exist, return a default.
-                if (financingConfigRes.error.code === 'PGRST116') {
-                     const defaultConfig = { maxAmount: 5000000, maxTerm: 12, interestRate: 3 };
-                     return res.status(200).json({ 
-                        reviews: reviewsRes.data || [], 
-                        financingConfig: defaultConfig 
-                    });
-                }
-                throw financingConfigRes.error;
-            }
+            
+            const financingConfig = financingConfigRes.data?.value || { maxAmount: 5000000, maxTerm: 12, interestRate: 3 };
+            const consignmentConfig = consignmentConfigRes.data?.value || { commissionRate: 8 };
 
             return res.status(200).json({
                 reviews: reviewsRes.data || [],
-                financingConfig: financingConfigRes.data.value || {}
+                financingConfig: financingConfig,
+                consignmentConfig: consignmentConfig
             });
         }
 
         if (req.method === 'POST') {
-             const { customer_name, rating, comment, vehicle_id, honeypot } = req.body;
+             const { action, ...payload } = req.body;
 
-            // Simple honeypot spam protection
-            if (honeypot) {
-                return res.status(400).json({ message: 'Spam detected.' });
-            }
+             if (action === 'submit_review') {
+                const { customer_name, rating, comment, vehicle_id, honeypot } = payload;
+                if (honeypot) return res.status(400).json({ message: 'Spam detected.' });
+                if (!customer_name || !rating) return res.status(400).json({ message: 'Name and rating are required.' });
+                
+                const { error } = await supabaseAdmin.from('reviews').insert({
+                    customer_name,
+                    rating: Number(rating),
+                    comment,
+                    vehicle_id: vehicle_id ? Number(vehicle_id) : null,
+                    is_visible: false,
+                    show_on_homepage: false,
+                });
+                if (error) throw error;
+                return res.status(201).json({ success: true, message: 'Gracias por tu reseña. Será revisada por un administrador.' });
+             }
 
-            if (!customer_name || !rating) {
-                return res.status(400).json({ message: 'Name and rating are required.' });
-            }
+             if (action === 'submit_consignment') {
+                const { honeypot, ...consignmentData } = payload;
+                if (honeypot) return res.status(400).json({ message: 'Spam detected.' });
 
-            const { error } = await supabaseAdmin.from('reviews').insert({
-                customer_name,
-                rating: Number(rating),
-                comment,
-                vehicle_id: vehicle_id ? Number(vehicle_id) : null,
-                is_visible: false, // All reviews start as hidden
-                show_on_homepage: false, // All reviews start as hidden from homepage
-            });
-
-            if (error) throw error;
-            
-            return res.status(201).json({ success: true, message: 'Gracias por tu reseña. Será revisada por un administrador.' });
+                const { error } = await supabaseAdmin.from('consignments').insert([consignmentData]);
+                if (error) throw error;
+                
+                return res.status(201).json({ success: true, message: 'Tu vehículo fue enviado para revisión. ¡Pronto nos pondremos en contacto!' });
+             }
+             
+             return res.status(400).json({ message: 'Invalid action.'});
         }
 
         res.status(405).json({ message: 'Method Not Allowed' });

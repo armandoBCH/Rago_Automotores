@@ -104,7 +104,7 @@ const Hero: React.FC<HeroProps> = ({ searchTerm, onSearchChange }) => {
                     </div>
 
                     <a
-                        href="#sell-car-section"
+                        href="/vender-mi-auto"
                         className="px-8 py-3 text-lg md:px-10 md:py-4 md:text-xl font-bold text-slate-800 bg-white rounded-xl hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-white transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl"
                         aria-label="Vender mi auto"
                     >

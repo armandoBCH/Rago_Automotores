@@ -1,10 +1,12 @@
+
 import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
-import { Vehicle, AnalyticsEvent, SiteData, Review, FinancingConfig, ReviewUpdate } from '../types';
-import { PlusIcon, EditIcon, TrashIcon, SearchIcon, LogoutIcon, EyeIcon, ChatBubbleIcon, TargetIcon, StarIcon, CircleDollarSignIcon, GripVerticalIcon, FileCheckIcon, StatsIcon, ShareIcon, ArrowUpDownIcon, MessageSquareIcon, HeartIcon, MousePointerClickIcon, GlobeIcon, CogIcon } from '../constants';
+import { Vehicle, AnalyticsEvent, SiteData, Review, FinancingConfig, ReviewUpdate, Consignment, ConsignmentConfig } from '../types';
+import { PlusIcon, EditIcon, TrashIcon, SearchIcon, LogoutIcon, EyeIcon, ChatBubbleIcon, TargetIcon, StarIcon, CircleDollarSignIcon, GripVerticalIcon, FileCheckIcon, StatsIcon, ShareIcon, ArrowUpDownIcon, MessageSquareIcon, HeartIcon, MousePointerClickIcon, GlobeIcon, CogIcon, SellCarIcon } from '../constants';
 import { optimizeUrl } from '../utils/image';
 import ConfirmationModal from './ConfirmationModal';
 import VehiclePerformanceTable, { PerformanceData } from './VehiclePerformanceTable';
 import ReviewEditModal from './ReviewEditModal';
+import ConsignmentsPanel from './admin/ConsignmentsPanel';
 
 const PageViewsChart = lazy(() => import('./charts/AnalyticsCharts').then(module => ({ default: module.PageViewsChart })));
 const TopVehiclesChart = lazy(() => import('./charts/AnalyticsCharts').then(module => ({ default: module.TopVehiclesChart })));
@@ -14,7 +16,7 @@ interface AdminPanelProps {
     vehicles: Vehicle[];
     allEvents: AnalyticsEvent[];
     siteData: SiteData;
-    onAdd: () => void;
+    onAdd: (consignment?: Consignment) => void;
     onEdit: (vehicle: Vehicle) => void;
     onDelete: (vehicleId: number) => void;
     onLogout: () => void;
@@ -345,7 +347,7 @@ const InventoryView: React.FC<Omit<AdminPanelProps, 'allEvents' | 'siteData' | '
                         />
                     </div>
                     <button
-                        onClick={onAdd}
+                        onClick={() => onAdd()}
                         className="flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-2.5 text-base font-semibold text-white bg-rago-burgundy rounded-lg hover:bg-rago-burgundy-darker focus:outline-none focus:ring-4 focus:ring-rago-burgundy/50 transition-all transform hover:-translate-y-px"
                     >
                         <PlusIcon className="h-5 w-5" />
@@ -495,25 +497,32 @@ const ReviewsPanel: React.FC<{ onDataUpdate: () => void; vehicles: Vehicle[] }> 
 
 
 // --- CONFIG VIEW ---
-const ConfigPanel: React.FC<{ config: FinancingConfig, onDataUpdate: () => void }> = ({ config, onDataUpdate }) => {
-    const [formState, setFormState] = useState(config);
+const ConfigPanel: React.FC<{ financingConfig: FinancingConfig, consignmentConfig: ConsignmentConfig, onDataUpdate: () => void }> = ({ financingConfig, consignmentConfig, onDataUpdate }) => {
+    const [formState, setFormState] = useState({ ...financingConfig, ...consignmentConfig });
     const [isSaving, setIsSaving] = useState(false);
 
-    useEffect(() => { setFormState(config) }, [config]);
+    useEffect(() => { setFormState({ ...financingConfig, ...consignmentConfig }) }, [financingConfig, consignmentConfig]);
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormState(prev => ({ ...prev, [name]: Number(value) }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent, configKey: 'financing' | 'consignment') => {
         e.preventDefault();
         setIsSaving(true);
         try {
+            let payloadValue;
+            if (configKey === 'financing') {
+                payloadValue = { maxAmount: formState.maxAmount, maxTerm: formState.maxTerm, interestRate: formState.interestRate };
+            } else {
+                payloadValue = { commissionRate: formState.commissionRate };
+            }
+
             const response = await fetch('/api/admin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'update_financing_config', payload: formState })
+                body: JSON.stringify({ action: 'update_site_config', payload: { key: configKey, value: payloadValue } })
             });
             if (!response.ok) throw new Error('Failed to save');
             onDataUpdate(); // Refresh global data
@@ -526,12 +535,22 @@ const ConfigPanel: React.FC<{ config: FinancingConfig, onDataUpdate: () => void 
     };
     
     return(
-        <div className="animate-fade-in"><h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-6">Configuración del Sitio</h2><div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700"><form onSubmit={handleSubmit} className="space-y-6 max-w-md"><h3 className="text-lg font-bold">Calculadora de Financiación</h3>
-            <div><label htmlFor="maxAmount" className="block text-sm font-medium">Monto Máximo a Financiar (ARS)</label><input type="number" id="maxAmount" name="maxAmount" value={formState.maxAmount} onChange={handleChange} className="mt-1 form-input" /></div>
-            <div><label htmlFor="maxTerm" className="block text-sm font-medium">Plazo Máximo (meses)</label><input type="number" id="maxTerm" name="maxTerm" value={formState.maxTerm} onChange={handleChange} className="mt-1 form-input" /></div>
-            <div><label htmlFor="interestRate" className="block text-sm font-medium">Tasa de Interés Mensual (%)</label><input type="number" step="0.01" id="interestRate" name="interestRate" value={formState.interestRate} onChange={handleChange} className="mt-1 form-input" /></div>
-            <div><button type="submit" disabled={isSaving} className="px-5 py-2.5 text-base font-semibold text-white bg-rago-burgundy rounded-lg hover:bg-rago-burgundy-darker disabled:opacity-60">{isSaving ? 'Guardando...' : 'Guardar Cambios'}</button></div>
-        </form></div>
+        <div className="animate-fade-in"><h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-6">Configuración del Sitio</h2><div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                <form onSubmit={(e) => handleSubmit(e, 'financing')} className="space-y-6"><h3 className="text-lg font-bold">Calculadora de Financiación</h3>
+                    <div><label htmlFor="maxAmount" className="block text-sm font-medium">Monto Máximo a Financiar (ARS)</label><input type="number" id="maxAmount" name="maxAmount" value={formState.maxAmount} onChange={handleChange} className="mt-1 form-input" /></div>
+                    <div><label htmlFor="maxTerm" className="block text-sm font-medium">Plazo Máximo (meses)</label><input type="number" id="maxTerm" name="maxTerm" value={formState.maxTerm} onChange={handleChange} className="mt-1 form-input" /></div>
+                    <div><label htmlFor="interestRate" className="block text-sm font-medium">Tasa de Interés Mensual (%)</label><input type="number" step="0.01" id="interestRate" name="interestRate" value={formState.interestRate} onChange={handleChange} className="mt-1 form-input" /></div>
+                    <div><button type="submit" disabled={isSaving} className="px-5 py-2.5 text-base font-semibold text-white bg-rago-burgundy rounded-lg hover:bg-rago-burgundy-darker disabled:opacity-60">{isSaving ? 'Guardando...' : 'Guardar Cambios'}</button></div>
+                </form>
+            </div>
+             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                <form onSubmit={(e) => handleSubmit(e, 'consignment')} className="space-y-6"><h3 className="text-lg font-bold">Venta por Consignación</h3>
+                    <div><label htmlFor="commissionRate" className="block text-sm font-medium">Comisión por Venta (%)</label><input type="number" step="0.1" id="commissionRate" name="commissionRate" value={formState.commissionRate} onChange={handleChange} className="mt-1 form-input" /></div>
+                    <div><button type="submit" disabled={isSaving} className="px-5 py-2.5 text-base font-semibold text-white bg-rago-burgundy rounded-lg hover:bg-rago-burgundy-darker disabled:opacity-60">{isSaving ? 'Guardando...' : 'Guardar Cambios'}</button></div>
+                </form>
+            </div>
+        </div>
         <style>{`.form-input{display:block;width:100%;padding:0.5rem 0.75rem;background-color:#f9fafb;border:1px solid #d1d5db;border-radius:0.375rem}.dark .form-input{background-color:#1f2937;border-color:#4b5563;color:#e5e7eb}`}</style>
         </div>
     )
@@ -539,7 +558,34 @@ const ConfigPanel: React.FC<{ config: FinancingConfig, onDataUpdate: () => void 
 
 
 export const AdminPanel: React.FC<AdminPanelProps> = (props) => {
-    const [activeTab, setActiveTab] = useState<'inventory' | 'stats' | 'reviews' | 'config'>('inventory');
+    const [activeTab, setActiveTab] = useState<'inventory' | 'consignments' | 'stats' | 'reviews' | 'config'>('inventory');
+    const [consignments, setConsignments] = useState<Consignment[]>([]);
+    const [isLoadingConsignments, setIsLoadingConsignments] = useState(false);
+
+    const fetchConsignments = async () => {
+        setIsLoadingConsignments(true);
+        try {
+            const response = await fetch('/api/admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_consignments' })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setConsignments(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch consignments:", error);
+        } finally {
+            setIsLoadingConsignments(false);
+        }
+    };
+    
+    useEffect(() => {
+        if (activeTab === 'consignments') {
+            fetchConsignments();
+        }
+    }, [activeTab]);
 
     return (
         <div className="bg-slate-100 dark:bg-slate-900/50 p-4 sm:p-6 lg:p-8 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-800/50 min-h-[85vh]">
@@ -560,6 +606,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = (props) => {
             <div className="border-b border-slate-200 dark:border-slate-700">
                 <nav className="-mb-px flex space-x-2 sm:space-x-6 overflow-x-auto" aria-label="Tabs">
                     <TabButton name="Inventario" icon={<FileCheckIcon className="h-5 w-5 sm:h-6 sm:w-6"/>} isActive={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} />
+                    <TabButton name="Consignaciones" icon={<SellCarIcon className="h-5 w-5 sm:h-6 sm:w-6"/>} isActive={activeTab === 'consignments'} onClick={() => setActiveTab('consignments')} />
                     <TabButton name="Estadísticas" icon={<StatsIcon className="h-5 w-5 sm:h-6 sm:w-6"/>} isActive={activeTab === 'stats'} onClick={() => setActiveTab('stats')} />
                     <TabButton name="Reseñas" icon={<StarIcon className="h-5 w-5 sm:h-6 sm:w-6"/>} isActive={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} />
                     <TabButton name="Configuración" icon={<CogIcon className="h-5 w-5 sm:h-6 sm:w-6"/>} isActive={activeTab === 'config'} onClick={() => setActiveTab('config')} />
@@ -568,9 +615,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = (props) => {
             
             <div className="mt-8">
                 {activeTab === 'inventory' && <InventoryView {...props} />}
+                {activeTab === 'consignments' && <ConsignmentsPanel consignments={consignments} isLoading={isLoadingConsignments} onRefresh={fetchConsignments} onApprove={props.onAdd} onDataUpdate={props.onDataUpdate} />}
                 {activeTab === 'stats' && <StatsView vehicles={props.vehicles} allEvents={props.allEvents} onAnalyticsReset={props.onDataUpdate} />}
                 {activeTab === 'reviews' && <ReviewsPanel onDataUpdate={props.onDataUpdate} vehicles={props.vehicles} />}
-                {activeTab === 'config' && <ConfigPanel config={props.siteData.financingConfig} onDataUpdate={props.onDataUpdate} />}
+                {activeTab === 'config' && <ConfigPanel financingConfig={props.siteData.financingConfig} consignmentConfig={props.siteData.consignmentConfig} onDataUpdate={props.onDataUpdate} />}
             </div>
         </div>
     );

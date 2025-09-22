@@ -23,6 +23,7 @@ const VehicleFormModal = lazy(() => import('./components/VehicleFormModal'));
 const ConfirmationModal = lazy(() => import('./components/ConfirmationModal'));
 const LoginPage = lazy(() => import('./components/LoginPage'));
 const SellYourCarSection = lazy(() => import('./components/SellYourCarSection'));
+const SellMyCarPage = lazy(() => import('./components/SellMyCarPage'));
 const FavoritesPage = lazy(() => import('./components/FavoritesPage'));
 const VerticalVideoPlayer = lazy(() => import('./components/VerticalVideoPlayer'));
 const ReviewsSection = lazy(() => import('./components/ReviewsSection'));
@@ -30,13 +31,17 @@ const LeaveReviewPage = lazy(() => import('./components/LeaveReviewPage'));
 
 type ModalState = 
     | { type: 'none' }
-    | { type: 'form'; vehicle?: Vehicle }
+    | { type: 'form'; vehicle?: Vehicle, consignment?: any }
     | { type: 'confirmDelete'; vehicleId: number };
 
 const App: React.FC = () => {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [analyticsEvents, setAnalyticsEvents] = useState<AnalyticsEvent[]>([]);
-    const [siteData, setSiteData] = useState<SiteData>({ reviews: [], financingConfig: { maxAmount: 5000000, maxTerm: 12, interestRate: 3 } });
+    const [siteData, setSiteData] = useState<SiteData>({ 
+        reviews: [], 
+        financingConfig: { maxAmount: 5000000, maxTerm: 12, interestRate: 3 },
+        consignmentConfig: { commissionRate: 8 }
+    });
     const [loading, setLoading] = useState(true);
     const [dbError, setDbError] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem('rago-admin') === 'true');
@@ -78,7 +83,7 @@ const App: React.FC = () => {
             const siteDataRes = await fetch('/api/public');
             if(siteDataRes.ok) {
                 const data = await siteDataRes.json();
-                setSiteData(data);
+                setSiteData(prev => ({ ...prev, ...data }));
             }
 
             if (isAdmin) {
@@ -213,6 +218,7 @@ const App: React.FC = () => {
     const vehicleId = vehicleIdStr ? parseInt(vehicleIdStr, 10) : null;
     const isHomePage = pathname === '/' || pathname === '/index.html';
     const isFavoritesPage = pathname === '/favoritos';
+    const isSellMyCarPage = pathname === '/vender-mi-auto';
     const isLeaveReviewPage = pathname === '/dejar-resena';
     
     const selectedVehicle = useMemo(() => {
@@ -284,9 +290,13 @@ const App: React.FC = () => {
             document.title = 'Dejar una Reseña | Rago Automotores';
             updateMeta('meta[name="description"]', 'Contanos tu experiencia con Rago Automotores. Tu opinión es muy valiosa para nosotros.');
             updateMeta('meta[property="og:title"]', 'Dejar una Reseña | Rago Automotores');
+        } else if (isSellMyCarPage) {
+            document.title = 'Vender mi Auto | Rago Automotores';
+            updateMeta('meta[name="description"]', 'Vende tu auto con nosotros de forma rápida, segura y al mejor precio. Ofrecemos compra directa o gestión por consignación.');
+            updateMeta('meta[property="og:title"]', 'Vende tu auto con Rago Automotores');
         }
         
-    }, [path, selectedVehicle, isHomePage, isFavoritesPage, isLeaveReviewPage]);
+    }, [path, selectedVehicle, isHomePage, isFavoritesPage, isLeaveReviewPage, isSellMyCarPage]);
 
     const uniqueBrands = useMemo(() => Array.from(new Set(vehicles.map(v => v.make))).sort(), [vehicles]);
     const uniqueVehicleTypes = useMemo(() => Array.from(new Set(vehicles.map(v => v.vehicle_type))).sort(), [vehicles]);
@@ -321,7 +331,7 @@ const App: React.FC = () => {
     };
 
     const handleFilterChange = useCallback((newFilters: { make: string; year: string; price: string; vehicleType: string; }) => setFilters(newFilters), []);
-    const handleAddVehicleClick = () => setModalState({ type: 'form' });
+    const handleAddVehicleClick = (consignment?: any) => setModalState({ type: 'form', consignment });
     const handleEditVehicleClick = (vehicle: Vehicle) => setModalState({ type: 'form', vehicle });
     const handleDeleteVehicleClick = (vehicleId: number) => setModalState({ type: 'confirmDelete', vehicleId });
     const handleCloseModal = () => setModalState({ type: 'none' });
@@ -465,7 +475,7 @@ const App: React.FC = () => {
                     onToggleSold={handleToggleSold}
                     onReorder={handleReorder}
                 />
-                {modalState.type === 'form' && <Suspense fallback={<Loader />}><VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} brands={uniqueBrands} /></Suspense>}
+                {modalState.type === 'form' && <Suspense fallback={<Loader />}><VehicleFormModal isOpen={true} onClose={handleCloseModal} onSubmit={handleSaveVehicle} initialData={modalState.vehicle} initialDataFromConsignment={modalState.consignment} brands={uniqueBrands} /></Suspense>}
                 {modalState.type === 'confirmDelete' && <Suspense fallback={<Loader />}><ConfirmationModal isOpen={true} onClose={handleCloseModal} onConfirm={confirmDelete} title="Confirmar Eliminación" message="¿Estás seguro de que quieres eliminar este vehículo? Esta acción no se puede deshacer." isConfirming={isDeleting} /></Suspense>}
             </Suspense>
         );
@@ -477,6 +487,7 @@ const App: React.FC = () => {
         if (vehicleId) return selectedVehicle ? <Suspense fallback={<Loader />}><VehicleDetailPage vehicle={selectedVehicle} allVehicles={vehicles} onPlayVideo={setPlayingVideoUrl} financingConfig={siteData.financingConfig} reviews={siteData.reviews} /></Suspense> : <NotFoundPage />;
         if (isFavoritesPage) return <Suspense fallback={<Loader />}><FavoritesPage allVehicles={vehicles} onPlayVideo={setPlayingVideoUrl}/></Suspense>;
         if (isLeaveReviewPage) return <Suspense fallback={<Loader />}><LeaveReviewPage vehicles={vehicles} /></Suspense>;
+        if (isSellMyCarPage) return <Suspense fallback={<Loader />}><SellMyCarPage brands={uniqueBrands} vehicleTypes={uniqueVehicleTypes} /></Suspense>;
         if (isHomePage) return (
             <>
                 <div className="hidden md:block">
@@ -542,7 +553,7 @@ const App: React.FC = () => {
                             )}
                         </a>
                     </li>
-                    <li><a href="/#sell-car-section" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><SellCarIcon className="h-7 w-7 text-rago-burgundy" /><span>Vender mi Auto</span></a></li>
+                    <li><a href="/vender-mi-auto" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><SellCarIcon className="h-7 w-7 text-rago-burgundy" /><span>Vender mi Auto</span></a></li>
                 </ul>
                 <div className="mt-auto pt-8 border-t border-slate-700/50">
                     <div className="flex justify-center gap-x-8">

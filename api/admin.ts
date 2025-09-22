@@ -6,7 +6,7 @@ import { Database } from '../lib/database.types';
 
 type VehicleInsert = Database['public']['Tables']['vehicles']['Insert'];
 type ReviewUpdate = Database['public']['Tables']['reviews']['Update'];
-type FinancingConfig = Database['public']['Tables']['site_config']['Row']['value'];
+type SiteConfigValue = Database['public']['Tables']['site_config']['Row']['value'];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -38,21 +38,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const { action, payload } = req.body;
 
             switch (action) {
-                // ... existing vehicle cases
                 case 'saveVehicle': {
                     const vehicleData = payload as VehicleInsert;
+                    const { consignment_id, ...restOfVehicleData } = vehicleData;
                     let result;
                     
-                    // If a truthy ID is present, it's an update.
-                    if (vehicleData.id) {
-                        const { id, ...dataToUpdate } = vehicleData;
+                    if (restOfVehicleData.id) {
+                        const { id, ...dataToUpdate } = restOfVehicleData;
                         const { data, error } = await supabaseAdmin.from('vehicles').update(dataToUpdate).eq('id', id).select().single();
                         if (error) throw error;
                         result = data;
                     } else {
-                        // For inserts, we create a new object and explicitly delete the 'id' property
-                        // to ensure the database auto-generates it. This is more robust.
-                        const dataToInsert = { ...vehicleData };
+                        const dataToInsert = { ...restOfVehicleData };
                         delete (dataToInsert as Partial<VehicleInsert>).id;
 
                         const { data: allOrders } = await supabaseAdmin.from('vehicles').select('display_order');
@@ -64,6 +61,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         const { data, error } = await supabaseAdmin.from('vehicles').insert(dataToInsert).select().single();
                         if (error) throw error;
                         result = data;
+
+                        if (consignment_id && result) {
+                             await supabaseAdmin.from('consignments').update({ status: 'published', vehicle_id: result.id }).eq('id', consignment_id);
+                        }
                     }
                     return res.status(200).json({ success: true, vehicle: result });
                 }
@@ -87,11 +88,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
                     const { error: deleteError } = await supabaseAdmin.from('vehicles').delete().eq('id', vehicleId);
                     if (deleteError) throw deleteError;
+
+                    await supabaseAdmin.from('consignments').update({ status: 'approved', vehicle_id: null }).eq('vehicle_id', vehicleId);
                     
                     return res.status(200).json({ success: true, message: 'Vehículo y datos asociados eliminados.' });
                 }
                 
-                // New Review Cases
                 case 'get_all_reviews': {
                     const { data, error } = await supabaseAdmin.from('reviews').select('*').order('created_at', { ascending: false });
                     if (error) throw error;
@@ -112,12 +114,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     return res.status(200).json({ success: true, message: 'Reseña eliminada.'});
                 }
 
-                // New Config Case
-                case 'update_financing_config': {
-                    const configData = payload as FinancingConfig;
-                    const { error } = await supabaseAdmin.from('site_config').upsert({ key: 'financing', value: configData });
+                case 'update_site_config': {
+                    const { key, value } = payload as { key: string, value: SiteConfigValue };
+                    const { error } = await supabaseAdmin.from('site_config').upsert({ key, value });
                     if (error) throw error;
                     return res.status(200).json({ success: true, message: 'Configuración guardada.' });
+                }
+
+                case 'get_consignments': {
+                     const { data, error } = await supabaseAdmin.from('consignments').select('*').order('created_at', { ascending: false });
+                    if (error) throw error;
+                    return res.status(200).json(data || []);
+                }
+
+                case 'update_consignment': {
+                    const { id, ...dataToUpdate } = payload;
+                    if (!id) return res.status(400).json({ message: 'ID de consignación requerido.'});
+                    const { data, error } = await supabaseAdmin.from('consignments').update(dataToUpdate).eq('id', id).select().single();
+                    if (error) throw error;
+                    return res.status(200).json({ success: true, consignment: data });
                 }
 
                 case 'reorderVehicles': {

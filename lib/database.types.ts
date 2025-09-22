@@ -37,6 +37,91 @@ export interface Database {
           }
         ]
       }
+      consignments: {
+        Row: {
+          id: number
+          created_at: string
+          owner_name: string
+          owner_phone: string
+          owner_email: string
+          make: string
+          model: string
+          year: number
+          mileage: number
+          engine: string
+          transmission: "Automática" | "Manual"
+          price_requested: number
+          extra_info: string | null
+          images: string[]
+          status:
+            | "pending"
+            | "in_review"
+            | "approved"
+            | "published"
+            | "sold"
+            | "rejected"
+          internal_notes: string | null
+          vehicle_id: number | null
+        }
+        Insert: {
+          id?: number
+          created_at?: string
+          owner_name: string
+          owner_phone: string
+          owner_email: string
+          make: string
+          model: string
+          year: number
+          mileage: number
+          engine: string
+          transmission: "Automática" | "Manual"
+          price_requested: number
+          extra_info?: string | null
+          images: string[]
+          status?:
+            | "pending"
+            | "in_review"
+            | "approved"
+            | "published"
+            | "sold"
+            | "rejected"
+          internal_notes?: string | null
+          vehicle_id?: number | null
+        }
+        Update: {
+          id?: number
+          created_at?: string
+          owner_name?: string
+          owner_phone?: string
+          owner_email?: string
+          make?: string
+          model?: string
+          year?: number
+          mileage?: number
+          engine?: string
+          transmission?: "Automática" | "Manual"
+          price_requested?: number
+          extra_info?: string | null
+          images?: string[]
+          status?:
+            | "pending"
+            | "in_review"
+            | "approved"
+            | "published"
+            | "sold"
+            | "rejected"
+          internal_notes?: string | null
+          vehicle_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consignments_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           id: number
@@ -133,6 +218,7 @@ export interface Database {
           is_sold?: boolean
           display_order?: number
           video_url?: string | null
+          consignment_id?: number | null
         }
         Update: {
           id?: number
@@ -152,6 +238,7 @@ export interface Database {
           is_sold?: boolean
           display_order?: number
           video_url?: string | null
+          consignment_id?: number | null
         }
         Relationships: []
       }

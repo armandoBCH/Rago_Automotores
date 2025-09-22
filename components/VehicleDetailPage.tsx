@@ -46,7 +46,8 @@ const Breadcrumb: React.FC<{ vehicle: Vehicle }> = ({ vehicle }) => (
     </div>
 );
 
-const SpecsCard: React.FC<{ specs: { icon: JSX.Element; label: string; value: string | number }[] }> = ({ specs }) => (
+// Fix: Changed JSX.Element to React.ReactNode to resolve namespace error.
+const SpecsCard: React.FC<{ specs: { icon: React.ReactNode; label: string; value: string | number }[] }> = ({ specs }) => (
      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-subtle dark:shadow-subtle-dark overflow-hidden border border-slate-200 dark:border-slate-800">
         <div className="border-b border-slate-200 dark:border-slate-800 px-6 py-4">
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">Especificaciones</h3>

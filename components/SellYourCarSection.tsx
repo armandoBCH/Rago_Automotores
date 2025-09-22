@@ -1,6 +1,5 @@
 
 
-
 import React, { useEffect, useRef } from 'react';
 import { CheckIcon, ArrowRightIcon, SellCarIcon, FileCheckIcon, CogIcon, ShieldIcon } from '../constants';
 import { optimizeUrl } from '../utils/image';
@@ -52,8 +51,6 @@ const SellYourCarSection: React.FC = () => {
         };
     }, []);
 
-    const contactMessage = "Hola, estoy interesado en vender mi vehículo con ustedes. Me gustaría recibir una cotización.";
-    const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(contactMessage)}`;
     const imageUrl = "https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752115790/Gemini_Generated_Image_2lfdwh2lfdwh2lfd_zjz8tq.webp";
     const srcSet = [400, 600, 800, 1200]
         .map(w => `${optimizeUrl(imageUrl, { w, h: Math.round(w * 0.75), fit: 'cover', output: 'webp', q: 75 })} ${w}w`)
@@ -136,13 +133,11 @@ const SellYourCarSection: React.FC = () => {
 
                 <div className="mt-16 text-center animate-fade-in-up" style={{ animationDelay: '500ms' }}>
                     <a 
-                        href={whatsappLink}
-                        onClick={() => trackEvent('click_whatsapp_sell')}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href="/vender-mi-auto"
+                        onClick={() => trackEvent('click_cta_sell')}
                         className="group inline-flex items-center justify-center gap-3 px-10 py-5 text-xl font-bold text-rago-burgundy bg-white rounded-lg hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 animate-pulse-light"
                     >
-                        <span>¡Cotizá tu Vehículo GRATIS!</span>
+                        <span>¡Comenzá la Tasación GRATIS!</span>
                         <ArrowRightIcon className="h-6 w-6 transition-transform duration-300 group-hover:translate-x-1" />
                     </a>
                 </div>
