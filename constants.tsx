@@ -218,18 +218,6 @@ export const CatalogIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-// Fix: Completed the SellCarIcon SVG definition
-export const SellCarIcon = ({ className }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <circle cx="8" cy="18" r="2" />
-        <circle cx="18" cy="18" r="2" />
-        <path d="M5 18H2" />
-        <path d="M22 18h-3" />
-        <path d="m20.5 13-1.8-6.3c-.1-.4-.5-.7-.9-.7H6.2c-.4 0-.8.3-1 .7L3.5 13" />
-        <path d="M3.5 13H20" />
-    </svg>
-);
-
 // Fix: Added missing icons
 export const StarIcon = ({ className, filled }: { className?: string, filled?: boolean }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>

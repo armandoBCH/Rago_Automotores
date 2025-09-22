@@ -93,9 +93,9 @@ const ActionCard: React.FC<{ vehicle: Vehicle, onWhatsAppClick: () => void, onMo
             </div>
 
             {!vehicle.is_sold && (
-                <div className="my-3 p-3 flex items-center justify-center gap-3 text-center rounded-lg bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300">
-                     <ArrowUpDownIcon className="h-5 w-5"/>
-                    <p className="font-semibold text-base">¡Aceptamos tu usado en parte de pago!</p>
+                <div className="my-4 p-4 flex items-center justify-center gap-3 text-center rounded-lg bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300">
+                     <ArrowUpDownIcon className="h-6 w-6 flex-shrink-0"/>
+                    <p className="font-semibold text-lg">¡Aceptamos tu usado en parte de pago!</p>
                 </div>
             )}
 
@@ -116,11 +116,11 @@ const ActionCard: React.FC<{ vehicle: Vehicle, onWhatsAppClick: () => void, onMo
                         </a>
                         <div className="grid grid-cols-2 gap-3">
                             <button onClick={() => onModalOpen('financing')} className="group w-full flex items-center justify-center gap-2 text-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-3 px-4 rounded-lg transition-all duration-300">
-                                <CalculatorIcon className="h-6 w-6"/>
+                                <CalculatorIcon className="h-7 w-7"/>
                                 <span>Financiación</span>
                             </button>
                             <button onClick={() => onModalOpen('test-drive')} className="group w-full flex items-center justify-center gap-2 text-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-3 px-4 rounded-lg transition-all duration-300">
-                                <SteeringWheelIcon className="h-6 w-6"/>
+                                <SteeringWheelIcon className="h-7 w-7"/>
                                 <span>Test Drive</span>
                             </button>
                         </div>
@@ -244,7 +244,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
     };
 
     return (
-        <div className="max-w-screen-xl mx-auto px-4 md:px-0">
+        <div className="max-w-screen-xl mx-auto md:px-0">
             <div className="hidden lg:block mb-8 opacity-0 animate-fade-in-up">
                 <Breadcrumb vehicle={vehicle} />
             </div>
@@ -254,7 +254,7 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
                 {/* Mobile Order: 1. Image */}
                 <div className="lg:col-span-7">
-                    <div className="-mx-4 md:mx-0 md:rounded-2xl relative overflow-hidden shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
+                    <div className="md:rounded-2xl relative overflow-hidden shadow-rago-lg aspect-[4/3] bg-gray-200 dark:bg-black">
                         <ImageCarousel images={vehicle.images} videoUrl={vehicle.video_url} onPlayVideo={onPlayVideo} />
                         {vehicle.is_sold && (
                             <div className="absolute top-10 -left-16 w-64 transform -rotate-45 bg-gradient-to-br from-red-600 to-red-800 text-center text-white font-black text-2xl py-2 z-20 pointer-events-none shadow-lg">Vendido</div>
@@ -264,14 +264,14 @@ const VehicleDetailPage: React.FC<VehicleDetailPageProps> = ({ vehicle, allVehic
 
                 {/* Mobile Order: 2 & 3. Action and Specs cards */}
                 {/* On desktop, this whole block moves to the right column and becomes sticky */}
-                <div className="lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-2 h-fit lg:sticky top-28 space-y-8">
+                <div className="lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-2 h-fit lg:sticky top-28 space-y-8 px-4 md:px-0">
                     <ActionCard vehicle={vehicle} onWhatsAppClick={handleWhatsAppClick} onModalOpen={setModalContent} />
                     <SpecsCard specs={specs} />
                 </div>
 
                 {/* Mobile Order: 4 & 5. Description and Reviews */}
                 {/* On desktop, this block moves back to the left column, under the image */}
-                <div className="lg:col-span-7 lg:col-start-1 space-y-8">
+                <div className="lg:col-span-7 lg:col-start-1 space-y-8 px-4 md:px-0">
                     <DescriptionCard description={vehicle.description} />
                     <VehicleReviews reviews={vehicleReviews} vehicleId={vehicle.id} />
                 </div>

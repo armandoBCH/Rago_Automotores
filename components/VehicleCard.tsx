@@ -1,10 +1,7 @@
-
-
-
 import React, { useState } from 'react';
 import { Vehicle } from '../types';
 import { optimizeUrl, slugify } from '../utils/image';
-import { ArrowRightIcon, StarIcon, PlayIcon, SellCarIcon } from '../constants';
+import { ArrowRightIcon, StarIcon, PlayIcon, CarFrontIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
 
 interface VehicleCardProps {
@@ -52,7 +49,7 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onPlayVideo }) => {
                 )}
                 {vehicle.consignment_id && !vehicle.is_sold && (
                     <div className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-2 border border-slate-300/50 dark:border-slate-700/50 transition-transform duration-300 group-hover:scale-105">
-                        <SellCarIcon className="h-4 w-4" />
+                        <CarFrontIcon className="h-4 w-4" />
                         <span>CONSIGNACIÓN</span>
                     </div>
                 )}

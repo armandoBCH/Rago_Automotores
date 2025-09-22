@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { Vehicle, VehicleFormData, AnalyticsEvent, VehicleUpdate, SiteData, Review } from './types';
-import { ChatBubbleIcon, InstagramIcon, CatalogIcon, SellCarIcon, HomeIcon, DownIcon, StarIcon, HeartIcon, SlidersIcon, XIcon } from './constants';
+import { ChatBubbleIcon, InstagramIcon, CatalogIcon, CarFrontIcon, HomeIcon, DownIcon, StarIcon, HeartIcon, SlidersIcon, XIcon } from './constants';
 import { supabase } from './lib/supabaseClient';
 import { trackEvent } from './lib/analytics';
 import { optimizeUrl } from './utils/image';
@@ -560,7 +560,7 @@ const App: React.FC = () => {
                             )}
                         </a>
                     </li>
-                    <li><a href="/#sell-car-section" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><SellCarIcon className="h-7 w-7 text-rago-burgundy" /><span>Vender mi Auto</span></a></li>
+                    <li><a href="/#sell-car-section" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><CarFrontIcon className="h-7 w-7 text-rago-burgundy" /><span>Vender mi Auto</span></a></li>
                 </ul>
                 <div className="mt-auto pt-8 border-t border-slate-700/50">
                     <div className="flex justify-center gap-x-8">
@@ -574,7 +574,7 @@ const App: React.FC = () => {
                 <Header />
                 {isHomePage && <Hero searchTerm={searchTerm} onSearchChange={setSearchTerm} />}
                 {isHomePage && <FeaturedVehiclesSection vehicles={vehicles} onPlayVideo={setPlayingVideoUrl} />}
-                <main id="catalog" className={`container mx-auto py-8 flex-grow ${isDetailPage ? 'px-0 md:px-6' : 'px-4 md:px-6'}`}>
+                <main id="catalog" className={`container mx-auto flex-grow ${isDetailPage ? 'px-0 md:px-6 pt-0 md:pt-8 pb-8' : 'px-4 md:px-6 py-8'}`}>
                      <div key={path} className="animate-fade-in">{renderPublicContent()}</div>
                 </main>
                 {isHomePage && <Suspense fallback={null}><ReviewsSection reviews={siteData.reviews} /></Suspense>}

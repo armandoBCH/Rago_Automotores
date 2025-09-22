@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { Vehicle, AnalyticsEvent, SiteData, Review, FinancingConfig, ReviewUpdate, Consignment, ConsignmentConfig } from '../types';
-import { PlusIcon, EditIcon, TrashIcon, SearchIcon, LogoutIcon, EyeIcon, ChatBubbleIcon, TargetIcon, StarIcon, CircleDollarSignIcon, GripVerticalIcon, FileCheckIcon, StatsIcon, ShareIcon, ArrowUpDownIcon, MessageSquareIcon, HeartIcon, MousePointerClickIcon, GlobeIcon, CogIcon, SellCarIcon } from '../constants';
+import { PlusIcon, EditIcon, TrashIcon, SearchIcon, LogoutIcon, EyeIcon, ChatBubbleIcon, TargetIcon, StarIcon, CircleDollarSignIcon, GripVerticalIcon, FileCheckIcon, StatsIcon, ShareIcon, ArrowUpDownIcon, MessageSquareIcon, HeartIcon, MousePointerClickIcon, GlobeIcon, CogIcon, CarFrontIcon } from '../constants';
 import { optimizeUrl } from '../utils/image';
 import ConfirmationModal from './ConfirmationModal';
 import VehiclePerformanceTable, { PerformanceData } from './VehiclePerformanceTable';
@@ -606,7 +605,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = (props) => {
             <div className="border-b border-slate-200 dark:border-slate-700">
                 <nav className="-mb-px flex space-x-2 sm:space-x-6 overflow-x-auto" aria-label="Tabs">
                     <TabButton name="Inventario" icon={<FileCheckIcon className="h-5 w-5 sm:h-6 sm:w-6"/>} isActive={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} />
-                    <TabButton name="Consignaciones" icon={<SellCarIcon className="h-5 w-5 sm:h-6 sm:w-6"/>} isActive={activeTab === 'consignments'} onClick={() => setActiveTab('consignments')} />
+                    <TabButton name="Consignaciones" icon={<CarFrontIcon className="h-5 w-5 sm:h-6 sm:w-6"/>} isActive={activeTab === 'consignments'} onClick={() => setActiveTab('consignments')} />
                     <TabButton name="Estadísticas" icon={<StatsIcon className="h-5 w-5 sm:h-6 sm:w-6"/>} isActive={activeTab === 'stats'} onClick={() => setActiveTab('stats')} />
                     <TabButton name="Reseñas" icon={<StarIcon className="h-5 w-5 sm:h-6 sm:w-6"/>} isActive={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} />
                     <TabButton name="Configuración" icon={<CogIcon className="h-5 w-5 sm:h-6 sm:w-6"/>} isActive={activeTab === 'config'} onClick={() => setActiveTab('config')} />
