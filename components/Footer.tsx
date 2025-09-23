@@ -12,7 +12,7 @@ const Footer: React.FC = () => {
     const phoneDisplay = "+54 9 2284 63-5692";
     const whatsappUrl = `https://wa.me/${phoneNumber}`;
     const telUrl = `tel:+${phoneNumber}`;
-    const logoUrl = "https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752960686/logo-rago-2_a9t0e4.png";
+    const logoUrl = "https://res.cloudinary.com/dbq5jp6jn/image/upload/v1758647696/Captura_de_pantalla_2025-07-06_191343_osvqs0.webp";
 
 
     return (
@@ -23,7 +23,7 @@ const Footer: React.FC = () => {
                     
                     <div className="md:col-span-3 lg:col-span-1 flex flex-col items-center text-center md:items-start md:text-left">
                         <a href="/" aria-label="Rago Automotores Home">
-                             <img src={optimizeUrl(logoUrl, { w: 250, q: 90, f: 'auto' })} alt="Rago Automotores Logo" className="h-20 mb-5" />
+                             <img src={optimizeUrl(logoUrl, { w: 250, q: 90, f: 'auto' })} alt="Rago Automotores Logo" className="h-20 mb-5" loading="lazy" decoding="async" />
                         </a>
                         <p className="text-base max-w-xs">
                             Tu concesionaria de confianza para vehículos seleccionados. Calidad y transparencia en cada venta.

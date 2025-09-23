@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { optimizeUrl } from '../utils/image';
 
 interface LoginPageProps {
     onLoginSuccess: () => void;
@@ -54,7 +55,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 {/* Logo */}
                 <a href="/" className="mb-10 block transition-transform duration-300 hover:scale-105" aria-label="Volver a la página de inicio">
                     <img 
-                        src="https://i.imgur.com/zOGb0ay.jpeg" 
+                        src={optimizeUrl("https://res.cloudinary.com/dbq5jp6jn/image/upload/v1758647696/Captura_de_pantalla_2025-07-06_191343_osvqs0.webp", { w: 300 })} 
                         alt="Rago Automotores Logo" 
                         className="h-28 drop-shadow-[0_8px_20px_rgba(0,0,0,0.5)]" 
                     />

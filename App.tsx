@@ -544,7 +544,7 @@ const App: React.FC = () => {
                 <div id="nav-icon3" className={isMobileMenuOpen ? 'open' : ''}><span></span><span></span><span></span><span></span></div>
             </button>
             <nav id="mobile-menu" aria-hidden={!isMobileMenuOpen} className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-gradient-to-br from-slate-900 via-rago-burgundy-darker to-rago-black shadow-2xl p-6 pt-20 flex flex-col text-white transform-gpu transition-transform duration-500 ease-in-out z-50 md:hidden ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                <div className="px-6 mb-12 text-center"><a href="/"><img src="https://i.imgur.com/zOGb0ay.jpeg" alt="Rago Automotores Logo" className="h-20 inline-block" /></a></div>
+                <div className="px-6 mb-12 text-center"><a href="/"><img src={optimizeUrl("https://res.cloudinary.com/dbq5jp6jn/image/upload/v1758647696/Captura_de_pantalla_2025-07-06_191343_osvqs0.webp", { w: 200 })} alt="Rago Automotores Logo" className="h-20 inline-block" /></a></div>
                 <ul className="flex flex-col gap-1">
                     <li><a href="/" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><HomeIcon className="h-7 w-7 text-rago-burgundy" /><span>Inicio</span></a></li>
                     <li><a href="/#catalog" className="flex items-center gap-4 px-3 py-3 text-xl font-semibold text-slate-200 rounded-lg hover:bg-white/10 transition-colors"><CatalogIcon className="h-7 w-7 text-rago-burgundy" /><span>Catálogo</span></a></li>

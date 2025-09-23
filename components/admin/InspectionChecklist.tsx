@@ -65,16 +65,21 @@ const InspectionChecklist: React.FC<InspectionChecklistProps> = ({ checklistData
         // Merge default structure with saved data to handle schema changes gracefully
         const initialData = checklistData && typeof checklistData === 'object' ? checklistData : {};
         const mergedData = JSON.parse(JSON.stringify(DEFAULT_CHECKLIST)); // Deep copy
+
+        // Fix: Cast initialData to a less strict type to allow safe property access.
+        const initialDataAny = initialData as any;
+
         for (const sectionKey in mergedData) {
-            if (initialData[sectionKey]) {
+            if (initialDataAny[sectionKey]) {
                 for (const itemKey in mergedData[sectionKey].items) {
-                    if (initialData[sectionKey].items?.[itemKey]?.status) {
-                        mergedData[sectionKey].items[itemKey].status = initialData[sectionKey].items[itemKey].status;
+                    if (initialDataAny[sectionKey].items?.[itemKey]?.status) {
+                        mergedData[sectionKey].items[itemKey].status = initialDataAny[sectionKey].items[itemKey].status;
                     }
                 }
             }
         }
-        setChecklist(mergedData);
+        // Fix: Ensure the state is updated with the correct type after JSON operations.
+        setChecklist(mergedData as ChecklistData);
     }, [checklistData]);
 
     const handleStatusChange = (sectionKey: string, itemKey: string, newStatus: ChecklistStatus) => {
