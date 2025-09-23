@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { Vehicle, VehicleFormData, AnalyticsEvent, VehicleUpdate, SiteData, Review } from './types';
@@ -253,7 +254,7 @@ const App: React.FC = () => {
                 '@type': 'AutoDealer',
                 'name': 'Rago Automotores',
                 'url': window.location.origin,
-                'logo': 'https://i.imgur.com/zOGb0ay.jpeg',
+                'logo': optimizeUrl("https://res.cloudinary.com/dbq5jp6jn/image/upload/v1758647696/Captura_de_pantalla_2025-07-06_191343_osvqs0.webp", { w: 200 }),
                 'address': {
                     '@type': 'PostalAddress',
                     'streetAddress': 'Av. Ituzaingó 2658',

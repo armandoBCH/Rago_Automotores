@@ -56,7 +56,6 @@ const Header: React.FC = () => {
             <div className="container mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
                 {/* Left: Logo */}
                 <a href="/" className="flex items-center flex-shrink-0" aria-label="Rago Automotores Home">
-                    {/* Fix: Changed fetchpriority to fetchPriority to match React's camelCase prop naming. */}
                     <img src={optimizeUrl(logoUrl, { w: 250, q: 90, f: 'auto' })} alt="Rago Automotores Logo" className="h-16 transition-transform duration-300 hover:scale-105" fetchPriority="high" />
                 </a>
                 
