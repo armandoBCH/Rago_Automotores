@@ -1,4 +1,6 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "headers": [
     {
       "source": "/(.*)",
@@ -29,10 +31,10 @@
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/robots.txt", "destination": "/api/robots" },
-    { "source": "/dejar-resena", "destination": "/index.html" },
+    { "source": "/dejar-resena", "destination": "/" },
     {
       "source": "/((?!api/|.*\\.).*)",
-      "destination": "/index.html"
+      "destination": "/"
     }
   ]
 }
