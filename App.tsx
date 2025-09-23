@@ -272,7 +272,8 @@ const App: React.FC = () => {
 
         } else if (selectedVehicle) {
             const title = `${selectedVehicle.make} ${selectedVehicle.model} ${selectedVehicle.year} | Rago Automotores`;
-            const description = `Encontrá este ${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.year}) en Rago Automotores. Kilometraje: ${selectedVehicle.mileage.toLocaleString('es-AR')} km. Precio: $${selectedVehicle.price.toLocaleString('es-AR')}.`;
+            const descriptionSnippet = (selectedVehicle.description || '').substring(0, 80);
+            const description = `En venta: ${selectedVehicle.make} ${selectedVehicle.model}, año ${selectedVehicle.year} con ${selectedVehicle.mileage.toLocaleString('es-AR')} km. ${descriptionSnippet}... Consultá precio y financiación en Rago Automotores, Olavarría.`.substring(0, 160);
             const imageUrl = optimizeUrl(selectedVehicle.images[0], { w: 1200, h: 630, fit: 'cover', q: 80, output: 'jpeg' });
             
             document.title = title;

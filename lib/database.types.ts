@@ -51,7 +51,7 @@ export interface Database {
           created_at?: string
           consignment_id: number
           old_status?: string | null
-          new_status: string
+          new_status?: string
           notes?: string | null
         }
         Update: {
@@ -100,6 +100,8 @@ export interface Database {
           market_price_suggestion: number | null
           final_agreed_price: number | null
           inspection_checklist: Json | null
+          commission_enabled: boolean | null
+          custom_commission_rate: number | null
         }
         Insert: {
           id?: number
@@ -129,6 +131,8 @@ export interface Database {
           market_price_suggestion?: number | null
           final_agreed_price?: number | null
           inspection_checklist?: Json | null
+          commission_enabled?: boolean | null
+          custom_commission_rate?: number | null
         }
         Update: {
           id?: number
@@ -158,6 +162,8 @@ export interface Database {
           market_price_suggestion?: number | null
           final_agreed_price?: number | null
           inspection_checklist?: Json | null
+          commission_enabled?: boolean | null
+          custom_commission_rate?: number | null
         }
         Relationships: [
           {

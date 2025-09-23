@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Vehicle } from '../types';
 import { optimizeUrl, slugify } from '../utils/image';
 import { ArrowRightIcon, StarIcon, PlayIcon, CarFrontIcon } from '../constants';
@@ -10,14 +10,42 @@ interface VehicleCardProps {
 }
 
 const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onPlayVideo }) => {
+    const [isVisible, setIsVisible] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+    const cardRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                    observer.unobserve(entry.target);
+                }
+            },
+            {
+                rootMargin: '0px 0px 200px 0px', // Load images 200px before they enter the viewport
+                threshold: 0.01
+            }
+        );
+
+        const currentCardRef = cardRef.current;
+        if (currentCardRef) {
+            observer.observe(currentCardRef);
+        }
+
+        return () => {
+            if (currentCardRef) {
+                observer.unobserve(currentCardRef);
+            }
+        };
+    }, []);
     
     const imageSrc = vehicle.images?.[0] || '';
-
     const placeholderUrl = optimizeUrl(imageSrc, { w: 20, h: 15, fit: 'cover', blur: 2, output: 'webp' });
-    const srcSet = [400, 600, 800, 1200]
+    const optimizedSrc = isVisible ? optimizeUrl(imageSrc, { w: 800, h: 600, fit: 'cover', output: 'webp', q: 75 }) : '';
+    const srcSet = isVisible ? [400, 600, 800, 1200]
         .map(w => `${optimizeUrl(imageSrc, { w, h: Math.round(w * 0.75), fit: 'cover', output: 'webp', q: 75 })} ${w}w`)
-        .join(', ');
+        .join(', ') : '';
         
     const vehicleUrl = `/vehiculo/${slugify(`${vehicle.make} ${vehicle.model}`)}-${vehicle.id}`;
     
@@ -31,6 +59,7 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onPlayVideo }) => {
 
     return (
         <div 
+            ref={cardRef}
             className={`relative bg-white dark:bg-slate-900 rounded-2xl overflow-hidden flex flex-col transition-all duration-300 ease-out shadow-subtle dark:shadow-subtle-dark border border-slate-200 dark:border-slate-800 ${!vehicle.is_sold && 'hover:shadow-rago-lg dark:hover:shadow-rago-glow dark:hover:border-rago-burgundy/40 hover:-translate-y-1.5'} group`}
         >
              {vehicle.is_sold && (
@@ -68,16 +97,18 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onPlayVideo }) => {
                     className="w-full h-full bg-cover bg-center"
                     style={{ backgroundImage: `url(${placeholderUrl})` }}
                 >
-                    <img 
-                        className={`w-full h-full object-cover transition-all duration-500 ${!vehicle.is_sold && 'group-hover:scale-105'}`}
-                        src={optimizeUrl(imageSrc, { w: 800, h: 600, fit: 'cover', output: 'webp', q: 75 })}
-                        srcSet={srcSet}
-                        sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw"
-                        alt={`${vehicle.make} ${vehicle.model}`} 
-                        loading="lazy"
-                        decoding="async"
-                        onLoad={() => setIsLoaded(true)}
-                    />
+                    {isVisible && (
+                        <img 
+                            className={`w-full h-full object-cover transition-all duration-500 ${!vehicle.is_sold && 'group-hover:scale-105'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                            src={optimizedSrc}
+                            srcSet={srcSet}
+                            sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw"
+                            alt={`${vehicle.make} ${vehicle.model}`} 
+                            loading="lazy"
+                            decoding="async"
+                            onLoad={() => setIsLoaded(true)}
+                        />
+                    )}
                 </div>
             </a>
             <div className="p-5 flex flex-col flex-grow">

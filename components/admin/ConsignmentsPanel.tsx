@@ -1,6 +1,5 @@
-
 import React, { useState, useMemo } from 'react';
-import { Consignment } from '../../types';
+import { Consignment, ConsignmentConfig } from '../../types';
 import { optimizeUrl } from '../../utils/image';
 import ConsignmentDetailModal from './ConsignmentDetailModal';
 import ConfirmationModal from '../ConfirmationModal';
@@ -23,9 +22,10 @@ interface ConsignmentsPanelProps {
     onRefresh: () => void;
     onApprove: (consignment: Consignment) => void;
     onDataUpdate: () => void;
+    siteConfig: ConsignmentConfig;
 }
 
-const ConsignmentsPanel: React.FC<ConsignmentsPanelProps> = ({ consignments, isLoading, onRefresh, onApprove, onDataUpdate }) => {
+const ConsignmentsPanel: React.FC<ConsignmentsPanelProps> = ({ consignments, isLoading, onRefresh, onApprove, onDataUpdate, siteConfig }) => {
     const [activeFilter, setActiveFilter] = useState<Status | 'all'>('all');
     const [modalState, setModalState] = useState<{ type: 'detail' | 'delete', consignment: Consignment } | null>(null);
 
@@ -134,6 +134,7 @@ const ConsignmentsPanel: React.FC<ConsignmentsPanelProps> = ({ consignments, isL
                     consignment={modalState.consignment}
                     onApproveAndCreateListing={onApprove}
                     onDataUpdate={onDataUpdate}
+                    siteConfig={siteConfig}
                 />
             )}
             {modalState?.type === 'delete' && (

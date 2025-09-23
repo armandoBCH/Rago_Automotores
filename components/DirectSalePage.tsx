@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { ConsignmentInsert } from '../types';
 import { CheckIcon } from '../constants';
@@ -13,7 +11,7 @@ interface DirectSalePageProps {
 
 type FormData = {
     owner_name: string; owner_phone: string; owner_email: string;
-    make: string; model: string; year: string; mileage: string; engine: string;
+    make: string; custom_make?: string; model: string; year: string; mileage: string; engine: string;
     transmission: 'Manual' | 'Automática'; price_requested: string; extra_info: string; honeypot: string;
 };
 
@@ -63,7 +61,7 @@ const FloatingLabelSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement
 const DirectSalePage: React.FC<DirectSalePageProps> = ({ brands }) => {
     const [formData, setFormData] = useState<FormData>({
         owner_name: '', owner_phone: '', owner_email: '',
-        make: '', model: '', year: '', mileage: '', engine: '',
+        make: '', custom_make: '', model: '', year: '', mileage: '', engine: '',
         transmission: 'Manual', price_requested: '', extra_info: '', honeypot: ''
     });
     const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
@@ -72,11 +70,14 @@ const DirectSalePage: React.FC<DirectSalePageProps> = ({ brands }) => {
     const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
     const [submitProgress, setSubmitProgress] = useState({ total: 0, completed: 0 });
 
+    const isOtherMake = formData.make === 'Otra marca';
+
     const validate = (): boolean => {
         const newErrors: Partial<Record<keyof FormData, string>> = {};
         const MAX_PRICE = 2147483647;
         
         if (!formData.make) newErrors.make = 'La marca es requerida.';
+        if (isOtherMake && !formData.custom_make?.trim()) newErrors.custom_make = 'Por favor, especifica la marca.';
         if (!formData.model.trim()) newErrors.model = 'El modelo es requerido.';
         if (!formData.year) newErrors.year = 'El año es requerido.';
         else if (parseInt(formData.year) < 1950 || parseInt(formData.year) > new Date().getFullYear() + 1) newErrors.year = 'Año inválido.';
@@ -148,9 +149,11 @@ const DirectSalePage: React.FC<DirectSalePageProps> = ({ brands }) => {
             });
             const uploadedUrls = (await Promise.all(uploadPromises)).filter((url): url is string => !!url);
             
-            const { honeypot, ...consignmentData } = formData;
+            const finalMake = isOtherMake ? formData.custom_make?.trim() : formData.make;
+            const { honeypot, custom_make, ...consignmentData } = formData;
             const consignmentPayload: Omit<ConsignmentInsert, 'id' | 'created_at' | 'status' | 'internal_notes' | 'vehicle_id'> = {
                 ...consignmentData,
+                make: finalMake || '',
                 year: parseInt(consignmentData.year),
                 mileage: parseInt(consignmentData.mileage),
                 price_requested: parseInt(consignmentData.price_requested),
@@ -205,7 +208,11 @@ const DirectSalePage: React.FC<DirectSalePageProps> = ({ brands }) => {
                         <FloatingLabelSelect label="Marca" name="make" value={formData.make} onChange={handleChange} required error={errors.make}>
                             <option value="" disabled>Seleccionar</option>
                             {brands.map(b => <option key={b} value={b}>{b}</option>)}
+                            <option value="Otra marca">Otra marca</option>
                         </FloatingLabelSelect>
+                        {isOtherMake && (
+                            <FloatingLabelInput label="Especificar Marca" name="custom_make" value={formData.custom_make || ''} onChange={handleChange} required error={errors.custom_make} />
+                        )}
                         <FloatingLabelInput label="Modelo" name="model" value={formData.model} onChange={handleChange} required error={errors.model} />
                         <FloatingLabelInput label="Año" name="year" type="text" inputMode="numeric" value={formData.year} onChange={handleChange} required error={errors.year} />
                         <FloatingLabelInput label="Kilometraje" name="mileage" type="text" inputMode="numeric" value={formData.mileage} onChange={handleChange} required error={errors.mileage} />

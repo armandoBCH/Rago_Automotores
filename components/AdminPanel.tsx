@@ -614,7 +614,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = (props) => {
             
             <div className="mt-8">
                 {activeTab === 'inventory' && <InventoryView {...props} />}
-                {activeTab === 'consignments' && <ConsignmentsPanel consignments={consignments} isLoading={isLoadingConsignments} onRefresh={fetchConsignments} onApprove={props.onAdd} onDataUpdate={props.onDataUpdate} />}
+                {activeTab === 'consignments' && <ConsignmentsPanel consignments={consignments} isLoading={isLoadingConsignments} onRefresh={fetchConsignments} onApprove={props.onAdd} onDataUpdate={props.onDataUpdate} siteConfig={props.siteData.consignmentConfig} />}
                 {activeTab === 'stats' && <StatsView vehicles={props.vehicles} allEvents={props.allEvents} onAnalyticsReset={props.onDataUpdate} />}
                 {activeTab === 'reviews' && <ReviewsPanel onDataUpdate={props.onDataUpdate} vehicles={props.vehicles} />}
                 {activeTab === 'config' && <ConfigPanel financingConfig={props.siteData.financingConfig} consignmentConfig={props.siteData.consignmentConfig} onDataUpdate={props.onDataUpdate} />}

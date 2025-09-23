@@ -95,7 +95,7 @@ const ActionCard: React.FC<{ vehicle: Vehicle, onWhatsAppClick: () => void, onMo
             {!vehicle.is_sold && (
                 <div className="my-4 p-4 flex items-center justify-center gap-3 text-center rounded-lg bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300">
                      <ArrowUpDownIcon className="h-6 w-6 flex-shrink-0"/>
-                    <p className="font-semibold text-lg">¡Aceptamos tu usado en parte de pago!</p>
+                    <p className="font-semibold text-lg whitespace-nowrap">¡Aceptamos tu usado en parte de pago!</p>
                 </div>
             )}
 
