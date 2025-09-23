@@ -38,8 +38,16 @@ export const optimizeUrl = (url: string, options: Record<string, any> = {}): str
         
         // weserv.nl expects the URL without the protocol
         const cleanUrl = url.replace(/^https?:\/\//, '');
+
+        // Default optimization parameters
+        const defaultOptions = {
+            f: 'auto', // Serve next-gen formats automatically (WebP/AVIF)
+            q: 'auto'  // Adjust quality automatically
+        };
         
-        const params = new URLSearchParams(options).toString();
+        const finalOptions = { ...defaultOptions, ...options };
+        const params = new URLSearchParams(finalOptions).toString();
+        
         return `${baseUrl}${cleanUrl}&${params}`;
     } catch (e) {
         // If the URL is malformed, return the standard placeholder

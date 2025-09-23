@@ -95,7 +95,7 @@ const ActionCard: React.FC<{ vehicle: Vehicle, onWhatsAppClick: () => void, onMo
             {!vehicle.is_sold && (
                 <div className="my-4 p-4 flex items-center justify-center gap-3 text-center rounded-lg bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300">
                      <ArrowUpDownIcon className="h-6 w-6 flex-shrink-0"/>
-                    <p className="font-semibold text-lg whitespace-nowrap">¡Aceptamos tu usado en parte de pago!</p>
+                    <p className="font-semibold text-lg">¡Aceptamos tu usado en parte de pago!</p>
                 </div>
             )}
 
@@ -114,7 +114,7 @@ const ActionCard: React.FC<{ vehicle: Vehicle, onWhatsAppClick: () => void, onMo
                             <ChatBubbleIcon className="h-5 w-5" />
                             <span>Contactar por WhatsApp</span>
                         </a>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <button onClick={() => onModalOpen('financing')} className="group w-full flex items-center justify-center gap-2 text-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-3 px-4 rounded-lg transition-all duration-300">
                                 <CalculatorIcon className="h-7 w-7"/>
                                 <span>Financiación</span>

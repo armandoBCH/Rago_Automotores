@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatBubbleIcon, InstagramIcon, HeartIcon, CarFrontIcon } from '../constants';
 import { trackEvent } from '../lib/analytics';
 import { useFavorites } from './FavoritesProvider';
+import { optimizeUrl } from '../utils/image';
 
 const NavLink: React.FC<{ href: string; children: React.ReactNode; }> = ({ href, children }) => (
     <a
@@ -48,13 +50,14 @@ const Header: React.FC = () => {
     const contactMessage = "Hola, estoy interesado en sus vehículos.";
     const whatsappLink = `https://wa.me/5492284635692?text=${encodeURIComponent(contactMessage)}`;
     const instagramUrl = "https://www.instagram.com/ragoautomotores?igsh=MWJuamF6ZXF5YjF4cw%3D%3D";
+    const logoUrl = "https://res.cloudinary.com/dbq5jp6jn/image/upload/v1752960686/logo-rago-2_a9t0e4.png";
 
     return (
         <header className={headerClasses}>
             <div className="container mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
                 {/* Left: Logo */}
                 <a href="/" className="flex items-center flex-shrink-0" aria-label="Rago Automotores Home">
-                    <img src="https://i.imgur.com/zOGb0ay.jpeg" alt="Rago Automotores Logo" className="h-16 transition-transform duration-300 hover:scale-105" />
+                    <img src={optimizeUrl(logoUrl, { w: 250, q: 90, f: 'auto' })} alt="Rago Automotores Logo" className="h-16 transition-transform duration-300 hover:scale-105" />
                 </a>
                 
                 {/* Center: Desktop Navigation Links */}
